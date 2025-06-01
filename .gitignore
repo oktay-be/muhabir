@@ -44,7 +44,7 @@ coverage.xml
 *.cover
 
 # IDE / Editor
-.vscode/
+# .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
