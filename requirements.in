@@ -24,7 +24,7 @@ readability-lxml>=0.8.1 # For extracting main article content
 autogen-agentchat==0.5.7 # For multi-agent conversations and AI summarization
 # google-genai==1.18.0 # For Google Generative AI capabilities (older, consider removing if google-generativeai is used)
 google-generativeai==0.8.5
-# google-cloud-aiplatform>=1.38.0 # Added for Vertex AI / ADC
+google-cloud-aiplatform>=1.38.0 # Added for Vertex AI / ADC
 certifi>=2024.2.2 # For SSL certificate verification
 
 # Data processing

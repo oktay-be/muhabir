@@ -22,385 +22,114 @@ from utils.validators import validate_request_data
 from pydantic import ValidationError
 from capabilities.analysis_orchestrator import AnalysisOrchestrator # Added
 import uuid # Added for session IDs
+import threading # Added for threading
 
 logger = logging.getLogger(__name__)
 
 # Create API blueprint
 api_blueprint = Blueprint('api', __name__)
 
-
-@api_blueprint.route('/news', methods=['POST'])
-async def get_news(): # Changed to async
-    """
-    Get news articles based on specified parameters
-    
-    Expected POST body:
-    {
-        "keywords": ["Fenerbahçe", "Mourinho"], # Can be a list of keywords
-        "team_ids": [8650], 
-        "languages": ["tr", "en"],
-        "domains": ["hurriyet.com.tr"],
-        "max_results": 50,
-        "time_range": "last_24_hours",
-        "sources": ["all"], # or specific like ["newsapi", "fotmob"]
-        "include_trends": true,
-        "scrape_urls": ["https://www.hurriyet.com.tr/spor/futbol/"]
-    }
-    """
-    start_time = time.time()
-      # Get NewsAPI key from app config
-    newsapi_key = current_app.config.get('NEWSAPI_KEY')
-    if not newsapi_key:
-        logger.error("NEWSAPI_KEY is not configured")
-        return jsonify(ErrorResponse(
-            error="Configuration Error", 
-            code=500, 
-            details="NewsAPI key is not configured"
-        ).dict()), 500
-    
-    # Parse and validate the request data
+# Function to run the orchestrator pipeline in a separate thread
+def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, initial_keywords, initial_scrape_urls, use_default_urls_keywords, client_keywords, client_scrape_urls):
+    orchestrator = AnalysisOrchestrator(
+        session_id=session_id,
+        base_workspace_path=base_workspace_path,
+        config=app_config
+    )
+    # Since orchestrator.run_full_pipeline is an async method, we need to run it in an event loop.
+    # Each thread needs its own event loop if we are using asyncio.run()
+    # However, if the Flask app is already running with an async framework like Quart or using app.run(debug=True) 
+    # which might use Werkzeug\'s auto-reloader with its own event loop management,
+    # directly calling asyncio.run() in a new thread can sometimes lead to "loop is already running" errors
+    # or other event loop conflicts.
+    # A common pattern for running an async function from a synchronous thread is:
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(orchestrator.run_full_pipeline(...))
+    # loop.close()
+    # For simplicity here, we'll use asyncio.run(), assuming it handles loop creation/closing correctly in a new thread.
+    # If issues arise, the more explicit loop management above might be needed.
     try:
-        request_data = request.get_json() or {}
-        news_request = NewsRequest(**request_data)
-    except ValidationError as e:
-        logger.error(f"Invalid request data: {str(e)}")
-        return jsonify(ErrorResponse(
-            error="Invalid Request", 
-            code=400, 
-            details=str(e)
-        ).dict()), 400
-        
-    try:
-        # Initialize the news aggregator
-        news_aggregator = NewsAggregator(
-            newsapi_key=newsapi_key,
-            worldnewsapi_key=current_app.config.get('WORLDNEWSAPI_KEY'),
-            gnews_api_key=current_app.config.get('GNEWS_API_KEY'),
-            cache_dir=current_app.config.get('CACHE_DIR'),
-            cache_expiration_hours=current_app.config.get('CACHE_EXPIRATION', 1)
-        )
-        
-        # Analyze trends if requested
-        trending_topics = []
-        if news_request.include_trends:
-            trends_analyzer = TrendsAnalyzer(
-                twitter_api_key=current_app.config.get('TWITTER_API_KEY'),
-                twitter_api_secret=current_app.config.get('TWITTER_API_SECRET'),
-                twitter_access_token=current_app.config.get('TWITTER_ACCESS_TOKEN'),
-                twitter_access_secret=current_app.config.get('TWITTER_ACCESS_SECRET')
-            )
-            # Assuming trends_analyzer.get_trending_topics is synchronous
-            # If it were async, it would need to be awaited and run in executor if blocking
-            trending_topics = trends_analyzer.get_trending_topics(
-                keywords=news_request.keywords, 
-                location="Turkey"
-            )
-        
-        # Apply trending topics to the keywords if available
-        # The news_aggregator.update_keywords is synchronous and fine as is.
-        if trending_topics:
-            trending_keywords = [topic.name for topic in trending_topics[:5]]
-            news_aggregator.update_keywords(trending_keywords)
-        
-        # Configure news aggregator with request parameters
-        # The news_aggregator.configure is synchronous and fine as is.
-        news_aggregator.configure(
-            default_keywords=news_request.keywords,
-            team_ids=news_request.team_ids,
-            languages=news_request.languages,
-            domains=news_request.domains,
-            max_results=news_request.max_results,
-            time_range=news_request.time_range,
-            custom_start_date=news_request.custom_start_date,
-            custom_end_date=news_request.custom_end_date
-        )
-        
-        # Determine sources to use
-        sources_to_fetch = news_request.sources
-        if NewsSourceEnum.ALL in news_request.sources:
-            sources_to_fetch = news_aggregator.get_available_sources()
-            # Remove web_scraping if no scrape_urls are provided, as get_news doesn't handle it directly
-            if not news_request.scrape_urls and NewsSourceEnum.WEB_SCRAPING in sources_to_fetch:
-                sources_to_fetch.remove(NewsSourceEnum.WEB_SCRAPING)
-        
-        # Get news from specified sources using the main get_news method
-        # The `news_request.keywords` are already set as default_keywords in `configure`
-        # and `update_keywords` handles additional ones (like from trends).
-        # The `get_news` method itself takes a `query` param which can be a list.
-        # For the `/news` endpoint, we rely on the configured keywords.
-        articles = await news_aggregator.get_news( # await async call
-            query=news_request.keywords, # Pass keywords as the query
-            sources=[source.value for source in sources_to_fetch if source != NewsSourceEnum.WEB_SCRAPING], # Pass string list
-            limit=news_request.max_results
-        )
-        sources_used = [source.value for source in sources_to_fetch if source != NewsSourceEnum.WEB_SCRAPING]
-
-        # Scrape web sources if requested - this part remains separate as it uses a different capability
-        if (NewsSourceEnum.ALL in news_request.sources or NewsSourceEnum.WEB_SCRAPING in news_request.sources) and news_request.scrape_urls:
-            web_scraper = WebScraper(cache_dir=current_app.config.get('CACHE_DIR'))
-            try: # Added try-finally for session management
-                # Assuming web_scraper.scrape_urls is synchronous
-                # If it were async, it would need to be awaited and run in executor if blocking
-                # scraped_articles = web_scraper.scrape_urls( # Modified to await async call
-                #     urls=news_request.scrape_urls,
-                #     keywords=news_request.keywords
-                # ) # Modified to await async call
-                scraped_articles = await web_scraper.scrape_urls( # Modified to await async call
-                    urls=news_request.scrape_urls, # Modified to await async call
-                    keywords=news_request.keywords # Modified to await async call
-                ) # Modified to await async call
-                articles.extend(scraped_articles)
-                if NewsSourceEnum.WEB_SCRAPING.value not in sources_used:
-                    sources_used.append(NewsSourceEnum.WEB_SCRAPING.value)
-            finally: # Added try-finally for session management
-                await web_scraper.close_session() # Added session close
-        
-        # Deduplicate and sort articles - these are synchronous methods
-        unique_articles = news_aggregator.deduplicate_articles(articles)
-        sorted_articles = news_aggregator.sort_articles(unique_articles)
-        
-        # Prepare response
-        # response = NewsResponse(
-        #     articles=[NewsArticle(**article) for article in sorted_articles],
-        #     trending_topics=trending_topics,
-        #     total_count=len(sorted_articles),
-        #     sources_used=sources_used,
-        #     query_time=time.time() - start_time
-        # )
-        
-        # logger.info(f"Served news request with {len(sorted_articles)} articles from {len(sources_used)} sources")
-        # return jsonify(response.dict())
-        
-        # Simplified response for client
-        client_response = []
-        for article_data in sorted_articles:
-            article = NewsArticle(**article_data) # Ensure it's a Pydantic model for consistent access
-            client_response.append({
-                "title": article.title,
-                "body": article.content, # Using content as body
-                "source": article.source # Using source field (e.g., newsapi, gnews, domain)
-            })
-        
-        logger.info(f"Served news request with {len(client_response)} articles from {len(sources_used)} sources")
-        return jsonify(client_response)
-        
+        asyncio.run(orchestrator.run_full_pipeline(
+            initial_keywords=initial_keywords,
+            initial_scrape_urls=initial_scrape_urls,
+            use_default_urls_keywords=use_default_urls_keywords,
+            client_keywords=client_keywords,
+            client_scrape_urls=client_scrape_urls
+        ))
     except Exception as e:
-        logger.error(f"Error processing news request: {str(e)}", exc_info=True)
-        return jsonify(ErrorResponse(
-            error="Processing Error", 
-            code=500, 
-            details=str(e)
-        ).dict()), 500
-
-
-@api_blueprint.route('/trending', methods=['POST'])
-def get_trending():
-    """
-    Get trending topics related to Turkish sports
-    
-    POST Body:
-    {
-        "keywords": ["Turkey", "Fenerbahçe", "football"],
-        "location": "Turkey",
-        "limit": 10
-    }
-    """
-    try:
-        # Parse request data
-        data = request.get_json() or {}
-        
-        # Validate request with Pydantic model
-        try:
-            trending_request = TrendingRequest(**data)
-        except ValidationError as e:
-            return jsonify(ErrorResponse(
-                error="Validation Error",
-                code=400,
-                details=str(e)
-            ).dict()), 400
-        
-        trends_analyzer = TrendsAnalyzer(
-            twitter_api_key=current_app.config.get('TWITTER_API_KEY'),
-            twitter_api_secret=current_app.config.get('TWITTER_API_SECRET'),
-            twitter_access_token=current_app.config.get('TWITTER_ACCESS_TOKEN'),
-            twitter_access_secret=current_app.config.get('TWITTER_ACCESS_SECRET')
-        )
-        
-        trending_topics = trends_analyzer.get_trending_topics(
-            keywords=trending_request.keywords,
-            location=trending_request.location,
-            count=trending_request.limit
-        )
-        
-        logger.info(f"Served trending topics request with {len(trending_topics)} topics")
-        response = TrendingResponse(
-            topics=trending_topics,
-            count=len(trending_topics),
-            location=trending_request.location
-        )
-        return jsonify(response.dict())
-        
-    except Exception as e:
-        logger.error(f"Error processing trending topics request: {str(e)}", exc_info=True)
-        return jsonify(ErrorResponse(
-            error="Processing Error", 
-            code=500, 
-            details=str(e)
-        ).dict()), 500
-
-
-@api_blueprint.route('/scrape', methods=['POST'])
-async def scrape_website(): # Changed to async
-    """
-    Scrape news articles from specified URLs based on keywords
-    POST Body:
-    {
-        "urls": ["https://www.example.com/sports"],
-        "keywords": ["Fenerbahçe"]
-    }
-    """
-    try:
-        data = request.get_json()
-        if not data or 'urls' not in data or 'keywords' not in data:
-            return jsonify(ErrorResponse(
-                error="Invalid Request", 
-                code=400, 
-                details="Missing 'urls' or 'keywords' in request body"
-            ).dict()), 400
-        
-        urls = data.get('urls')
-        keywords = data.get('keywords')
-        
-        if not isinstance(urls, list) or not isinstance(keywords, list):
-            return jsonify(ErrorResponse(
-                error="Invalid Request", 
-                code=400, 
-                details="'urls' and 'keywords' must be lists"
-            ).dict()), 400
-
-        web_scraper = WebScraper(cache_dir=current_app.config.get('CACHE_DIR'))
-        scraped_data_list = [] # Initialize list to hold all scraped data
-        try: # Added try-finally for session management
-            # scraped_articles = web_scraper.scrape_urls(urls, keywords) # Modified to await async call
-            scraped_data_list = await web_scraper.scrape_urls(urls, keywords) # Modified to await async call
-        finally: # Added try-finally for session management
-            await web_scraper.close_session() # Added session close
-        
-        # Create workspace and save scraped_data
-        workspace_dir = os.path.join(current_app.root_path, 'workspace')
-        os.makedirs(workspace_dir, exist_ok=True)
-        
-        timestamp_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        request_specific_dir = os.path.join(workspace_dir, timestamp_id)
-        os.makedirs(request_specific_dir, exist_ok=True)
-        
-        # Prepare data for JSON serialization and save each article to its own file
-        serializable_data_list = []
-        for item_index, item in enumerate(scraped_data_list):
-            s_item = item.copy()
-            if isinstance(s_item.get('published_at'), datetime):
-                s_item['published_at'] = s_item['published_at'].isoformat()
-            serializable_data_list.append(s_item) # Keep this for the client response preparation
-
-            # Create a safe filename from the URL
-            article_url = s_item.get("url")
-            if article_url:
-                # Custom pre-processing: Remove protocol and replace slashes
-                processed_url = article_url.replace("https://", "").replace("http://", "")
-                processed_url = processed_url.replace("/", "__")
-                
-                # Secure the filename and add .json extension
-                base_filename = secure_filename(processed_url)
-                # secure_filename might return an empty string if the input is really bad,
-                # or it might be too short. Add a fallback or ensure it's meaningful.
-                if not base_filename: # Fallback if secure_filename results in empty
-                    base_filename = f"article_{item_index}"
-                
-                # Ensure filename is not too long (optional, but good practice)
-                # secure_filename itself doesn't truncate, so manual truncation might still be desired.
-                # However, the previous truncation was arbitrary. Let's rely on secure_filename's safety
-                # and typical filesystem limits. If very long URLs are common, truncation might be re-added.
-                output_file_path = os.path.join(request_specific_dir, f"{base_filename}.json")
-            else:
-                # Fallback filename if URL is missing (should ideally not happen)
-                output_file_path = os.path.join(request_specific_dir, f"article_{item_index}.json")
-
-            try:
-                with open(output_file_path, 'w', encoding='utf-8') as f:
-                    json.dump(s_item, f, ensure_ascii=False, indent=2)
-                logger.info(f"Saved article data to {output_file_path}")
-            except Exception as e:
-                logger.error(f"Error saving article to {output_file_path}: {e}")
-
-        # Simplified response for client (without html_content for brevity in HTTP response)
-        client_response = []
-        if serializable_data_list: # Ensure scraped_data is not None
-            for article_data in serializable_data_list:
-                client_response.append({
-                    "title": article_data.get("title"),
-                    "body": article_data.get("body"), 
-                    "source": article_data.get("source"),
-                    "url": article_data.get("url"),
-                    "published_at": article_data.get("published_at"),
-                    "image_url": article_data.get("image_url")
-                })
-        return jsonify(client_response)
-        
-    except Exception as e:
-        logger.error(f"Error scraping website: {str(e)}", exc_info=True)
-        return jsonify(ErrorResponse(
-            error="Scraping Error", 
-            code=500, 
-            details=str(e)
-        ).dict()), 500
+        logger.error(f"Exception in orchestrator thread for session {session_id}: {e}", exc_info=True)
+        # Optionally, update a global status or a specific file to indicate failure from the thread
+        # For now, the orchestrator itself handles creating a _JOB_FAILED marker.
 
 
 @api_blueprint.route('/analysis/start_job', methods=['POST'])
-async def start_analysis_job():
+def start_analysis_job(): # Changed to synchronous
     """
     Starts a new analysis job.
-    Creates a unique session and triggers the analysis pipeline asynchronously.
+    Creates a unique session and triggers the analysis pipeline in a background thread.
+    Returns a 202 Accepted response immediately.
     
     POST Body (optional):
     {
-        "initial_keywords": ["Fenerbahçe", "transfer"],
-        "initial_scrape_urls": ["https://www.fanatik.com.tr/fenerbahce"],
+        "client_keywords": ["Fenerbahçe", "transfer"], // Renamed from initial_keywords for clarity
+        "client_scrape_urls": ["https://www.fanatik.com.tr/fenerbahce"], // Renamed
         "use_default_urls_keywords": true 
     }
     """
     try:
-        session_id = str(uuid.uuid4())
+        # Generate a timestamp-based session ID
+        timestamp_session_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f") # YYYYMMDD_HHMMSS_microseconds
+        session_id = timestamp_session_id # Use this as the session_id
+
         base_workspace_path = current_app.config.get('WORKSPACE_DIR', os.path.join(current_app.root_path, 'workspace'))
         
-        # Ensure base_workspace_path exists
         os.makedirs(base_workspace_path, exist_ok=True)
 
         request_data = request.get_json(silent=True) or {}
-        initial_keywords = request_data.get("initial_keywords")
-        initial_scrape_urls = request_data.get("initial_scrape_urls")
+        client_keywords = request_data.get("client_keywords") # Keywords from client
+        client_scrape_urls = request_data.get("client_scrape_urls") # URLs from client
         use_default_urls_keywords = request_data.get("use_default_urls_keywords", True)
 
-        # The orchestrator needs the full app config to pass to capabilities
-        app_config = current_app.config
+        # Load initial keywords and URLs from search_parameters.json
+        search_params_keywords = []
+        search_params_urls = []
+        search_params_path = current_app.config.get('SEARCH_PARAMETERS_PATH', os.path.join(current_app.root_path, 'search_parameters.json'))
+        if os.path.exists(search_params_path):
+            try:
+                with open(search_params_path, 'r', encoding='utf-8') as f:
+                    params_data = json.load(f)
+                search_params_keywords = params_data.get("keywords", [])
+                search_params_urls = params_data.get("scrape_urls", [])
+                logger.info(f"Loaded {len(search_params_keywords)} keywords and {len(search_params_urls)} URLs from {search_params_path}")
+            except Exception as e:
+                logger.error(f"Error loading search_parameters.json: {e}")
+        else:
+            logger.warning(f"search_parameters.json not found at {search_params_path}. Proceeding without them.")
 
-        orchestrator = AnalysisOrchestrator(
-            session_id=session_id,
-            base_workspace_path=base_workspace_path,
-            config=app_config # Pass the whole app config
+
+        app_config = current_app.config.copy() # Pass a copy of the config
+
+        # Start the orchestrator pipeline in a new thread
+        thread = threading.Thread(
+            target=run_orchestrator_in_thread,
+            args=(
+                app_config, 
+                session_id, 
+                base_workspace_path,
+                search_params_keywords, # Pass keywords from search_parameters.json
+                search_params_urls,     # Pass URLs from search_parameters.json
+                use_default_urls_keywords,
+                client_keywords,        # Pass keywords from client request
+                client_scrape_urls      # Pass URLs from client request
+            )
         )
-
-        # Run the pipeline in the background (fire and forget from API perspective)
-        # For a more robust solution with task queues (Celery, RQ), this would be different.
-        # For now, we use asyncio.create_task for non-blocking execution.
-        asyncio.create_task(orchestrator.run_full_pipeline(
-            initial_keywords=initial_keywords,
-            initial_scrape_urls=initial_scrape_urls,
-            use_default_urls_keywords=use_default_urls_keywords
-        ))
+        thread.daemon = True # Allow main program to exit even if threads are running
+        thread.start()
         
-        logger.info(f"Started analysis job with session_id: {session_id}")
+        logger.info(f"Started analysis job in background thread with session_id: {session_id}")
         return jsonify({
-            "message": "Analysis job started.",
+            "message": "Analysis job successfully started in the background.",
             "session_id": session_id,
             "status_endpoint": f"/api/analysis/job_status/{session_id}"
         }), 202 # Accepted

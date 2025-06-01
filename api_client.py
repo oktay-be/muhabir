@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Configuration
 SERVER_BASE_URL = "http://localhost:5000/api"
-SCRAPE_ENDPOINT = f"{SERVER_BASE_URL}/scrape"
+ANALYSIS_START_JOB_ENDPOINT = f"{SERVER_BASE_URL}/analysis/start_job" # New endpoint
 PARAMETERS_FILE = "search_parameters.json"
 
 async def fetch_data(session, url, payload):
@@ -29,8 +29,27 @@ async def fetch_data(session, url, payload):
         logging.error(f"An unexpected error occurred fetching {url}: {e}")
     return None
 
+async def start_analysis_job(session, url, payload):
+    """Helper function to make a POST request to start an analysis job and return JSON data."""
+    try:
+        async with session.post(url, json=payload) as response:
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            data = await response.json()
+            logging.info(f"Successfully started analysis job via {url} with payload {payload}")
+            logging.info(f"Server response: {data}")
+            return data
+    except aiohttp.ClientResponseError as e:
+        logging.error(f"HTTP error starting job {url}: {e.status} {e.message} - Server response: {await response.text()}")
+    except aiohttp.ClientConnectionError as e:
+        logging.error(f"Connection error starting job {url}: {e}")
+    except json.JSONDecodeError:
+        logging.error(f"Failed to decode JSON response from {url} when starting job")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred starting job {url}: {e}")
+    return None
+
 async def main():
-    """Main function to load parameters, call the scrape API endpoint, and print results."""
+    """Main function to load parameters, call the analysis job endpoint, and print results."""
     try:
         with open(PARAMETERS_FILE, 'r', encoding='utf-8') as f:
             params = json.load(f)
@@ -41,60 +60,41 @@ async def main():
         logging.error(f"Error: Could not decode JSON from {PARAMETERS_FILE}.")
         return
 
-    scrape_urls = params.get("scrape_urls", [])
-    keywords = params.get("keywords", [])
-
-    all_results = []
+    # Parameters from search_parameters.json will be used as client_keywords and client_scrape_urls
+    client_keywords_from_params = params.get("keywords", [])
+    client_scrape_urls_from_params = params.get("scrape_urls", [])
+    # You can also define whether to use default keywords/URLs from the server if these are empty
+    use_server_defaults = params.get("use_default_urls_keywords", True) 
 
     async with aiohttp.ClientSession() as session:
-        tasks = []
+        # Prepare payload for the analysis job
+        analysis_payload = {}
+        if client_keywords_from_params:
+            analysis_payload["client_keywords"] = client_keywords_from_params
+        if client_scrape_urls_from_params:
+            analysis_payload["client_scrape_urls"] = client_scrape_urls_from_params # Corrected variable name
+        analysis_payload["use_default_urls_keywords"] = use_server_defaults
 
-        # Call /api/scrape
-        if scrape_urls and keywords:
-            scrape_payload = {
-                "urls": scrape_urls,
-                "keywords": keywords
-            }
-            logging.info(f"Preparing to call /api/scrape with payload: {scrape_payload}")
-            tasks.append(fetch_data(session, SCRAPE_ENDPOINT, scrape_payload))
-        elif not scrape_urls:
-            logging.warning("No scrape_urls found in parameters file for /api/scrape endpoint.")
-        elif not keywords:
-            logging.warning("No keywords found in parameters file for /api/scrape endpoint (needed for filtering).")
-
-        if not tasks:
-            logging.warning("No tasks to run. Check your parameters file for scrape_urls and keywords.")
-            return
-
-        results = await asyncio.gather(*tasks)
-
-        for result_item in results: # Changed variable name for clarity as we expect a single task result
-            if result_item and isinstance(result_item, list):
-                all_results.extend(result_item)
-            elif result_item: # Handles cases where the API might return a single object or error structure
-                logging.warning(f"Received non-list result from scrape endpoint: {result_item}")
-                # Depending on expected error structure, you might want to append or handle differently
-                # For now, if it's a dict (e.g. a single article or an error message), let's add it.
-                if isinstance(result_item, dict):
-                    all_results.append(result_item)
-
-
-    if all_results:
-        logging.info(f"Total articles/items fetched: {len(all_results)}")
-        # Optionally, print all results or a summary
-        # for i, item in enumerate(all_results):
-        #     print(f"--- Item {i+1} ---")
-        #     print(f"  Title: {item.get('title')}")
-        #     print(f"  Body: {item.get('body', '')[:100]}...") # Print first 100 chars of body
-        #     print(f"  Source: {item.get('source')}")
+        logging.info(f"Preparing to call {ANALYSIS_START_JOB_ENDPOINT} with payload: {analysis_payload}")
         
-        # Save to a file
-        output_filename = "client_output.json"
-        with open(output_filename, 'w', encoding='utf-8') as outfile: # Added encoding
-            json.dump(all_results, outfile, ensure_ascii=False, indent=2)
-        logging.info(f"All results saved to {output_filename}")
-    else:
-        logging.info("No results fetched from any endpoint.")
+        job_initiation_response = await start_analysis_job(session, ANALYSIS_START_JOB_ENDPOINT, analysis_payload)
+
+        if job_initiation_response and job_initiation_response.get("session_id"):
+            logging.info(f"Analysis job started successfully. Session ID: {job_initiation_response.get('session_id')}")
+            logging.info(f"Check status at: {job_initiation_response.get('status_endpoint')}")
+            # Here you would typically store the session_id and implement polling or another mechanism
+            # to check the job status and retrieve results when completed.
+            # For this client, we'll just log the initial response.
+            
+            # Save the initial response to a file for reference
+            output_filename = f"analysis_job_{job_initiation_response.get('session_id')}_init_response.json"
+            with open(output_filename, 'w', encoding='utf-8') as outfile:
+                json.dump(job_initiation_response, outfile, ensure_ascii=False, indent=2)
+            logging.info(f"Job initiation response saved to {output_filename}")
+        else:
+            logging.error("Failed to start analysis job or received an unexpected response.")
+            if job_initiation_response:
+                logging.error(f"Response received: {job_initiation_response}")
 
 if __name__ == "__main__":
     asyncio.run(main())
