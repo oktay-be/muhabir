@@ -1,0 +1,48 @@
+# Dependencies source file
+# Use pip-compile to generate requirements.txt from this file
+# pip-compile requirements.in
+
+# Core dependencies
+flask[async]>=2.3.2 # Added [async] extra
+flask-cors>=4.0.0
+pydantic>=2.8.2
+python-dotenv>=1.0.1
+requests>=2.31.0
+aiohttp==3.12.2  # Added for asynchronous HTTP requests
+
+# News fetching
+newsapi-python>=0.2.7
+soccerdata==1.8.7
+# No dedicated package for WorldNewsAPI, using requests directly
+
+# Web scraping
+beautifulsoup4>=4.13.4
+lxml>=4.9.3  # Faster parser for BeautifulSoup
+readability-lxml>=0.8.1 # For extracting main article content
+
+# AI / LLM Capabilities
+autogen-agentchat==0.5.7 # For multi-agent conversations and AI summarization
+# google-genai==1.18.0 # For Google Generative AI capabilities (older, consider removing if google-generativeai is used)
+google-generativeai==0.8.5
+# google-cloud-aiplatform>=1.38.0 # Added for Vertex AI / ADC
+certifi>=2024.2.2 # For SSL certificate verification
+
+# Data processing
+pandas>=2.1.0
+pytz>=2024.1  # For timezone handling
+
+# API documentation
+flask-swagger-ui>=4.11.1
+apispec>=6.0.2
+
+# Caching
+cachetools>=5.3.2
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock  # Added for pytest 'mocker' fixture, if needed
+
+# Development
+flake8>=6.1.0
+black>=23.7.0
