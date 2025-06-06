@@ -1,35 +1,67 @@
 """
 AI Aggregator for AISports application.
 Handles aggregation of source-specific AI summaries and NewsAPI integration.
+Uses Google Vertex AI with Application Default Credentials (ADC).
 """
 
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from pathlib import Path
+from google import genai
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import our database client
 from database.mongodb_client import MongoDBClient
-from capabilities.ai_summarizer import AISummarizer
 
 logger = logging.getLogger(__name__)
 
 class AIAggregator:
     """
     AI-powered aggregator for combining source summaries and generating diffs.
+    Uses Google Vertex AI with Application Default Credentials (ADC).
     """
     
-    def __init__(self, google_api_key: str):
+    def __init__(self, project_id: str = None, location: str = None, model_name: str = "gemini-2.5-pro"):
         """
-        Initialize AI Aggregator.
+        Initialize AI Aggregator with Vertex AI using ADC.
         
         Args:
-            google_api_key: Google API key for AI operations
+            project_id (str, optional): Google Cloud project ID. If None, gets from GOOGLE_CLOUD_PROJECT env var.
+            location (str, optional): Vertex AI location. If None, gets from GOOGLE_CLOUD_LOCATION env var or defaults to "global".
+            model_name (str, optional): The name of the Gemini model to use. Defaults to "gemini-2.5-pro".
         """
-        self.ai_summarizer = AISummarizer(google_api_key=google_api_key)
+        self.client = None
+        self.model_name = model_name
         self.db_client = None
+        
+        # Get configuration from environment variables or parameters
+        self.project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
+        self.location = location or os.getenv("GOOGLE_CLOUD_LOCATION", "global")
+
+        if not self.project_id:
+            logger.error("Google Cloud project ID is not set. Set GOOGLE_CLOUD_PROJECT environment variable.")
+            return
+
+        try:
+            # Initialize Vertex AI client with ADC
+            # ADC will automatically find credentials from GOOGLE_APPLICATION_CREDENTIALS
+            self.client = genai.Client(
+                vertexai=True,
+                project=self.project_id,
+                location=self.location
+            )
+            
+            logger.info(f"AIAggregator initialized with Vertex AI: project={self.project_id}, location={self.location}, model={model_name}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Vertex AI client: {e}", exc_info=True)
+            self.client = None
     
     async def initialize(self):
         """Initialize database connection."""
@@ -412,74 +444,109 @@ Provide the diff analysis as clean JSON.
         return prompt
     
     async def _run_ai_aggregation(self, prompt: str, region: str) -> Dict:
-        """Run AI aggregation using the AI summarizer."""
+        """Run AI aggregation using Vertex AI client directly."""
+        if not self.client:
+            logger.error("Vertex AI client is not initialized. Cannot run aggregation.")
+            return {
+                "error": "AIAggregator client not initialized",
+                "processing_summary": {"total_input_articles": 0, "error": "Client not initialized"},
+                "processed_articles": []
+            }
+
         try:
-            # Create a temporary session-like object for the summarizer
-            temp_session = {
-                "articles": [{"content": prompt}],
-                "source_domain": f"aggregation_{region.lower()}",
-                "processing_type": "aggregation"
-            }
-            
-            # Use AI summarizer to process (we'll need to adapt this)
-            # For now, return a placeholder structure
-            result = {
-                "processing_summary": {
-                    "total_input_articles": 0,
-                    "articles_after_deduplication": 0,
-                    "articles_after_cleaning": 0,
-                    "duplicates_removed": 0,
-                    "sources_aggregated": [],
-                    "processing_date": datetime.now(timezone.utc).isoformat(),
-                    "region": region
-                },
-                "processed_articles": [],
-                "aggregation_metadata": {
-                    "entities_summary": {"teams": [], "players": [], "total_entities": 0},
-                    "categories_distribution": {},
-                    "sources_contribution": {}
+            logger.info(f"Running AI aggregation for region {region}")
+              # Use Vertex AI to process the aggregation prompt
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={
+                    "temperature": 0.1,
+                    "max_output_tokens": 8192,
+                    "response_mime_type": "application/json"
                 }
-            }
+            )
             
-            # TODO: Implement actual AI processing when AI summarizer supports custom prompts
-            logger.info(f"AI aggregation completed for {region} (placeholder)")
+            # Parse the JSON response
+            result_text = response.text.strip()
+            if result_text.startswith("```json"):
+                result_text = result_text[7:]
+            if result_text.endswith("```"):
+                result_text = result_text[:-3]
+            
+            result = json.loads(result_text)
+            
+            logger.info(f"AI aggregation completed successfully for {region}")
             return result
             
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI aggregation response as JSON: {e}")
+            return {
+                "error": f"JSON parsing error: {str(e)}",
+                "processing_summary": {"total_input_articles": 0, "error": "JSON parsing failed"},
+                "processed_articles": []
+            }
         except Exception as e:
             logger.error(f"Error in AI aggregation: {e}")
-            raise
+            return {
+                "error": str(e),
+                "processing_summary": {"total_input_articles": 0, "error": str(e)},
+                "processed_articles": []            }
     
     async def _run_ai_extension(self, prompt: str) -> Dict:
-        """Run AI extension using the AI summarizer."""
-        try:
-            # TODO: Implement actual AI processing
-            result = {
-                "processing_summary": {
-                    "total_input_articles": 0,
-                    "articles_after_deduplication": 0,
-                    "articles_after_cleaning": 0,
-                    "duplicates_removed": 0,
-                    "sources_aggregated": [],
-                    "newsapi_articles_added": 0,
-                    "processing_date": datetime.now(timezone.utc).isoformat(),
-                    "region": "EU_extended"
-                },
-                "processed_articles": [],
-                "aggregation_metadata": {}
+        """Run AI extension using Vertex AI client directly."""
+        if not self.client:
+            logger.error("Vertex AI client is not initialized. Cannot run extension.")
+            return {
+                "error": "AIAggregator client not initialized",
+                "processing_summary": {"total_input_articles": 0, "error": "Client not initialized"},
+                "processed_articles": []
             }
+
+        try:
+            logger.info("Running AI extension")
+              # Use Vertex AI to process the extension prompt
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={
+                    "temperature": 0.1,
+                    "max_output_tokens": 8192,
+                    "response_mime_type": "application/json"
+                }
+            )
             
-            logger.info("AI extension completed (placeholder)")
+            # Parse the JSON response
+            result_text = response.text.strip()
+            if result_text.startswith("```json"):
+                result_text = result_text[7:]
+            if result_text.endswith("```"):
+                result_text = result_text[:-3]
+            
+            result = json.loads(result_text)
+            
+            logger.info("AI extension completed successfully")
             return result
             
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI extension response as JSON: {e}")
+            return {
+                "error": f"JSON parsing error: {str(e)}",
+                "processing_summary": {"total_input_articles": 0, "error": "JSON parsing failed"},
+                "processed_articles": []
+            }
         except Exception as e:
             logger.error(f"Error in AI extension: {e}")
-            raise
+            return {
+                "error": str(e),
+                "processing_summary": {"total_input_articles": 0, "error": str(e)},
+                "processed_articles": []            }
     
     async def _run_ai_diff(self, prompt: str) -> Dict:
-        """Run AI diff analysis using the AI summarizer."""
-        try:
-            # TODO: Implement actual AI processing
-            result = {
+        """Run AI diff analysis using Vertex AI client directly."""
+        if not self.client:
+            logger.error("Vertex AI client is not initialized. Cannot run diff analysis.")
+            return {
+                "error": "AIAggregator client not initialized",
                 "entities_in_eu_only": [],
                 "entities_in_tr_only": [],
                 "common_entities": [],
@@ -488,32 +555,87 @@ Provide the diff analysis as clean JSON.
                 "sentiment_analysis": {},
                 "recommendations_for_targeting": []
             }
+
+        try:
+            logger.info("Running AI diff analysis")
+              # Use Vertex AI to process the diff prompt
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={
+                    "temperature": 0.1,
+                    "max_output_tokens": 8192,
+                    "response_mime_type": "application/json"
+                }
+            )
             
-            logger.info("AI diff analysis completed (placeholder)")
+            # Parse the JSON response
+            result_text = response.text.strip()
+            if result_text.startswith("```json"):
+                result_text = result_text[7:]
+            if result_text.endswith("```"):
+                result_text = result_text[:-3]
+            
+            result = json.loads(result_text)
+            
+            logger.info("AI diff analysis completed successfully")
             return result
             
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI diff response as JSON: {e}")
+            return {
+                "error": f"JSON parsing error: {str(e)}",
+                "entities_in_eu_only": [],
+                "entities_in_tr_only": [],
+                "common_entities": [],
+                "trending_topics_diff": {},
+                "transfer_rumors_comparison": {},
+                "sentiment_analysis": {},
+                "recommendations_for_targeting": []
+            }
         except Exception as e:
             logger.error(f"Error in AI diff analysis: {e}")
-            raise
+            return {
+                "error": str(e),
+                "entities_in_eu_only": [],
+                "entities_in_tr_only": [],
+                "common_entities": [],
+                "trending_topics_diff": {},
+                "transfer_rumors_comparison": {},
+                "sentiment_analysis": {},
+                "recommendations_for_targeting": []
+            }
 
 
 # Example usage and testing
 async def test_ai_aggregator():
-    """Test AI Aggregator functionality."""
-    print("🧪 Testing AI Aggregator...")
+    """Test AI Aggregator functionality with Vertex AI."""
+    print("🧪 Testing AI Aggregator with Vertex AI...")
     
     try:
-        import os
-        google_api_key = os.getenv('GOOGLE_API_KEY')
-        if not google_api_key:
-            print("⚠️  GOOGLE_API_KEY not set. Using placeholder mode.")
+        # Check Vertex AI environment variables
+        project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
+        credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
         
-        aggregator = AIAggregator(google_api_key or "placeholder")
+        if not project_id:
+            print("❌ GOOGLE_CLOUD_PROJECT environment variable not set")
+            print("   Set it in your .env file: GOOGLE_CLOUD_PROJECT=gen-lang-client-0306766464")
+            return
+            
+        if not credentials_path:
+            print("❌ GOOGLE_APPLICATION_CREDENTIALS environment variable not set")
+            print("   Set it in your .env file: GOOGLE_APPLICATION_CREDENTIALS=./gen-lang-client-0306766464-13fc9c9298ba.json")
+            return
+        
+        print(f"✅ Using Vertex AI with project: {project_id}")
+        print(f"✅ Using credentials file: {credentials_path}")
+        
+        aggregator = AIAggregator()
         await aggregator.initialize()
         
-        print("✅ AI Aggregator initialized successfully")
+        print("✅ AI Aggregator initialized successfully with Vertex AI")
         
-        # Test aggregation (will use placeholder data)
+        # Test aggregation (will use placeholder data for now)
         test_run_id = "test_run_123"
         test_region = "TR"
         
@@ -529,4 +651,8 @@ async def test_ai_aggregator():
 
 
 if __name__ == "__main__":
-    asyncio.run(test_ai_aggregator())
+    if not os.getenv("GOOGLE_CLOUD_PROJECT"):
+        print("Error: GOOGLE_CLOUD_PROJECT environment variable not set. This test requires it.")
+        print("Set your Google Cloud project ID: GOOGLE_CLOUD_PROJECT=gen-lang-client-0306766464")
+    else:
+        asyncio.run(test_ai_aggregator())

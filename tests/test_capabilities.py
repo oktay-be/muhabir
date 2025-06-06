@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.trends_analyzer import TrendsAnalyzer
-from capabilities.scraping.web_scraper import WebScraper # New import
 from api.models import TrendingTopic # Added for type hinting if needed
 
 
@@ -129,61 +128,6 @@ class TestTrendsAnalyzer(unittest.TestCase):
         os.makedirs(analyzer.cache_dir, exist_ok=True)
         topics = analyzer.get_trending_topics(keywords=["football"], count=3)
         self.assertEqual(len(topics), 0)
-
-
-class TestWebScraper(unittest.IsolatedAsyncioTestCase): # Changed to IsolatedAsyncioTestCase for async test
-    """Test the web scraper capability."""
-    
-    @patch('capabilities.scraping.session_manager.aiohttp.ClientSession.get') # Fixed path
-    async def test_scrape_article_details_successful_extraction(self, mock_get):
-        """Test scraping article details with successful extraction using readability."""
-        mock_html_content = """
-        <html>
-            <head><title>Test Article Title</title></head>
-            <body>
-                <article>
-                    <h1>Main Title</h1>
-                    <p>This is the first paragraph of the article.</p>
-                    <p>This is the second paragraph with more content.</p>
-                    <div>Some other div</div>
-                </article>
-            </body>
-        </html>        """        
-        # Configure the mock for the session.get() call
-        async_mock_response = AsyncMock()
-        async_mock_response.status = 200
-        async_mock_response.text = AsyncMock(return_value=mock_html_content)
-        async_mock_response.raise_for_status = MagicMock()
-        async_mock_response.headers = {"Content-Type": "text/html"}  # Add headers
-
-        # This is for the `async with session.get(...) as response:` part
-        mock_get.return_value.__aenter__.return_value = async_mock_response
-
-        cache_dir_path = os.path.join(os.path.dirname(__file__), 'tmp_cache_scraper_details')
-        if not os.path.exists(cache_dir_path):
-            os.makedirs(cache_dir_path, exist_ok=True)
-            
-        scraper = WebScraper(cache_dir=cache_dir_path)
-        
-        url = "https://example.com/article1"
-        keywords = ["test"]          # Mock the cache to return None initially (no cached content)
-        with patch.object(scraper.cache_manager, 'get_cached_content', return_value=None) as mock_get_cached, \
-             patch.object(scraper.cache_manager, 'cache_content', MagicMock()) as mock_cache_content, \
-             patch.object(scraper, '_save_article_with_url_filename', MagicMock()) as mock_save_article:
-
-            # Use the new modular API
-            article_details = await scraper._scrape_single_article(url, keywords)        
-        self.assertIsNotNone(article_details)
-        # The readability extractor extracts the title from <title> tag, not <h1>
-        self.assertEqual(article_details['title'], 'Test Article Title') 
-        self.assertIn("first paragraph", article_details['content'])  
-        self.assertIn("second paragraph", article_details['content']) 
-        self.assertEqual(article_details['url'], url)
-        
-        mock_get_cached.assert_called_once()
-        mock_cache_content.assert_called_once()
-        mock_save_article.assert_called_once()
-        mock_get.assert_called() # Verify that the mocked session.get was called
 
 
 # This is needed to run unittest.IsolatedAsyncioTestCase tests

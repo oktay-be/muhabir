@@ -1,0 +1,9 @@
+GenerateContentResponse(
+  automatic_function_calling_history=[],
+  candidates=[
+    Candidate(
+      avg_logprobs=-0.14413952067441613,
+      content=Content(
+        parts=[
+          Part(
+            text="""{

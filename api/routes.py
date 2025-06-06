@@ -17,7 +17,7 @@ from api.models import (
 )
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.trends_analyzer import TrendsAnalyzer
-from capabilities.scraping.web_scraper import WebScraper # New import
+from capabilities.content_scraping_service import Journalist, JOURNALIST_AVAILABLE
 from utils.constants import DEFAULT_TEAM_IDS, DEFAULT_DOMAINS
 from utils.validators import validate_request_data
 from pydantic import ValidationError

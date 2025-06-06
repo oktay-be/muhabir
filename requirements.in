@@ -9,7 +9,7 @@ pydantic>=2.8.2
 python-dotenv>=1.0.1
 requests>=2.31.0
 aiohttp==3.12.2  # Added for asynchronous HTTP requests
-journ4list==0.2.0 # For fetching and processing news articles
+journ4list==0.3.0 # For fetching and processing news articles
 
 # News fetching
 newsapi-python>=0.2.7
@@ -23,8 +23,9 @@ readability-lxml>=0.8.1 # For extracting main article content
 
 # AI / LLM Capabilities
 autogen-agentchat==0.5.7 # For multi-agent conversations and AI summarization
-# google-genai==1.18.0 # For Google Generative AI capabilities (older, consider removing if google-generativeai is used)
-google-generativeai==0.8.5
+
+google-genai==1.22.0 
+# google-generativeai==0.8.5
 google-cloud-aiplatform>=1.38.0 # Added for Vertex AI / ADC
 certifi>=2024.2.2 # For SSL certificate verification
 

@@ -573,3 +573,96 @@ class MongoDBClient:
         except Exception as e:
             logger.error(f"Error getting missing entities: {e}")
             return []
+    
+    # Additional methods needed by Collection Orchestrator
+    async def create_collection_run(self, run_data: Dict) -> str:
+        """
+        Create a new collection run.
+        Alias for save_collection_run for consistency with orchestrator.
+        
+        Args:
+            run_data: Collection run data
+            
+        Returns:
+            str: run_id of created record
+        """
+        return await self.save_collection_run(run_data)
+    
+    async def save_ai_summary_per_source(self, summary_data: Dict):
+        """
+        Save AI summary per source data.
+        Alias for save_source_summary for consistency with orchestrator.
+        
+        Args:
+            summary_data: AI summary data
+            
+        Returns:
+            InsertOneResult: MongoDB insert result
+        """
+        try:
+            summary_data["created_at"] = datetime.now(timezone.utc)
+            result = await self.db[self.AI_SUMMARIES_PER_SOURCE].insert_one(summary_data)
+            logger.info(f"Saved AI summary for source: {summary_data.get('source_domain')}")
+            return result
+        except Exception as e:
+            logger.error(f"Error saving AI summary per source: {e}")
+            raise
+    
+    async def update_collection_run(self, run_id: str, update_data: Dict) -> bool:
+        """
+        Update collection run with arbitrary data.
+        More flexible version of update_collection_run_status.
+        
+        Args:
+            run_id: Collection run identifier
+            update_data: Data to update
+            
+        Returns:
+            bool: True if updated successfully
+        """
+        try:
+            result = await self.db[self.COLLECTION_RUNS].update_one(
+                {"run_id": run_id},
+                {"$set": update_data}
+            )
+            
+            if result.modified_count > 0:
+                logger.info(f"Updated collection run: {run_id}")
+                return True
+            else:
+                logger.warning(f"No collection run found to update: {run_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error updating collection run: {e}")
+            return False
+    
+    async def list_collection_runs(self, limit: int = 10, run_type: str = None) -> List[Dict]:
+        """
+        List recent collection runs.
+        
+        Args:
+            limit: Maximum number of runs to return
+            run_type: Optional filter by run type
+            
+        Returns:
+            List[Dict]: Recent collection runs
+        """
+        try:
+            query = {}
+            if run_type:
+                query["type"] = run_type
+            
+            cursor = self.db[self.COLLECTION_RUNS].find(query).sort("created_at", DESCENDING).limit(limit)
+            runs = await cursor.to_list(length=limit)
+            
+            # Convert ObjectId to string for JSON serialization
+            for run in runs:
+                if "_id" in run:
+                    run["_id"] = str(run["_id"])
+            
+            return runs
+            
+        except Exception as e:
+            logger.error(f"Error listing collection runs: {e}")
+            return []

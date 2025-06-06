@@ -1,0 +1,729 @@
+```json
+{
+  "processing_summary": {
+    "total_input_articles": 28,
+    "articles_after_deduplication": 21,
+    "articles_after_cleaning": 15,
+    "duplicates_removed": 7,
+    "empty_articles_removed": 6,
+    "processing_date": "2025-06-26T20:00:00Z",
+    "custom_categories_added": [
+      "basketball_transfer_rumors",
+      "basketball_transfers_confirmed",
+      "basketball_departures",
+      "basketball_match_results",
+      "basketball_league_championship",
+      "basketball_team_rivalry",
+      "basketball_financial_news",
+      "transfer_rejected"
+    ]
+  },
+  "processed_articles": [
+    {
+      "id": "2586349-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/hakan-bilal-kutlualp-ve-mahmut-usludan-ortak-aciklama-gerekli-sayiya-ulastik-2586349",
+      "title": "Hakan Bilal Kutlualp ve Mahmut Uslu'dan ortak açıklama: 'Gerekli sayıya ulaştık'",
+      "summary": "Fenerbahçe presidential candidate Hakan Bilal Kutlualp and former executive Mahmut Uslu released a joint statement announcing they have collected the required number of signatures to call for an extraordinary general assembly (early election). The current board, led by President Ali Koç, had previously decided on an election in September, but this initiative aims to bring it forward. According to the club's statute (Tüzük Madde 20, bent 2c), a written request from at least one-fifth of paid-up congress members can force the board to call an extraordinary general assembly within one month. The collected signatures will be officially submitted to the Fenerbahçe Spor Kulübü Yüksek Divan Kurulu Başkanlığı (High Council Presidency) on Tuesday, July 1st, at 14:00. The groups involved decided on this date to avoid disrupting the season ticket renewal process. They have invited all congress members and fans to witness the submission.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe"
+        ],
+        "players": [
+          "Hakan Bilal Kutlualp",
+          "Mahmut Uslu",
+          "Ali Koç"
+        ],
+        "amounts": [],
+        "dates": [
+          "26 Haziran 2025",
+          "1 Temmuz Salı"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "elections_management",
+          "confidence": 1.0,
+          "evidence": "Article is about an initiative to force an early presidential election at the club: 'Fenerbahçe'de yapılacak seçim öncesinde imza toplayarak erken seçim yapılmasını isteyen gruplar ortak bir açıklama yayınladı.'"
+        },
+        {
+          "tag": "federation_politics",
+          "confidence": 0.8,
+          "evidence": "The process explicitly refers to the club's internal statutes: 'Tüzüğümüzün 20. Maddesinin (2) c bendi uyarınca...'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T19:02:15+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586344-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/galeri-fenerbahce-yildiz-ismi-gozden-cikardi-takasta-kullanilacak-2586344",
+      "title": "Fenerbahçe, Sofyan Amrabat'ı takasta kullanmaya hazır",
+      "summary": "According to Russian press reports, Fenerbahçe is targeting 19-year-old CSKA Moskova midfielder Matvey Kislyak to strengthen its squad. The reports claim that Fenerbahçe is prepared to use midfielder Sofyan Amrabat as part of a swap deal to acquire the young player. However, the article also notes that Amrabat, who has attracted interest from Italian Serie A clubs, is reportedly not keen on this potential move to Russia. Last season, Sofyan Amrabat played in 43 official matches for Fenerbahçe, contributing 2 goals and 4 assists.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "CSKA Moskova"
+        ],
+        "players": [
+          "Sofyan Amrabat",
+          "Matvey Kislyak"
+        ],
+        "amounts": [],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "The news is based on foreign press speculation: 'Rus basınında yer alan haberlere göre Fenerbahçe, 19 yaşındaki genç yıldız adayı için Sofyan Amrabat'ı takasta kullanmaya hazır.'"
+        },
+        {
+          "tag": "transfers_interest",
+          "confidence": 0.8,
+          "evidence": "Fenerbahçe's interest in Matvey Kislyak is the core of the article: 'Orta saha hattını güçlendirmek isteyen ve gözünü CSKA Moskova forması giyen Matvey Kislyak'a çeviren sarı-lacivertliler...'"
+        },
+        {
+          "tag": "departures",
+          "confidence": 0.6,
+          "evidence": "The article suggests Fenerbahçe is willing to let Amrabat go: 'Fenerbahçe yıldız ismi gözden çıkardı! Takasta kullanılacak'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": null,
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "medium",
+      "language": "turkish"
+    },
+    {
+      "id": "2586275-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahce-lyon-tarihinin-en-pahali-oyuncusunun-pesinde-transferde-yakin-takip-2586275",
+      "title": "Fenerbahçe, Lyon'un rekor transferi Moussa Niakhate'yi takip ediyor",
+      "summary": "Fenerbahçe is closely monitoring the situation of Lyon's Senegalese center-back, Moussa Niakhate, following a decision to relegate Lyon to the 2nd Lig for financial reasons. This decision has created a potential transfer opportunity, as many Lyon players, including the 29-year-old Niakhate, reportedly have clauses in their contracts that would allow them to become free agents in the case of relegation. Lyon has one week to appeal the decision, but French press commentary suggests the appeal is unlikely to succeed. Niakhate is Lyon's most expensive transfer in history, having been signed from Nottingham Forest for €32 million last summer. If the relegation is upheld and Niakhate becomes a free agent, Fenerbahçe is expected to immediately begin negotiations to sign him.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Lyon",
+          "Nottingham Forest"
+        ],
+        "players": [
+          "Moussa Niakhate"
+        ],
+        "amounts": [
+          "32 milyon Euro"
+        ],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "transfers_interest",
+          "confidence": 1.0,
+          "evidence": "The article explicitly states Fenerbahçe is monitoring the player: 'Sarı-Lacivertliler de bu isimlerden biri olan yıldız stoperi takibe aldı.'"
+        },
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "The entire transfer scenario is contingent on Lyon's relegation being confirmed, making it a speculative opportunity."
+        },
+        {
+          "tag": "disciplinary_actions",
+          "confidence": 0.8,
+          "evidence": "The situation stems from Lyon's punishment: 'Lyon, mali gerekçelerle 2. Lig’e düşürüldü.'"
+        },
+        {
+          "tag": "financial_news",
+          "confidence": 0.8,
+          "evidence": "The relegation is due to financial issues, and the article mentions the player's €32 million transfer fee."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T09:20:27+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586322-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/galeri-son-dakika-jadon-sancho-transferi-iptal-italyanlar-duyurdu-fenerbahce-istiyordu-2586322",
+      "title": "Jadon Sancho transferinde Fenerbahçe'ye Juventus rakip oldu, Napoli çekildi",
+      "summary": "Fenerbahçe's pursuit of Manchester United winger Jadon Sancho is intensifying, with new developments in the transfer saga. According to Sky Italia, Italian club Napoli has withdrawn its interest in the player. However, another Serie A giant, Juventus, has entered the race and reportedly held its first official meeting with the 25-year-old English star. Fenerbahçe has reportedly agreed to Sancho's annual salary demand of €12 million and is negotiating a transfer fee between €18 and €20 million with Manchester United. Juventus is expected to offer a lower salary. Sancho, who is valued at €28 million by Transfermarkt, is now considering the offers from both Fenerbahçe and Juventus and is expected to make a decision soon, as Manchester United is keen to sell him.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Manchester United",
+          "Napoli",
+          "Juventus"
+        ],
+        "players": [
+          "Jadon Sancho"
+        ],
+        "amounts": [
+          "28 milyon euro",
+          "12 milyon Euro",
+          "18 ile 20 milyon Euro"
+        ],
+        "dates": [
+          "1 Temmuz"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "transfers_rumors",
+          "confidence": 1.0,
+          "evidence": "The article details unconfirmed transfer talks and competition between clubs: 'Fenerbahçe ve Juventus'un tekliflerini dinleyen Jadon Sancho, yakın zamanda kararını verecek.'"
+        },
+        {
+          "tag": "transfers_negotiations",
+          "confidence": 0.8,
+          "evidence": "It mentions specific meetings and financial figures being discussed: 'Juventus, dün İngiliz yıldızla ilk resmî görüşmesini gerçekleştirdi' and 'Fenerbahçe’nin, İngiliz yıldızın ardından Manchester United ile de 18 ile 20 milyon Euro arasında bir rakama el sıkışması bekleniyor.'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": null,
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "medium",
+      "language": "turkish"
+    },
+    {
+      "id": "2586274-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/galeri-fenerbahceden-cilgin-transfer-operasyonu-ali-koc-bizzat-devrede-iste-listenin-parlayan-yildizlari-2586274",
+      "title": "Fenerbahçe'ye Samuel Chukwueze ve Alexis Sanchez önerildi",
+      "summary": "As part of Fenerbahçe's transfer operations led by president Ali Koç, several star players are being considered. Among them, Samuel Chukwueze has been prominently featured after being offered to the club. The 26-year-old Nigerian winger's agent, InterLax Sport, began searching for a new team after Milan's new coach, Massimiliano Allegri, reportedly informed Chukwueze he is not in his plans. Fenerbahçe is considering the player, potentially on a loan deal, as they might sign another winger even if the Jadon Sancho transfer is completed. Separately, 36-year-old Chilean star Alexis Sanchez, who is leaving Udinese, is also rumored to be in talks with Fenerbahçe after being spotted in Istanbul. He is considered a potential third-choice striker option for the club.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Milan",
+          "Udinese"
+        ],
+        "players": [
+          "Samuel Chukwueze",
+          "Alexis Sanchez",
+          "Ali Koç",
+          "Massimiliano Allegri"
+        ],
+        "amounts": [],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "The article discusses players offered to the club and speculative talks: 'Bu oyunculardan en fazla ön plana çıkanı Samuel Chukwueze oldu.' and 'Son iddia ise Udinese’den ayrılan 36 yaşındaki oyuncunun Fenerbahçe ile görüştüğü yönünde.'"
+        },
+        {
+          "tag": "transfers_interest",
+          "confidence": 0.6,
+          "evidence": "Fenerbahçe is reportedly considering the offers but has not made a concrete move yet: 'Yönetimin Chukwueze’ye kapıları kapatmadığı öğrenildi.'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": null,
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "medium",
+      "language": "turkish"
+    },
+    {
+      "id": "2586294-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahceden-milinkovic-savic-bombasi-tadic-devreye-girdi-2586294",
+      "title": "Tadic'in de devrede olduğu Milinkovic-Savic, Fenerbahçe'nin gündeminde",
+      "summary": "Fenerbahçe is reportedly targeting Al-Hilal's Serbian midfielder Sergej Milinkovic-Savic at the specific request of coach Jose Mourinho. The 30-year-old player is said to be open to a return to European football. While he has a salary demand of €10 million per year, Fenerbahçe aims to negotiate this figure down and is planning a transfer offer of around €10 million, to be paid in installments. A significant factor in the potential transfer is the involvement of former Fenerbahçe player and Milinkovic-Savic's compatriot, Dusan Tadic. Tadic has reportedly spoken with the midfielder, giving a glowing reference of the club and urging him to make the move by saying, 'It is the biggest club in Turkey. There is a magnificent atmosphere. You must go.'",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Al-Hilal"
+        ],
+        "players": [
+          "Sergej Milinkovic-Savic",
+          "Jose Mourinho",
+          "Dusan Tadic"
+        ],
+        "amounts": [
+          "10 milyon Euro"
+        ],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "The transfer is presented as a strong possibility but is still in the speculative stage: 'Fenerbahçe'nin transfer listesinde yer alan Sergej Milinkovic-Savic için sıcak gelişmeler yaşanıyor.'"
+        },
+        {
+          "tag": "transfers_interest",
+          "confidence": 1.0,
+          "evidence": "The interest is explicitly stated and attributed to the coach: 'Mourinho'nun kadrosunda görmek istediği yıldız futbolcu...'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T11:51:02+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586285-20250626",
+      "original_url": "https://www.fanatik.com.tr/yazarlar/gokhan-german/potanin-krali-fenerbahce-2586285",
+      "title": "Fenerbahçe Beko, Beşiktaş'ı yenerek tarihi bir sezonu üç kupayla taçlandırdı",
+      "summary": "Fenerbahçe Beko has won the 2024-25 Turkish Basketball Süper Lig championship, completing a historic treble-winning season. They defeated their rivals Beşiktaş Fibabanka 84-68 in the fifth game of the final series to win the series 4-1. This victory marks Fenerbahçe's 12th league title and adds to their Turkish Cup and EuroLeague trophies from the same season. By winning all three major competitions, Fenerbahçe Beko becomes the first team in European basketball to achieve this feat since Real Madrid in the 2015-16 season. Khem Birch was named the Final Series MVP. The article also commends Beşiktaş for their sportsmanship in staying on the court to applaud Fenerbahçe during the trophy ceremony.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Beko",
+          "Beşiktaş Fibabanka",
+          "Real Madrid"
+        ],
+        "players": [
+          "Khem Birch",
+          "Nigel Hayes-Davis",
+          "Wade Baldwin",
+          "Sarunas Jasikevicius"
+        ],
+        "amounts": [],
+        "dates": [
+          "2024-25 sezonu"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "basketball_match_results",
+          "confidence": 1.0,
+          "evidence": "The article reports the final score of the championship game: 'Beşiktaş Fibabanka’yı 84-68 mağlup etti...'"
+        },
+        {
+          "tag": "basketball_league_championship",
+          "confidence": 1.0,
+          "evidence": "The main topic is Fenerbahçe winning the league title: '...lig şampiyonu olan Sarı-Lacivertliler, tarihlerinde ilk kez bu başarıyı gösterdi.'"
+        },
+        {
+          "tag": "basketball_team_rivalry",
+          "confidence": 0.8,
+          "evidence": "The final was played between Istanbul rivals Fenerbahçe and Beşiktaş."
+        },
+        {
+          "tag": "performance_analysis",
+          "confidence": 0.8,
+          "evidence": "The article is an opinion piece analyzing the team's performance throughout the season and the final series."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T07:00:00+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586288-20250626",
+      "original_url": "https://www.fanatik.com.tr/basketbol/fenerbahcenin-yildizi-galatasaray-ile-anlasti-imzayi-atiyor-2586288",
+      "title": "Fenerbahçe Beko'nun yıldızı Errick McCollum, Galatasaray ile anlaştı",
+      "summary": "Following a historic season where he helped Fenerbahçe Beko win three trophies, American guard Errick McCollum has reportedly reached an agreement to join arch-rivals Galatasaray for the upcoming 2025-26 season. McCollum, who joined Fenerbahçe mid-season, played a significant role in their EuroLeague championship run. This move marks a return to Galatasaray for McCollum, where he previously played for two separate stints and was a key player in their 2016 EuroCup championship victory, earning the MVP award for that season.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Beko",
+          "Galatasaray"
+        ],
+        "players": [
+          "Errick McCollum"
+        ],
+        "amounts": [],
+        "dates": [
+          "2025-26 sezonu"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "basketball_transfers_confirmed",
+          "confidence": 0.8,
+          "evidence": "The article strongly states an agreement has been reached: 'Errick McCollum, gelecek sezon için Galatasaray ile anlaşmaya vardı.'"
+        },
+        {
+          "tag": "basketball_team_rivalry",
+          "confidence": 1.0,
+          "evidence": "The transfer is a direct move between two of Turkey's biggest sports rivals: 'Fenerbahçe Beko'nun yıldız ismi, ezeli rakibi Galatasaray ile anlaşmaya vardı.'"
+        },
+        {
+          "tag": "basketball_departures",
+          "confidence": 1.0,
+          "evidence": "The player is leaving Fenerbahçe Beko."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T08:59:05+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586299-20250626",
+      "original_url": "https://www.fanatik.com.tr/besiktas/fenerbahcenin-yildizi-besiktasa-teklif-yapildi-2586299",
+      "title": "Beşiktaş, Fenerbahçe'den ayrılacak olan Dyshawn Pierre'e teklif yaptı",
+      "summary": "Following Fenerbahçe Beko's championship victory, rival club Beşiktaş has reportedly made a transfer offer for forward Dyshawn Pierre. According to a report by Andrea Calzoni, Beşiktaş is closely interested in Pierre, who is preparing to leave Fenerbahçe. This news comes amidst a number of departures from the championship-winning team, including Marko Guduric (to Milano), Errick McCollum (to Galatasaray), and General Manager Maurizio Gherardini. Beşiktaş has submitted its official offer to the experienced player.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Beko",
+          "Beşiktaş",
+          "Galatasaray",
+          "Milano"
+        ],
+        "players": [
+          "Dyshawn Pierre",
+          "Marko Guduric",
+          "Errick McCollum",
+          "Maurizio Gherardini"
+        ],
+        "amounts": [],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "basketball_transfer_rumors",
+          "confidence": 0.8,
+          "evidence": "The article reports on an offer being made, but no agreement is confirmed: 'Beşiktaş, Fenerbahçe Beko'dan ayrılmaya hazırlanan Dyshawn Pierre ile yakından ilgileniyor.'"
+        },
+        {
+          "tag": "basketball_departures",
+          "confidence": 1.0,
+          "evidence": "The player is confirmed to be leaving Fenerbahçe: 'ayrılmaya hazırlanan Dyshawn Pierre'"
+        },
+        {
+          "tag": "basketball_team_rivalry",
+          "confidence": 0.8,
+          "evidence": "This is a potential transfer between Istanbul rivals Beşiktaş and Fenerbahçe."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T12:14:38+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586268-20250626",
+      "original_url": "https://www.fanatik.com.tr/basketbol/fenerbahceye-gozyaslariyla-veda-etti-duygu-dolu-anlar-gordugum-en-guzel-taraftar-2586268",
+      "title": "Marko Guduric, Fenerbahçe Beko'ya gözyaşlarıyla veda etti",
+      "summary": "Fenerbahçe Beko's Serbian star Marko Guduric gave an emotional farewell after the team won the Turkish Basketball Süper Lig championship. In a post-game interview, Guduric confirmed it was his last match for the club and spoke through tears about his time at Fenerbahçe. He stated, 'We wrote history. This was my last game... I love all these people very much... My heart will always beat for Fenerbahçe!' Guduric, who is reportedly joining Milano, thanked President Ali Koç, the staff, and his teammates. Team captain Melih Mahmutoğlu also commented on his departure, saying 'He is a true Fenerbahçeli. He will return again, I feel it.' General Manager Maurizio Gherardini is also leaving the club.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Beko",
+          "Beşiktaş Fibabanka",
+          "Milano"
+        ],
+        "players": [
+          "Marko Guduric",
+          "Melih Mahmutoğlu",
+          "Ali Koç",
+          "Maurizio Gherardini"
+        ],
+        "amounts": [],
+        "dates": [
+          "June 25, 2025"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "basketball_departures",
+          "confidence": 1.0,
+          "evidence": "The player himself confirms his departure in a post-game speech: 'Bu benim son maçımdı. Herkes biliyor galiba. Evet gidiyorum.'"
+        },
+        {
+          "tag": "personal_life",
+          "confidence": 0.8,
+          "evidence": "The article focuses heavily on the emotional aspect of the player's farewell and his connection to the club and fans."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T02:40:18+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586314-20250626",
+      "original_url": "https://www.fanatik.com.tr/basketbol/micicin-yeni-takimi-belli-oldu-fenerbahce-derken-2586314",
+      "title": "Vasilije Micic'in Fenerbahçe'ye transferi NBA takası sonrası zora girdi",
+      "summary": "A potential move to Fenerbahçe Beko for Serbian star Vasilije Micic has been complicated by an unexpected NBA development. It was widely expected that the Phoenix Suns would decline their $8.1 million team option on Micic, making him a free agent and paving the way for a return to Europe, with Fenerbahçe being a likely destination. However, Phoenix surprisingly exercised the option and immediately traded Micic back to his former team, the Charlotte Hornets. A return to the EuroLeague for Micic is now contingent on whether the Hornets decide to release him from his contract.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Beko",
+          "Anadolu Efes",
+          "Phoenix Suns",
+          "Charlotte Hornets"
+        ],
+        "players": [
+          "Vasilije Micic"
+        ],
+        "amounts": [
+          "8.1 milyon dolar"
+        ],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "basketball_transfer_rumors",
+          "confidence": 0.8,
+          "evidence": "The article details a potential transfer that was being discussed but is now uncertain: 'Sarı-lacivertli ekibin gündemine ... Vasilije Micic gelmiş ve yıldız basketbolcuyla anlaşmanın yakın olduğu iddiaları gündeme gelmişti.'"
+        },
+        {
+          "tag": "contract_renewals",
+          "confidence": 1.0,
+          "evidence": "The core of the news is that Phoenix exercised their contract option: 'Ancak Phoenix, bu opsiyonu kullanarak tecrübeli oyuncuyu...'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T12:26:52+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586258-20250625",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahce-ugurcan-cakir-bombasini-patlatiyor-transferde-dev-gelisme-samandirada-idmana-cikar-2586258",
+      "title": "Fenerbahçe, Uğurcan Çakır transferi için Trabzonspor ile pazarlıklara devam ediyor",
+      "summary": "Fenerbahçe is advancing in its efforts to sign Trabzonspor and Turkish national team captain, Uğurcan Çakır. The goalkeeper has reportedly informed Trabzonspor of his desire to join Fenerbahçe if the clubs can reach an agreement. While both Fenerbahçe and Galatasaray were linked to the player, Fenerbahçe is considered to be in a more advantageous position. Negotiations are ongoing at the presidential level between Ali Koç and Ertuğrul Doğan. Trabzonspor has set an asking price of €20 million, and Fenerbahçe is trying to negotiate a lower fee, reportedly offering €15 million. It is also mentioned that if Uğurcan Çakır departs, Trabzonspor will make an official offer for goalkeeper Berke Özer as his replacement.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Trabzonspor",
+          "Galatasaray"
+        ],
+        "players": [
+          "Uğurcan Çakır",
+          "Berke Özer",
+          "Ali Koç",
+          "Ertuğrul Doğan"
+        ],
+        "amounts": [
+          "20 milyon euro",
+          "15 milyon euro"
+        ],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "transfers_negotiations",
+          "confidence": 1.0,
+          "evidence": "The article explicitly states that negotiations are ongoing between the clubs: 'Fenerbahçe ve Trabzonspor arasında başkanlar düzeyinde görüşmeler sürerken, pazarlıklar devam ediyor.'"
+        },
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "While negotiations are happening, the deal is not complete and figures are still being discussed."
+        },
+        {
+          "tag": "team_rivalry",
+          "confidence": 0.6,
+          "evidence": "The transfer involves two major Turkish rivals, Fenerbahçe and Trabzonspor."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-25T19:23:57+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586279-20250626",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahcede-lincolnun-sansi-istikrari-2586279",
+      "title": "Kiralıktan dönen Lincoln Henrique, istikrarıyla Mourinho'dan şans bekliyor",
+      "summary": "Brazilian midfielder Lincoln Henrique is set to return to Fenerbahçe for the new season after loan spells at Red Bull Bragantino and Hull City. During his 1.5 seasons away, he demonstrated significant consistency by playing in 60 official matches. This level of playing time is notable, as only six Fenerbahçe players (Tadic, Szymanski, Fred, Dzeko, Mert Müldür, and İrfan Can Kahveci) surpassed the 60-match mark in the same period. It is suggested that this proven stability could earn him a chance to prove himself under new coach Jose Mourinho.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Red Bull Bragantino",
+          "Hull City"
+        ],
+        "players": [
+          "Lincoln Henrique",
+          "Jose Mourinho",
+          "Tadic",
+          "Szymanski",
+          "Fred",
+          "Dzeko",
+          "Mert Müldür",
+          "İrfan Can Kahveci"
+        ],
+        "amounts": [],
+        "dates": []
+      },
+      "categories": [
+        {
+          "tag": "squad_changes",
+          "confidence": 1.0,
+          "evidence": "The article is about a player returning from a loan spell: 'Fenerbahçe'den kiralık olarak ayrılan Brezilyalı orta sahha Lincoln Henrique, yeni sezon öncesinde takıma geri dönecek.'"
+        },
+        {
+          "tag": "performance_analysis",
+          "confidence": 0.6,
+          "evidence": "The article analyzes his consistent performance on loan as a reason for him to get a chance with the first team."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-26T07:00:46+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586269-20250625",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahceden-bedelli-sermaye-artirimi-2586269",
+      "title": "Fenerbahçe Futbol A.Ş.'nin 1 Milyar TL'lik bedelli sermaye artırım başvurusu onaylandı",
+      "summary": "Fenerbahçe Futbol A.Ş. has received approval from Turkey's Sermaye Piyasası Kurulu (SPK - Capital Markets Board) for a paid-in capital increase. The company's current capital of 250 million TL will be increased by 1 billion TL, bringing the new total capital to 1.25 billion TL. The entire increase will be realized through a paid-in process, with the shares to be sold via a public offering ('halka arz').",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe Futbol A.Ş."
+        ],
+        "players": [],
+        "amounts": [
+          "1 milyar TL",
+          "250 milyon TL",
+          "1 milyar 250 milyon TL"
+        ],
+        "dates": [
+          "25 Haziran 2025"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "financial_news",
+          "confidence": 1.0,
+          "evidence": "The article is exclusively about the club's financial operation of increasing its capital: 'Sermaye Piyasası Kurulu, Fenerbahçe Futbol A.Ş’nin bedelli sermaye artırım başvurusunu onayladı.'"
+        },
+        {
+          "tag": "policy_changes",
+          "confidence": 0.6,
+          "evidence": "The news involves an official approval from a national regulatory body (SPK), representing a formal change in the company's financial structure."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-25T22:42:50+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    },
+    {
+      "id": "2586261-20250625",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/galeri-fenerbahcede-fredden-transfer-karari-gelen-teklife-tokat-gibi-cevap-2586261",
+      "title": "Fenerbahçe'li Fred, Atletico Mineiro'dan gelen teklifi reddetti",
+      "summary": "Fenerbahçe midfielder Fred has reportedly rejected a transfer inquiry from Brazilian club Atletico Mineiro. According to a report by Globo, Atletico Mineiro added Fred to their transfer list and made a preliminary approach, but the player gave a negative response. The report details that Fred intends to honor his contract with Fenerbahçe, which runs until June 30, 2027. In the previous season, Fred made 45 official appearances for Fenerbahçe, scoring 5 goals and providing 8 assists.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe",
+          "Atletico Mineiro"
+        ],
+        "players": [
+          "Fred"
+        ],
+        "amounts": [],
+        "dates": [
+          "30 Haziran 2027"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "transfers_rumors",
+          "confidence": 0.8,
+          "evidence": "The article reports on a transfer approach from another club: 'Globo'nun haberine göre Brezilya temsilcisi Atletico Mineiro, Fred'i transfer listesine aldı.'"
+        },
+        {
+          "tag": "transfer_rejected",
+          "confidence": 1.0,
+          "evidence": "The main point of the article is the player's rejection of the offer: 'Atletico Mineiro, yıldız futbolcu için bir yoklama yaptı ancak oyuncu olumsuz yanıt verdi.'"
+        },
+        {
+          "tag": "departures",
+          "confidence": 0.2,
+          "evidence": "The article is about a potential departure that was rejected, reinforcing the player's decision to stay."
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": null,
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "medium",
+      "language": "turkish"
+    },
+    {
+      "id": "2586256-20250625",
+      "original_url": "https://www.fanatik.com.tr/fenerbahce/fenerbahcenin-yildizina-hirsizlik-soku-sorusturma-baslatildi-2586256",
+      "title": "Fenerbahçe oyuncusu Bright Osayi-Samuel hırsızlık şikayetinde bulundu",
+      "summary": "Fenerbahçe player Bright Osayi-Samuel has filed a legal complaint for theft with the Istanbul Anadolu Cumhuriyet Başsavcılığı (Public Prosecutor's Office). Upon returning to his home in Üsküdar from a trip abroad, Osayi-Samuel discovered his watch was missing. He has officially accused his girlfriend of stealing the watch. The prosecutor's office has launched an investigation into the 'hırsızlık' (theft) allegation. The article also mentions that Osayi-Samuel, whose contract is ending, is preparing to leave the club.",
+      "key_entities": {
+        "teams": [
+          "Fenerbahçe"
+        ],
+        "players": [
+          "Bright Osayi-Samuel"
+        ],
+        "amounts": [],
+        "dates": [
+          "25 Haziran 2025"
+        ]
+      },
+      "categories": [
+        {
+          "tag": "off_field_scandals",
+          "confidence": 1.0,
+          "evidence": "The article is about a player filing a police report for theft, a legal issue outside of sports: 'Fenerbahçe'nin yıldızı Bright Osayi-Samuel, İstanbul Anadolu Cumhuriyet Başsavcılığı'na hırsızlık iddiasıyla başvuruda bulundu.'"
+        },
+        {
+          "tag": "departures",
+          "confidence": 0.8,
+          "evidence": "The article states the player is expected to leave the club: 'Fenerbahçe ile sözleşmesi sona ermek üzere olan ve takımdan ayrılmaya hazırlanan Bright Osayi-Samuel...'"
+        }
+      ],
+      "source": "www.fanatik.com.tr",
+      "published_date": "2025-06-25T21:02:08+03:00",
+      "keywords_matched": [
+        "fenerbahce",
+        "mourinho"
+      ],
+      "content_quality": "high",
+      "language": "turkish"
+    }
+  ]
+}
+```
