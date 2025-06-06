@@ -76,13 +76,11 @@ def configure_app(name, config_name=None):
         "temperature": float(os.getenv("LLM_TEMPERATURE", 0.2)),
         "timeout": int(os.getenv("LLM_TIMEOUT", 120)),
         "cache_seed": None # Or an integer for reproducible caching, None to disable caching based on seed
-    }
-
-    # Default keywords and URLs for the orchestrator if not provided in the request
-    app.config['DEFAULT_KEYWORDS'] = json.loads(os.getenv('DEFAULT_KEYWORDS', '["Fenerbahçe", "Galatasaray", "Beşiktaş", "Trabzonspor", "football", "transfer"]'))
-    app.config['DEFAULT_SCRAPE_URLS'] = json.loads(os.getenv('DEFAULT_SCRAPE_URLS', '["https://www.fanatik.com.tr/son-dakika-haberleri", "https://www.hurriyet.com.tr/spor/"]'))
-    app.config['AGGREGATOR_SOURCES'] = json.loads(os.getenv('AGGREGATOR_SOURCES', '["newsapi", "gnews"]'))
-    app.config['AGGREGATOR_LIMIT_PER_SOURCE'] = int(os.getenv('AGGREGATOR_LIMIT_PER_SOURCE', 10))
+    }    # News aggregator configuration
+    app.config['NEWS_SOURCES'] = json.loads(os.getenv('NEWS_SOURCES', '["newsapi", "gnews"]'))
+    app.config['NEWS_LANGUAGES'] = json.loads(os.getenv('NEWS_LANGUAGES', '["en", "tr"]'))
+    app.config['TEAM_IDS'] = json.loads(os.getenv('TEAM_IDS', '[8650]'))  # Fenerbahçe default
+    app.config['NEWS_DOMAINS'] = json.loads(os.getenv('NEWS_DOMAINS', '[]'))
 
     # Create cache directory
     os.makedirs(app.config['CACHE_DIR'], exist_ok=True)

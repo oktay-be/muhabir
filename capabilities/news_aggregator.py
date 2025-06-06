@@ -52,7 +52,7 @@ class NewsAggregator:
                  languages: Optional[List[str]] = None,
                  domains: Optional[List[str]] = None,
                  max_results: Optional[int] = None,
-                 time_range: Optional[str] = None,
+                 time_range: Optional[str] = None, # Expects a string like "last_week"
                  custom_start_date: Optional[str] = None,
                  custom_end_date: Optional[str] = None) -> None:
         """Configure the news aggregator"""
@@ -72,7 +72,18 @@ class NewsAggregator:
             self.max_results = max_results
             
         if time_range is not None:
-            self.time_range = time_range
+            try:
+                # Convert the incoming string value to the TimeRangeEnum member
+                self.time_range = TimeRangeEnum(time_range) 
+                logger.info(f"NewsAggregator: self.time_range set to enum member: {self.time_range} from string '{time_range}'")
+            except ValueError:
+                # If the string is not a valid value for TimeRangeEnum, log a warning
+                # and keep the existing self.time_range.
+                logger.warning(
+                    f"Invalid time_range string '{time_range}' received in configure. "
+                    f"Valid values are: {[e.value for e in TimeRangeEnum]}. " # Assumes TimeRangeEnum is imported
+                    f"Keeping existing time_range: {self.time_range}"
+                )
             
         if custom_start_date is not None:
             self.custom_start_date = custom_start_date
@@ -80,7 +91,8 @@ class NewsAggregator:
         if custom_end_date is not None:
             self.custom_end_date = custom_end_date
         
-        logger.info(f"Configured news aggregator. Team IDs: {self.team_ids}, Max Results: {self.max_results}") # Updated log
+        logger.info(f"NewsAggregator.configure: Values AFTER update: self.max_results={self.max_results}, self.time_range='{self.time_range}' (type: {type(self.time_range)})")
+        logger.info(f"Configured news aggregator. Team IDs: {self.team_ids}, Max Results: {self.max_results}, Time Range: '{self.time_range}', Custom Start: {self.custom_start_date}, Custom End: {self.custom_end_date}") # Updated log
     
     def update_keywords(self, keywords: List[str]) -> None:
         """Update keywords for the current news fetching operation."""
@@ -98,6 +110,7 @@ class NewsAggregator:
 
     def get_date_range(self) -> Dict[str, str]:
         """Get date range based on the time range setting"""
+        logger.info(f"NewsAggregator.get_date_range: Evaluating with self.time_range='{self.time_range}' (type: {type(self.time_range)}).")
         now = datetime.now()
         
         if self.time_range == TimeRangeEnum.CUSTOM and self.custom_start_date and self.custom_end_date:
@@ -558,93 +571,96 @@ class NewsAggregator:
             query (List[str]): List of keywords to search for.
             sources (Optional[List[str]]): List of sources to fetch from (e.g., ['newsapi', 'gnews']). 
                                          If None, uses all available/configured sources.
-            limit (Optional[int]): If provided, this will override `self.max_results` (set via `configure()`) 
-                                   for the duration of this method call.
+            limit (Optional[int]): If provided, this will temporarily override `self.max_results` (set via `configure()`
+                                   for the API calls made *within this method execution*.
         Returns:
             List[str]: A list of absolute file paths to the saved articles.
         """
-        logger.info(f"Session [{session_id}]: Starting news aggregation. Query: {query}, Sources: {sources}, Configured Max Results: {self.max_results}, Call-specific Limit: {limit}")
+        logger.info(f"Session [{session_id}]: Starting news aggregation. Query: {query}, Sources: {sources}, Configured Max Results (at start of call): {self.max_results}, Call-specific Limit: {limit}")
         self.update_keywords(query) # Set the keywords for this run
 
-        # Determine the actual max_results to use for API calls within this method execution.
-        # Priority: 1. call-specific `limit`, 2. `self.max_results` (which should have been set by `configure`).
         original_instance_max_results = self.max_results 
-        effective_max_results = original_instance_max_results
-
-        if limit is not None:
-            effective_max_results = limit
-            self.max_results = effective_max_results # Temporarily set for fetch_from_source calls
-            logger.info(f"Session [{session_id}]: Call-specific limit ({limit}) provided. Using {effective_max_results} as max results for this fetch operation, overriding instance default ({original_instance_max_results}).")
-        else:
-            logger.info(f"Session [{session_id}]: Using configured max_results: {self.max_results} for this fetch operation.")
-
-
-        session_raw_articles_path = os.path.join(base_workspace_path, session_id, "raw_articles")
-        os.makedirs(session_raw_articles_path, exist_ok=True)
-
-        target_sources = sources or self.get_available_sources()
         
-        fetch_tasks = []
-        for source_name in target_sources:
-            # fetch_from_source will use the current self.max_results value
-            fetch_tasks.append(self.fetch_from_source(source_name)) 
-            logger.debug(f"Session [{session_id}]: Added task for source: {source_name} with query: {query} and effective max_results: {self.max_results}")
+        try:
+            if limit is not None:
+                # Temporarily override self.max_results for this specific call's fetch operations
+                self.max_results = limit 
+                logger.info(f"Session [{session_id}]: Call-specific limit ({limit}) provided. Temporarily setting instance max_results to {self.max_results} for this fetch, overriding original instance default ({original_instance_max_results}).")
+            else:
+                # No limit provided for the call, use the already configured self.max_results
+                logger.info(f"Session [{session_id}]: Using configured instance max_results: {self.max_results} for this fetch operation.")
 
-        all_articles_lists = await asyncio.gather(*fetch_tasks, return_exceptions=True)
-        
-        processed_urls = set() 
-        articles_saved_count = 0
-        saved_article_filepaths = [] # To store paths of saved articles
+            session_raw_articles_path = os.path.join(base_workspace_path, session_id, "raw_articles")
+            os.makedirs(session_raw_articles_path, exist_ok=True)
 
-        for i, result_list in enumerate(all_articles_lists):
-            source_name = target_sources[i]
-            if isinstance(result_list, Exception):
-                logger.error(f"Session [{session_id}]: Error fetching news from {source_name} - {result_list}", exc_info=result_list)
-                continue
+            target_sources = sources or self.get_available_sources()
             
-            if not result_list:
-                logger.info(f"Session [{session_id}]: No articles found from {source_name}.")
-                continue
+            fetch_tasks = []
+            for source_name in target_sources:
+                # fetch_from_source will use the current self.max_results value
+                fetch_tasks.append(self.fetch_from_source(source_name)) 
+                logger.debug(f"Session [{session_id}]: Added task for source: {source_name} with query: {query} and effective max_results for API call: {self.max_results}")
 
-            logger.info(f"Session [{session_id}]: Received {len(result_list)} articles from {source_name}.")
-            for article in result_list:
-                article_url = article.get("url")
-                if not article_url or article_url in processed_urls:
-                    logger.debug(f"Session [{session_id}]: Skipping duplicate or invalid URL: {article_url}")
+            all_articles_lists = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+            
+            processed_urls = set() 
+            articles_saved_count = 0
+            saved_article_filepaths = [] # To store paths of saved articles
+
+            for i, result_list in enumerate(all_articles_lists):
+                source_name = target_sources[i]
+                if isinstance(result_list, Exception):
+                    logger.error(f"Session [{session_id}]: Error fetching news from {source_name} - {result_list}", exc_info=result_list)
                     continue
                 
-                processed_urls.add(article_url)
-                
-                # Sanitize title for filename
-                title_for_filename = article.get("title", "untitled_article")
-                # Keep only alphanumeric, spaces, and common punc, then replace spaces/punc with underscores
-                sane_title = "".join(c if c.isalnum() or c.isspace() or c in ['-', '_'] else '' for c in title_for_filename)
-                sane_title = "_".join(sane_title.split()) # Replace spaces with underscores
-                sane_title = secure_filename(sane_title[:80]) # Limit length and further sanitize
+                if not result_list:
+                    logger.info(f"Session [{session_id}]: No articles found from {source_name}.")
+                    continue
 
-                # Create a unique filename
-                article_source_name = article.get("source", source_name).replace(" ", "_").lower()
-                filename_base = f"{article_source_name}_{sane_title}"
-                
-                # Ensure filename uniqueness by appending a short hash of the URL if needed, or a counter
-                # For simplicity, using a small part of the URL hash
-                url_hash_suffix = hashlib.md5(article_url.encode()).hexdigest()[:6]
-                filename = f"{filename_base}_{url_hash_suffix}.json"
-                filepath = os.path.join(session_raw_articles_path, filename)
-                
-                try:
-                    with open(filepath, 'w', encoding='utf-8') as f:
-                        json.dump(article, f, ensure_ascii=False, indent=2)
-                    articles_saved_count += 1
-                    saved_article_filepaths.append(filepath) # Add path to list
-                    logger.debug(f"Session [{session_id}]: Saved article to {filepath}")
-                except Exception as e:
-                    logger.error(f"Session [{session_id}]: Error saving article {filename} - {e}", exc_info=True)
+                logger.info(f"Session [{session_id}]: Received {len(result_list)} articles from {source_name}.")
+                for article in result_list:
+                    article_url = article.get("url")
+                    if not article_url or article_url in processed_urls:
+                        logger.debug(f"Session [{session_id}]: Skipping duplicate or invalid URL: {article_url}")
+                        continue
                     
-        # Restore original self.max_results if it was temporarily changed by a call-specific limit
-        if limit is not None:
-            self.max_results = original_instance_max_results
-            logger.debug(f"Session [{session_id}]: Restored instance max_results to {self.max_results}.")
-        
-        logger.info(f"Session [{session_id}]: News aggregation complete. Saved {articles_saved_count} articles to {session_raw_articles_path}.")
-        return saved_article_filepaths
+                    processed_urls.add(article_url)
+                    
+                    # Sanitize title for filename
+                    title_for_filename = article.get("title", "untitled_article")
+                    # Keep only alphanumeric, spaces, and common punc, then replace spaces/punc with underscores
+                    sane_title = "".join(c if c.isalnum() or c.isspace() or c in ['-', '_'] else '' for c in title_for_filename)
+                    sane_title = "_".join(sane_title.split()) # Replace spaces with underscores
+                    sane_title = secure_filename(sane_title[:80]) # Limit length and further sanitize
+
+                    # Create a unique filename
+                    article_source_name = article.get("source", source_name).replace(" ", "_").lower()
+                    filename_base = f"{article_source_name}_{sane_title}"
+                    
+                    # Ensure filename uniqueness by appending a short hash of the URL if needed, or a counter
+                    # For simplicity, using a small part of the URL hash
+                    url_hash_suffix = hashlib.md5(article_url.encode()).hexdigest()[:6]
+                    filename = f"{filename_base}_{url_hash_suffix}.json"
+                    filepath = os.path.join(session_raw_articles_path, filename)
+                    
+                    try:
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            json.dump(article, f, ensure_ascii=False, indent=2)
+                        articles_saved_count += 1
+                        saved_article_filepaths.append(filepath) # Add path to list
+                        logger.debug(f"Session [{session_id}]: Saved article to {filepath}")
+                    except Exception as e:
+                        logger.error(f"Session [{session_id}]: Error saving article {filename} - {e}", exc_info=True)
+                        
+            if articles_saved_count > 0: # Log actual saved count
+                 logger.info(f"Session [{session_id}]: Aggregation complete. Processed articles from sources. Saved {articles_saved_count} new articles to {session_raw_articles_path}.")
+            else:
+                 logger.info(f"Session [{session_id}]: Aggregation complete. Processed articles from sources. No new articles were saved.")
+            return saved_article_filepaths
+        finally:
+            # Restore self.max_results to its original value if it was temporarily changed by the limit parameter
+            if limit is not None and self.max_results != original_instance_max_results:
+                self.max_results = original_instance_max_results
+                logger.info(f"Session [{session_id}]: Restored instance max_results to {self.max_results} after fetch operation with temporary limit.")
+            elif limit is None:
+                 logger.info(f"Session [{session_id}]: Instance max_results ({self.max_results}) was not changed by this call (no limit provided).")

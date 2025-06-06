@@ -57,6 +57,7 @@ async def main():
     # but we can keep it for now or decide to remove it from the API contract later.
     # For this client, let's set it to False, as we are providing specific inputs.
     use_server_defaults = False
+    client_time_range_direct = "last_week" # Client wants to see news from the last week
 
     async with aiohttp.ClientSession() as session:
         # Prepare payload for the analysis job
@@ -64,8 +65,13 @@ async def main():
         if client_keywords_direct: # Use direct values
             analysis_payload["client_keywords"] = client_keywords_direct
         if client_scrape_urls_direct: # Use direct values
-            analysis_payload["client_scrape_urls"] = client_scrape_urls_direct # Corrected variable name
+            analysis_payload["client_scrape_urls"] = client_scrape_urls_direct
         analysis_payload["use_default_urls_keywords"] = use_server_defaults
+        if client_time_range_direct: # Add time_range if specified
+            analysis_payload["time_range"] = client_time_range_direct
+        # Custom dates are not specified in this example, so they won't be sent.
+        # analysis_payload["custom_start_date"] = "YYYY-MM-DD" 
+        # analysis_payload["custom_end_date"] = "YYYY-MM-DD"
 
         logging.info(f"Preparing to call {ANALYSIS_START_JOB_ENDPOINT} with payload: {analysis_payload}")
         

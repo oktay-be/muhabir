@@ -8,7 +8,7 @@ import asyncio # Added for Quart compatibility if needed, and for running sync i
 import os # Add this import
 import json # Add this import
 from datetime import datetime # Add this import
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, url_for
 from werkzeug.utils import secure_filename # Add this import
 from api.models import (
     NewsRequest, NewsResponse, ErrorResponse, TrendingRequest, TrendingTopic, NewsArticle, 
@@ -30,37 +30,22 @@ logger = logging.getLogger(__name__)
 api_blueprint = Blueprint('api', __name__)
 
 # Function to run the orchestrator pipeline in a separate thread
-def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, search_params_keywords, search_params_urls, client_keywords, client_scrape_urls, use_default_urls_keywords_from_client, client_time_range, client_custom_start_date, client_custom_end_date, news_aggregator_config_from_search_params):
+def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, aggregated_config):
+    # The AnalysisOrchestrator is instantiated here, within the thread
     orchestrator = AnalysisOrchestrator(
         session_id=session_id,
         base_workspace_path=base_workspace_path,
-        config=app_config
+        config=app_config # Pass the main app config
     )
     try:
-        asyncio.run(orchestrator.run_full_pipeline(
-            initial_keywords_from_search_params=search_params_keywords, # Pass as initial_keywords_from_search_params
-            initial_scrape_urls_from_search_params=search_params_urls,   # Pass as initial_scrape_urls_from_search_params
-            client_provided_keywords=client_keywords,                     # Pass as client_provided_keywords
-            client_provided_scrape_urls=client_scrape_urls,           # Pass as client_provided_scrape_urls
-            # The use_default_urls_keywords parameter for the orchestrator will be determined by its own logic
-            # based on whether any keywords/URLs are present after combining all sources.
-            # The client's 'use_default_urls_keywords' might be used to influence if server defaults are considered AT ALL
-            # if all other inputs are empty. For now, let's pass it and let orchestrator decide.
-            # We might simplify/remove this from the orchestrator's direct params later if its logic becomes fully self-contained.
-            use_config_defaults_as_fallback=use_default_urls_keywords_from_client,
-            client_time_range=client_time_range,
-            client_custom_start_date=client_custom_start_date,
-            client_custom_end_date=client_custom_end_date,
-            news_aggregator_config_from_search_params=news_aggregator_config_from_search_params
-        ))
+        # The orchestrator's run_full_pipeline is an async method
+        asyncio.run(orchestrator.run_full_pipeline(aggregated_config))
     except Exception as e:
         logger.error(f"Exception in orchestrator thread for session {session_id}: {e}", exc_info=True)
-        # Optionally, update a global status or a specific file to indicate failure from the thread
-        # For now, the orchestrator itself handles creating a _JOB_FAILED marker.
-
+        # Orchestrator handles creating _JOB_FAILED marker.
 
 @api_blueprint.route('/analysis/start_job', methods=['POST'])
-def start_analysis_job(): # Changed to synchronous
+def start_analysis_job():
     """
     Starts a new analysis job.
     Creates a unique session and triggers the analysis pipeline in a background thread.
@@ -68,86 +53,130 @@ def start_analysis_job(): # Changed to synchronous
     
     POST Body (optional):
     {
-        "client_keywords": ["Fenerbahçe", "transfer"], // Renamed from initial_keywords for clarity
-        "client_scrape_urls": ["https://www.fanatik.com.tr/fenerbahce"], // Renamed
-        "use_default_urls_keywords": true 
+        "client_keywords": ["Fenerbahçe", "transfer"],
+        "client_scrape_urls": ["https://www.fanatik.com.tr/fenerbahce"],
+        "use_default_urls_keywords": true,
+        "time_range": "last_week", // e.g., "last_24_hours", "last_week"
+        "custom_start_date": "YYYY-MM-DD", // Optional
+        "custom_end_date": "YYYY-MM-DD"   // Optional
     }
     """
     try:
-        # Generate a timestamp-based session ID
-        timestamp_session_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f") # YYYYMMDD_HHMMSS_microseconds
-        session_id = timestamp_session_id # Use this as the session_id
-
+        session_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         base_workspace_path = current_app.config.get('WORKSPACE_DIR', os.path.join(current_app.root_path, 'workspace'))
-        
         os.makedirs(base_workspace_path, exist_ok=True)
 
-        request_data = request.get_json(silent=True) or {}
-        client_keywords_from_req = request_data.get("client_keywords") 
-        client_scrape_urls_from_req = request_data.get("client_scrape_urls") 
-        # This flag from the client indicates if it's okay for the server to use its own defaults
-        # if NO keywords/URLs are provided by client AND search_parameters.json is also empty.
-        # The orchestrator will make the final decision on applying defaults.
-        allow_server_defaults_if_all_empty = request_data.get("use_default_urls_keywords", True)
-
-        # Load initial keywords and URLs from search_parameters.json
-        search_params_keywords_loaded = []
-        search_params_urls_loaded = []
+        request_data_raw = request.get_json(silent=True) or {}
+        
+        # Validate incoming data using Pydantic model if it makes sense here
+        # For now, directly extracting with .get for flexibility
+        client_config_payload = {
+            'keywords': request_data_raw.get("client_keywords"),
+            'scrape_urls': request_data_raw.get("client_scrape_urls"),
+            'use_default_urls_keywords': request_data_raw.get("use_default_urls_keywords", True),
+            'time_range': request_data_raw.get("time_range"), # Expects a string like "last_week"
+            'custom_start_date': request_data_raw.get("custom_start_date"),
+            'custom_end_date': request_data_raw.get("custom_end_date")
+        }
+        logger.info(f"Received client_config_payload: {client_config_payload}")        # Load search_parameters.json
+        search_params_data = {}
         search_params_path = current_app.config.get('SEARCH_PARAMETERS_PATH', os.path.join(current_app.root_path, 'search_parameters.json'))
         if os.path.exists(search_params_path):
             try:
                 with open(search_params_path, 'r', encoding='utf-8') as f:
-                    params_data = json.load(f)
-                search_params_keywords_loaded = params_data.get("keywords", [])
-                search_params_urls_loaded = params_data.get("scrape_urls", [])
-                logger.info(f"Loaded {len(search_params_keywords_loaded)} keywords and {len(search_params_urls_loaded)} URLs from {search_params_path}")
+                    search_params_data = json.load(f)
+                logger.info(f"Loaded search_parameters.json: {search_params_data}")
             except Exception as e:
-                logger.error(f"Error loading search_parameters.json: {e}")
+                logger.error(f"Error loading or parsing search_parameters.json: {e}")
         else:
-            logger.warning(f"search_parameters.json not found at {search_params_path}. Proceeding without them.")
+            logger.warning(f"search_parameters.json not found at {search_params_path}")
 
-
-        app_config = current_app.config.copy() # Pass a copy of the config
-
-        # Start the orchestrator pipeline in a new thread
-        thread = threading.Thread(
-            target=run_orchestrator_in_thread,
-            args=(
-                app_config, 
-                session_id, 
-                base_workspace_path,
-                search_params_keywords_loaded, # Pass keywords from search_parameters.json
-                search_params_urls_loaded,     # Pass URLs from search_parameters.json
-                client_keywords_from_req,        # Pass keywords from client request
-                client_scrape_urls_from_req,     # Pass URLs from client request
-                allow_server_defaults_if_all_empty, # Pass the client's preference on using server defaults
-                # Added client-provided date parameters
-                request_data.get("time_range"),
-                request_data.get("custom_start_date"),
-                request_data.get("custom_end_date"),
-                # news_aggregator_config_from_search_params will be determined by its own logic in the orchestrator
-                # based on the presence of keywords/URLs and the client's fallback settings.
-                # For now, let's pass an empty dict and let orchestrator decide.
-                {}
-            )
-        )
-        thread.daemon = True # Allow main program to exit even if threads are running
-        thread.start()
+        # Aggregate parameters according to priority rules:
+        # 1. Client keywords extend search_parameters.json keywords
+        # 2. Client URLs extend search_parameters.json URLs  
+        # 3. Client time info overwrites search_parameters.json time info
+        # 4. Max results comes only from search_parameters.json
+        aggregated_config = {}
         
-        logger.info(f"Started analysis job in background thread with session_id: {session_id}")
-        return jsonify({
-            "message": "Analysis job successfully started in the background.",
+        # Keywords: extend (client + search_parameters)
+        search_keywords = search_params_data.get('keywords', [])
+        client_keywords = client_config_payload.get('keywords') or []
+        aggregated_config['keywords'] = search_keywords + client_keywords
+        
+        # URLs: extend (client + search_parameters)
+        search_urls = search_params_data.get('scrape_urls', [])
+        client_urls = client_config_payload.get('scrape_urls') or []
+        aggregated_config['scrape_urls'] = search_urls + client_urls
+        
+        # Time info: client overwrites search_parameters
+        if client_config_payload.get('time_range'):
+            aggregated_config['time_range'] = client_config_payload['time_range']
+        else:
+            aggregated_config['time_range'] = search_params_data.get('default_time_range', 'last_24_hours')
+            
+        # Custom dates: client overwrites
+        if client_config_payload.get('custom_start_date'):
+            aggregated_config['custom_start_date'] = client_config_payload['custom_start_date']
+        if client_config_payload.get('custom_end_date'):
+            aggregated_config['custom_end_date'] = client_config_payload['custom_end_date']
+            
+        # Max results: only from search_parameters.json (mandatory)
+        aggregated_config['max_results'] = search_params_data.get('max_results_news', 10)  # Default to 10 if not in search_parameters
+        
+        # News sources: from search_parameters.json
+        aggregated_config['news_sources'] = search_params_data.get('news_sources', ['newsapi'])
+        
+        # Use default URLs/keywords flag
+        aggregated_config['use_default_urls_keywords'] = client_config_payload.get('use_default_urls_keywords', True)
+        
+        logger.info(f"Aggregated configuration: {aggregated_config}")
+
+        app_config_copy = current_app.config.copy()
+
+        # Store job initial info
+        if not hasattr(current_app, 'jobs'):
+            current_app.jobs = {}
+        
+        status_endpoint = url_for('api.get_analysis_job_status', session_id=session_id, _external=True)
+        results_endpoint = url_for('api.get_job_results', session_id=session_id, _external=True)
+
+        current_app.jobs[session_id] = {
+            "status": "pending", 
             "session_id": session_id,
-            "status_endpoint": f"/api/analysis/job_status/{session_id}"
-        }), 202 # Accepted
+            "start_time": datetime.now().isoformat(),
+            "status_endpoint": status_endpoint,
+            "results_endpoint": results_endpoint,
+            "client_config_received": client_config_payload,
+            "search_params_loaded": search_params_data,
+            "aggregated_config": aggregated_config
+        }
+
+        # Start the background task using threading
+        thread = threading.Thread(target=run_orchestrator_in_thread, args=(
+            app_config_copy, 
+            session_id, 
+            base_workspace_path, 
+            aggregated_config
+        ))
+        thread.start()
+
+        logger.info(f"Job {session_id} started. Status endpoint: {status_endpoint}")
+        return jsonify({
+            "message": "Analysis job initiated successfully",
+            "session_id": session_id,
+            "status_endpoint": status_endpoint,
+            "results_endpoint": results_endpoint
+        }), 202
 
     except Exception as e:
         logger.error(f"Error starting analysis job: {str(e)}", exc_info=True)
+        # Ensure ErrorResponse is serializable if it's a Pydantic model by calling .dict()
+        # Assuming ErrorResponse is already defined and imported
         return jsonify(ErrorResponse(
             error="Job Start Error", 
             code=500, 
             details=str(e)
-        ).dict()), 500
+        ).model_dump()), 500 # Use .model_dump() for Pydantic v2+ or .dict() for v1
 
 @api_blueprint.route('/analysis/job_status/<session_id>', methods=['GET'])
 def get_analysis_job_status(session_id: str):
@@ -251,6 +280,71 @@ def get_analysis_job_status(session_id: str):
             details=str(e)
         ).dict()), 500
 
+@api_blueprint.route('/analysis/job_results/<session_id>', methods=['GET'])
+def get_job_results(session_id: str):
+    """
+    Gets the results of a completed analysis job.
+    (Placeholder implementation)
+    """
+    logger.info(f"Attempting to retrieve results for session_id: {session_id}")
+    base_workspace_path = current_app.config.get('WORKSPACE_DIR', os.path.join(current_app.root_path, 'workspace'))
+    session_path = os.path.join(base_workspace_path, secure_filename(session_id))
+    # Example: Define a path where results might be stored, e.g., a summary file
+    summary_file_path = os.path.join(session_path, "summary", "final_summary.txt") # Adjust as per your orchestrator
+
+    if not os.path.exists(session_path):
+        return jsonify(ErrorResponse(
+            error="Not Found", 
+            code=404, 
+            details=f"Session ID {session_id} not found."
+        ).model_dump()), 404 # Use .model_dump() for Pydantic v2+
+
+    # Check if the specific result file exists (e.g., summary)
+    if os.path.exists(summary_file_path):
+        try:
+            # Example: return content of a summary file
+            with open(summary_file_path, 'r', encoding='utf-8') as f:
+                summary_content = f.read()
+            return jsonify({
+                "session_id": session_id,
+                "status": "COMPLETED", # Assuming if results file exists, job is completed
+                "results": {
+                    "summary": summary_content
+                    # You can add more structured results here
+                }
+            }), 200
+        except Exception as e:
+            logger.error(f"Error reading results file {summary_file_path} for session {session_id}: {e}", exc_info=True)
+            return jsonify(ErrorResponse(
+                error="Result Retrieval Error", 
+                code=500, 
+                details=f"Could not read results for session {session_id}."
+            ).model_dump()), 500
+    else:
+        # If the specific result file doesn't exist, check the job's overall status
+        job_info = current_app.jobs.get(session_id)
+        if job_info:
+            job_status = job_info.get("status", "UNKNOWN")
+            if job_status in ["pending", "RUNNING", "INITIALIZED"]: # Check against actual statuses used
+                return jsonify({
+                    "session_id": session_id,
+                    "status": job_status,
+                    "message": "Job is still processing or has not yet produced results. Results are not yet available."
+                }), 202 # Accepted, but not ready
+            else: # e.g., FAILED, or COMPLETED but specific file missing
+                return jsonify(ErrorResponse(
+                    error="Results Not Found", 
+                    code=404, 
+                    details=f"Results for session ID {session_id} are not available. Job status: {job_status}."
+                ).model_dump()), 404
+        else:
+            # This case might be redundant if the initial session_path check handles it,
+            # but good for robustness if current_app.jobs might not have the session for some reason.
+            return jsonify(ErrorResponse(
+                error="Not Found", 
+                code=404, 
+                details=f"Session ID {session_id} not found, cannot determine job status for results."
+            ).model_dump()), 404
 
 @api_blueprint.route('/docs')
 def api_docs():
