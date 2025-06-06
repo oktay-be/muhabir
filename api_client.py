@@ -50,29 +50,21 @@ async def start_analysis_job(session, url, payload):
 
 async def main():
     """Main function to load parameters, call the analysis job endpoint, and print results."""
-    try:
-        with open(PARAMETERS_FILE, 'r', encoding='utf-8') as f:
-            params = json.load(f)
-    except FileNotFoundError:
-        logging.error(f"Error: {PARAMETERS_FILE} not found.")
-        return
-    except json.JSONDecodeError:
-        logging.error(f"Error: Could not decode JSON from {PARAMETERS_FILE}.")
-        return
-
-    # Parameters from search_parameters.json will be used as client_keywords and client_scrape_urls
-    client_keywords_from_params = params.get("keywords", [])
-    client_scrape_urls_from_params = params.get("scrape_urls", [])
-    # You can also define whether to use default keywords/URLs from the server if these are empty
-    use_server_defaults = params.get("use_default_urls_keywords", True) 
+    # Define client-specific keywords and URLs directly
+    client_keywords_direct = ["Galatasaray"]
+    client_scrape_urls_direct = ["https://www.skorgazetesi.com/"]
+    # This parameter's relevance is reduced with the new orchestrator logic,
+    # but we can keep it for now or decide to remove it from the API contract later.
+    # For this client, let's set it to False, as we are providing specific inputs.
+    use_server_defaults = False
 
     async with aiohttp.ClientSession() as session:
         # Prepare payload for the analysis job
         analysis_payload = {}
-        if client_keywords_from_params:
-            analysis_payload["client_keywords"] = client_keywords_from_params
-        if client_scrape_urls_from_params:
-            analysis_payload["client_scrape_urls"] = client_scrape_urls_from_params # Corrected variable name
+        if client_keywords_direct: # Use direct values
+            analysis_payload["client_keywords"] = client_keywords_direct
+        if client_scrape_urls_direct: # Use direct values
+            analysis_payload["client_scrape_urls"] = client_scrape_urls_direct # Corrected variable name
         analysis_payload["use_default_urls_keywords"] = use_server_defaults
 
         logging.info(f"Preparing to call {ANALYSIS_START_JOB_ENDPOINT} with payload: {analysis_payload}")

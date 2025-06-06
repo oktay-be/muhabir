@@ -53,6 +53,32 @@ class TrendingTopic(BaseModel):
     related_keywords: List[str] = Field(default_factory=list)
 
 
+class AnalysisRequest(BaseModel):
+    """Request model for the main analysis endpoint"""
+    keywords: List[str] = Field(default_factory=list, description="Keywords for news aggregation and analysis.")
+    scrape_urls: List[str] = Field(default_factory=list, description="Specific URLs to scrape content from.")
+    # client_config: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Client-specific configurations, e.g., for NewsAggregator.")
+    use_config_defaults_as_fallback: bool = Field(default=True, description="Whether to use defaults from search_parameters.json if specific inputs are not provided by client.")
+    
+    # Date range parameters for NewsAggregator, with highest priority
+    time_range: Optional[TimeRangeEnum] = Field(default=None, description="Time range for news articles (e.g., last_24_hours, last_week). Overrides search_parameters.json and NewsAggregator defaults.")
+    custom_start_date: Optional[str] = Field(default=None, description="Custom start date in ISO format (YYYY-MM-DDTHH:mm:ss). Used if time_range is 'custom'.")
+    custom_end_date: Optional[str] = Field(default=None, description="Custom end date in ISO format (YYYY-MM-DDTHH:mm:ss). Used if time_range is 'custom'.")
+
+    @validator('custom_start_date', 'custom_end_date', pre=True)
+    def validate_analysis_date_format(cls, v):
+        if v:
+            try:
+                # Attempt to parse to validate, then return original string if valid,
+                # or reformat to ensure consistency if needed.
+                # For now, just ensuring it's a valid ISO format string.
+                datetime.fromisoformat(v.replace("Z", "+00:00")) # Handles 'Z' for UTC
+                return v 
+            except (ValueError, TypeError):
+                raise ValueError("Date must be in ISO format (e.g., YYYY-MM-DDTHH:mm:ss or YYYY-MM-DDTHH:mm:ssZ)")
+        return v
+
+
 class NewsRequest(BaseModel):
     """Request model for news search"""
     keywords: List[str] = Field(default_factory=list)

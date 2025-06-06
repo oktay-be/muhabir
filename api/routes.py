@@ -11,8 +11,8 @@ from datetime import datetime # Add this import
 from flask import Blueprint, jsonify, request, current_app
 from werkzeug.utils import secure_filename # Add this import
 from api.models import (
-    NewsRequest, NewsResponse, ErrorResponse, NewsArticle, TrendingTopic,
-    TrendingRequest, TrendingResponse, NewsSourceEnum # Removed SimpleNewsRequest
+    NewsRequest, NewsResponse, ErrorResponse, TrendingRequest, TrendingTopic, NewsArticle, 
+    TimeRangeEnum, NewsSourceEnum, AnalysisRequest # Added AnalysisRequest
 )
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.trends_analyzer import TrendsAnalyzer
@@ -30,32 +30,28 @@ logger = logging.getLogger(__name__)
 api_blueprint = Blueprint('api', __name__)
 
 # Function to run the orchestrator pipeline in a separate thread
-def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, initial_keywords, initial_scrape_urls, use_default_urls_keywords, client_keywords, client_scrape_urls):
+def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, search_params_keywords, search_params_urls, client_keywords, client_scrape_urls, use_default_urls_keywords_from_client, client_time_range, client_custom_start_date, client_custom_end_date, news_aggregator_config_from_search_params):
     orchestrator = AnalysisOrchestrator(
         session_id=session_id,
         base_workspace_path=base_workspace_path,
         config=app_config
     )
-    # Since orchestrator.run_full_pipeline is an async method, we need to run it in an event loop.
-    # Each thread needs its own event loop if we are using asyncio.run()
-    # However, if the Flask app is already running with an async framework like Quart or using app.run(debug=True) 
-    # which might use Werkzeug\'s auto-reloader with its own event loop management,
-    # directly calling asyncio.run() in a new thread can sometimes lead to "loop is already running" errors
-    # or other event loop conflicts.
-    # A common pattern for running an async function from a synchronous thread is:
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)
-    # loop.run_until_complete(orchestrator.run_full_pipeline(...))
-    # loop.close()
-    # For simplicity here, we'll use asyncio.run(), assuming it handles loop creation/closing correctly in a new thread.
-    # If issues arise, the more explicit loop management above might be needed.
     try:
         asyncio.run(orchestrator.run_full_pipeline(
-            initial_keywords=initial_keywords,
-            initial_scrape_urls=initial_scrape_urls,
-            use_default_urls_keywords=use_default_urls_keywords,
-            client_keywords=client_keywords,
-            client_scrape_urls=client_scrape_urls
+            initial_keywords_from_search_params=search_params_keywords, # Pass as initial_keywords_from_search_params
+            initial_scrape_urls_from_search_params=search_params_urls,   # Pass as initial_scrape_urls_from_search_params
+            client_provided_keywords=client_keywords,                     # Pass as client_provided_keywords
+            client_provided_scrape_urls=client_scrape_urls,           # Pass as client_provided_scrape_urls
+            # The use_default_urls_keywords parameter for the orchestrator will be determined by its own logic
+            # based on whether any keywords/URLs are present after combining all sources.
+            # The client's 'use_default_urls_keywords' might be used to influence if server defaults are considered AT ALL
+            # if all other inputs are empty. For now, let's pass it and let orchestrator decide.
+            # We might simplify/remove this from the orchestrator's direct params later if its logic becomes fully self-contained.
+            use_config_defaults_as_fallback=use_default_urls_keywords_from_client,
+            client_time_range=client_time_range,
+            client_custom_start_date=client_custom_start_date,
+            client_custom_end_date=client_custom_end_date,
+            news_aggregator_config_from_search_params=news_aggregator_config_from_search_params
         ))
     except Exception as e:
         logger.error(f"Exception in orchestrator thread for session {session_id}: {e}", exc_info=True)
@@ -87,21 +83,24 @@ def start_analysis_job(): # Changed to synchronous
         os.makedirs(base_workspace_path, exist_ok=True)
 
         request_data = request.get_json(silent=True) or {}
-        client_keywords = request_data.get("client_keywords") # Keywords from client
-        client_scrape_urls = request_data.get("client_scrape_urls") # URLs from client
-        use_default_urls_keywords = request_data.get("use_default_urls_keywords", True)
+        client_keywords_from_req = request_data.get("client_keywords") 
+        client_scrape_urls_from_req = request_data.get("client_scrape_urls") 
+        # This flag from the client indicates if it's okay for the server to use its own defaults
+        # if NO keywords/URLs are provided by client AND search_parameters.json is also empty.
+        # The orchestrator will make the final decision on applying defaults.
+        allow_server_defaults_if_all_empty = request_data.get("use_default_urls_keywords", True)
 
         # Load initial keywords and URLs from search_parameters.json
-        search_params_keywords = []
-        search_params_urls = []
+        search_params_keywords_loaded = []
+        search_params_urls_loaded = []
         search_params_path = current_app.config.get('SEARCH_PARAMETERS_PATH', os.path.join(current_app.root_path, 'search_parameters.json'))
         if os.path.exists(search_params_path):
             try:
                 with open(search_params_path, 'r', encoding='utf-8') as f:
                     params_data = json.load(f)
-                search_params_keywords = params_data.get("keywords", [])
-                search_params_urls = params_data.get("scrape_urls", [])
-                logger.info(f"Loaded {len(search_params_keywords)} keywords and {len(search_params_urls)} URLs from {search_params_path}")
+                search_params_keywords_loaded = params_data.get("keywords", [])
+                search_params_urls_loaded = params_data.get("scrape_urls", [])
+                logger.info(f"Loaded {len(search_params_keywords_loaded)} keywords and {len(search_params_urls_loaded)} URLs from {search_params_path}")
             except Exception as e:
                 logger.error(f"Error loading search_parameters.json: {e}")
         else:
@@ -117,11 +116,19 @@ def start_analysis_job(): # Changed to synchronous
                 app_config, 
                 session_id, 
                 base_workspace_path,
-                search_params_keywords, # Pass keywords from search_parameters.json
-                search_params_urls,     # Pass URLs from search_parameters.json
-                use_default_urls_keywords,
-                client_keywords,        # Pass keywords from client request
-                client_scrape_urls      # Pass URLs from client request
+                search_params_keywords_loaded, # Pass keywords from search_parameters.json
+                search_params_urls_loaded,     # Pass URLs from search_parameters.json
+                client_keywords_from_req,        # Pass keywords from client request
+                client_scrape_urls_from_req,     # Pass URLs from client request
+                allow_server_defaults_if_all_empty, # Pass the client's preference on using server defaults
+                # Added client-provided date parameters
+                request_data.get("time_range"),
+                request_data.get("custom_start_date"),
+                request_data.get("custom_end_date"),
+                # news_aggregator_config_from_search_params will be determined by its own logic in the orchestrator
+                # based on the presence of keywords/URLs and the client's fallback settings.
+                # For now, let's pass an empty dict and let orchestrator decide.
+                {}
             )
         )
         thread.daemon = True # Allow main program to exit even if threads are running

@@ -46,87 +46,31 @@ class TrendsAnalyzer:
         ])
         
         if not self.twitter_available:
-            logger.warning("Twitter API credentials not fully configured, using fallback trend data")
+            logger.warning("Twitter API credentials not fully configured, trend analysis will likely return no data.")
     
     def get_trending_topics(self, keywords: List[str], location: str = "Turkey", count: int = 10) -> List[TrendingTopic]:
-        """Get trending topics related to the specified keywords"""
+        """Get trending topics related to the specified keywords.
+        If keywords list is empty, it attempts to fetch general trends for the location.
+        Returns an empty list if Twitter API is unavailable or an error occurs.
+        """
         
-        # Try to use the Twitter API if available
-        if self.twitter_available:
-            try:
-                return self._get_twitter_trends(keywords, location, count)
-            except Exception as e:
-                logger.error(f"Error getting Twitter trends: {str(e)}")
-        
-        # Use fallback if Twitter API is unavailable or fails
-        return self._get_fallback_trends(keywords, count)
-    
-    def _get_twitter_trends(self, keywords: List[str], location: str = "Turkey", count: int = 10) -> List[TrendingTopic]:
-        """Get trending topics from Twitter/X API"""
-        
-        # This is a placeholder for actual Twitter API implementation
-        # In a real application, you would use the Twitter API to get trending topics
-        
-        # For now, return the fallback trends
-        logger.info("Using Twitter API to get trending topics (placeholder)")
-        return self._get_fallback_trends(keywords, count)
-    
-    def _get_fallback_trends(self, keywords: List[str], count: int = 10) -> List[TrendingTopic]:
-        """Get fallback trending topics when Twitter API is unavailable"""
-        logger.info(f"Using fallback trending topics for {', '.join(keywords)}")
-        
-        # Turkish football trending topics fallback data
-        # These would normally come from Twitter/X API
-        all_trends = [
-            {"name": "Fenerbahçe", "tweet_volume": 120000, "related": ["FB", "Sarı Kanaryalar", "Kadıköy"]},
-            {"name": "Galatasaray", "tweet_volume": 115000, "related": ["GS", "Cimbom", "Aslan"]},
-            {"name": "Beşiktaş", "tweet_volume": 100000, "related": ["BJK", "Kara Kartal"]},
-            {"name": "Süper Lig", "tweet_volume": 85000, "related": ["Türkiye Ligi", "TFF"]},
-            {"name": "Trabzonspor", "tweet_volume": 70000, "related": ["TS", "Karadeniz Fırtınası"]},
-            {"name": "Mourinho", "tweet_volume": 65000, "related": ["The Special One", "Jose"]},
-            {"name": "TFF", "tweet_volume": 60000, "related": ["Türkiye Futbol Federasyonu", "Hakemler"]},
-            {"name": "Türkiye Milli Takımı", "tweet_volume": 55000, "related": ["A Milli", "Ay-Yıldızlılar"]},
-            {"name": "Transfer", "tweet_volume": 52000, "related": ["Transfer sezonu", "Yeni transferler"]},
-            {"name": "UEFA", "tweet_volume": 48000, "related": ["Avrupa Kupaları", "Şampiyonlar Ligi"]},
-            {"name": "Avrupa Ligi", "tweet_volume": 45000, "related": ["UEFA Europa League", "Perşembe"]},
-            {"name": "Derbi", "tweet_volume": 42000, "related": ["Büyük maç", "Rekabet"]},
-            {"name": "Ali Koç", "tweet_volume": 40000, "related": ["Fenerbahçe Başkanı", "Başkan Koç"]},
-            {"name": "Şampiyonlar Ligi", "tweet_volume": 38000, "related": ["Champions League", "Devler Ligi"]},
-            {"name": "Fatih Terim", "tweet_volume": 36000, "related": ["İmparator", "Terim Hoca"]},
-            {"name": "Adana Demirspor", "tweet_volume": 35000, "related": ["Mavi Şimşekler"]},
-            {"name": "Sergen Yalçın", "tweet_volume": 30000, "related": ["Sergen Hoca"]},
-            {"name": "İstanbul Derbi", "tweet_volume": 28000, "related": ["Büyük Derbi"]},
-            {"name": "VAR", "tweet_volume": 25000, "related": ["Video Hakem", "Hakem kararı"]},
-            {"name": "Arda Güler", "tweet_volume": 22000, "related": ["Türk yıldız", "Real Madrid"]}
-        ]
-        
-        # Filter trends related to the provided keywords
-        filtered_trends = []
-        for trend in all_trends:
-            # Check if the trend name or related keywords match any of the provided keywords
-            if any(keyword.lower() in trend["name"].lower() for keyword in keywords) or \
-               any(any(keyword.lower() in related.lower() for related in trend.get("related", [])) for keyword in keywords):
-                filtered_trends.append(trend)
-        
-        # If we don't have enough filtered trends, add some from the general list
-        if len(filtered_trends) < count:
-            remaining = count - len(filtered_trends)
-            existing_names = {trend["name"] for trend in filtered_trends}
-            for trend in all_trends:
-                if trend["name"] not in existing_names:
-                    filtered_trends.append(trend)
-                    remaining -= 1
-                    if remaining <= 0:
-                        break
-        
-        # Convert to TrendingTopic objects
-        trending_topics = []
-        for trend in filtered_trends[:count]:
-            trending_topics.append(TrendingTopic(
-                name=trend["name"],
-                tweet_volume=trend.get("tweet_volume", 0),
-                relevance_score=1.0,
-                related_keywords=trend.get("related", [])
-            ))
-        
-        return trending_topics
+        if not self.twitter_available:
+            logger.info("Twitter API not available (credentials missing). Returning empty list for trends.")
+            return []
+
+        try:
+            # If a full Twitter client were integrated, this is where it would be called.
+            # For now, respecting the 'no fallback' and 'dummy keys mean no data' principles:
+            logger.info(f"Attempting to fetch Twitter trends for keywords: {keywords}, location: {location}, count: {count}. (Currently a placeholder - will return empty list as no real API call is made)")
+            # Placeholder: Simulate an API call attempt. 
+            # In a real scenario with dummy keys, the API library would likely raise an error,
+            # which would be caught by the except block below, or the call would return an empty/error response.
+            # To strictly adhere to "dummy keys mean no data" and "no fallbacks", we'll return empty.
+            # If there was a real API call here, it would be:
+            # actual_trends = self._call_actual_twitter_api(keywords, location, count)
+            # return actual_trends
+            return [] # Ensuring no data is returned as it's a placeholder and no fallback is allowed.
+
+        except Exception as e:
+            logger.error(f"Error during (placeholder) Twitter trends call: {str(e)}")
+            return [] # Return empty list on any error

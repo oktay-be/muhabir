@@ -41,68 +41,89 @@ class AnalysisOrchestrator:
     def _create_status_marker(self, marker_name: str, content: dict = None):
         """Creates a status marker file."""
         try:
-            with open(os.path.join(self.status_markers_path, marker_name), 'w') as f:
-                if content:
-                    json.dump(content, f, indent=2)
-                else:
-                    f.write(datetime.now().isoformat())
-            logger.info(f"Session [{self.session_id}]: Created status marker - {marker_name}")
+            # Ensure content includes a timestamp if provided, or add one
+            if content and isinstance(content, dict):
+                content.setdefault("timestamp", datetime.now().isoformat())
+            elif not content:
+                content = {"timestamp": datetime.now().isoformat()}
+            
+            with open(os.path.join(self.status_markers_path, marker_name), 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            logger.info(f"Session [{self.session_id}]: Created status marker - {marker_name} with content: {content}")
         except Exception as e:
             logger.error(f"Session [{self.session_id}]: Failed to create status marker {marker_name} - {e}")
 
-    async def run_full_pipeline(self, initial_keywords: list = None, initial_scrape_urls: list = None, use_default_urls_keywords: bool = True, client_keywords: list = None, client_scrape_urls: list = None):
+    async def run_full_pipeline(self, 
+                                initial_keywords_from_search_params: List[str] = None, 
+                                initial_scrape_urls_from_search_params: List[str] = None, 
+                                client_provided_keywords: List[str] = None, 
+                                client_provided_scrape_urls: List[str] = None,
+                                use_config_defaults_as_fallback: bool = True, # This param is now less directly used
+                                client_time_range: str = None, # Added from routes
+                                client_custom_start_date: str = None, # Added from routes
+                                client_custom_end_date: str = None, # Added from routes
+                                news_aggregator_config_from_search_params: dict = None): # Added from routes
         """Runs the full analysis pipeline.
         Args:
-            initial_keywords (list, optional): Keywords from search_parameters.json.
-            initial_scrape_urls (list, optional): URLs from search_parameters.json.
-            use_default_urls_keywords (bool): Whether to use default keywords/URLs if initial ones are not provided.
-            client_keywords (list, optional): Keywords from the client's API request.
-            client_scrape_urls (list, optional): URLs to scrape from the client's API request.
+            initial_keywords_from_search_params (List[str], optional): Keywords from search_parameters.json.
+            initial_scrape_urls_from_search_params (List[str], optional): URLs from search_parameters.json.
+            client_provided_keywords (List[str], optional): Keywords from the client's API request.
+            client_provided_scrape_urls (List[str], optional): URLs to scrape from the client's API request.
+            use_config_defaults_as_fallback (bool): Client flag, its direct utility is reduced.
+            client_time_range (str, optional): Time range from client.
+            client_custom_start_date (str, optional): Custom start date from client.
+            client_custom_end_date (str, optional): Custom end date from client.
+            news_aggregator_config_from_search_params (dict, optional): Config for NewsAggregator from search_parameters.json.
         """
         self._create_status_marker("_JOB_STARTED")
         logger.info(f"Session [{self.session_id}]: Pipeline started.")
 
         try:
-            # Consolidate keywords and URLs
-            final_keywords = set(initial_keywords or [])
-            if client_keywords:
-                final_keywords.update(client_keywords)
+            # 1. Consolidate keywords and URLs from search_parameters.json and client request
+            aggregated_keywords = set(initial_keywords_from_search_params or [])
+            if client_provided_keywords:
+                aggregated_keywords.update(client_provided_keywords)
             
-            final_scrape_urls = set(initial_scrape_urls or [])
-            if client_scrape_urls:
-                final_scrape_urls.update(client_scrape_urls)
+            aggregated_scrape_urls = set(initial_scrape_urls_from_search_params or [])
+            if client_provided_scrape_urls:
+                aggregated_scrape_urls.update(client_provided_scrape_urls)
 
-            # Use defaults only if no keywords/URLs are provided from any source AND use_default_urls_keywords is true
-            if not final_keywords and not final_scrape_urls and use_default_urls_keywords:
-                logger.info(f"Session [{self.session_id}]: No specific keywords or URLs provided, using system defaults as fallback.")
-                # Default keywords from config if no keywords are gathered from any source
-                if not final_keywords:
-                    final_keywords.update(self.config.get("DEFAULT_KEYWORDS", ["Fenerbahçe", "Galatasaray", "Beşiktaş", "Trabzonspor", "football", "transfer"]))
-                # Default scrape URLs from config if no URLs are gathered from any source
-                if not final_scrape_urls:
-                    final_scrape_urls.update(self.config.get("DEFAULT_SCRAPE_URLS", [
-                        "https://www.fanatik.com.tr/son-dakika-haberleri",
-                        "https://www.hurriyet.com.tr/spor/",
-                        "https://www.fotomac.com.tr/son-dakika-haberleri"
-                    ]))
-            
-            logger.info(f"Session [{self.session_id}]: Effective initial keywords for trends: {list(final_keywords)}")
-            # Step 1: Gather Trends - trends are based on the combined initial/client keywords
-            trending_keywords = await self._gather_trends(list(final_keywords))
-            self._create_status_marker("_TRENDS_COMPLETE")
+            logger.info(f"Session [{self.session_id}]: Keywords from (search_params + client_request): {list(aggregated_keywords)}")
+            logger.info(f"Session [{self.session_id}]: Scrape URLs from (search_params + client_request): {list(aggregated_scrape_urls)}")
 
-            # Add trending keywords to the set for data collection
-            all_processing_keywords = set(final_keywords) # Start with keywords from params/client
-            all_processing_keywords.update(trending_keywords) # Add trends
+            # 2. Fetch general trending keywords
+            logger.info(f"Session [{self.session_id}]: Attempting to gather general trending keywords.")
+            # No longer pass aggregated_keywords, _gather_trends is now independent
+            trending_keywords_fetched = await self._gather_trends() 
+            self._create_status_marker(
+                "_TRENDS_COMPLETE", 
+                content={
+                    "trends_found": trending_keywords_fetched, 
+                    "details": "Fetched general trends." if trending_keywords_fetched else "No general trends found or trend gathering skipped/failed."
+                }
+            )
 
-            # If after all additions, keywords are still empty, and defaults are allowed, use default keywords for processing
-            if not all_processing_keywords and use_default_urls_keywords:
-                logger.info(f"Session [{self.session_id}]: No keywords after trends, using default keywords for data collection.")
-                all_processing_keywords.update(self.config.get("DEFAULT_KEYWORDS", ["Fenerbahçe", "Galatasaray", "Beşiktaş", "Trabzonspor", "football", "transfer"]))
+            # 3. Combine all keyword sources: search_params + client_request + trends
+            final_processing_keywords = set(aggregated_keywords)
+            final_processing_keywords.update(trending_keywords_fetched)
 
+            # At this point, final_scrape_urls are simply aggregated_scrape_urls
+            final_processing_scrape_urls = set(aggregated_scrape_urls)
 
-            logger.info(f"Session [{self.session_id}]: Keywords for data collection (NewsAggregator, WebScraper): {list(all_processing_keywords)}")
-            logger.info(f"Session [{self.session_id}]: URLs for WebScraper: {list(final_scrape_urls)}")
+            logger.info(f"Session [{self.session_id}]: Final keywords for processing (after trends): {list(final_processing_keywords)}")
+            logger.info(f"Session [{self.session_id}]: Final scrape URLs for processing: {list(final_processing_scrape_urls)}")
+
+            # 4. CRUCIAL EXIT CONDITION:
+            # If both final keywords AND final scrape URLs are empty, log and exit.
+            if not final_processing_keywords and not final_processing_scrape_urls:
+                message = f"Session [{self.session_id}]: No keywords and no URLs to process after aggregation and trend analysis. Pipeline exiting gracefully."
+                logger.warning(message)
+                self._create_status_marker("_JOB_HALTED_NO_INPUT", content={"reason": message})
+                self._create_status_marker("_JOB_SUCCESS", content={"status": "Completed", "details": "No keywords or URLs to process."})
+                return # Exit the pipeline
+
+            logger.info(f"Session [{self.session_id}]: Keywords for data collection (NewsAggregator, WebScraper): {list(final_processing_keywords)}")
+            logger.info(f"Session [{self.session_id}]: URLs for WebScraper: {list(final_processing_scrape_urls)}")
 
             # Define a list to hold tasks for concurrent execution
             pipeline_execution_tasks = []
@@ -110,7 +131,14 @@ class AnalysisOrchestrator:
             # Create a task for data collection
             # This task will execute _fetch_and_scrape_news
             data_collection_task = asyncio.create_task(
-                self._fetch_and_scrape_news(list(all_processing_keywords), list(final_scrape_urls))
+                self._fetch_and_scrape_news(
+                    keywords=list(final_processing_keywords), 
+                    urls_to_scrape=list(final_processing_scrape_urls),
+                    client_time_range=client_time_range,
+                    client_custom_start_date=client_custom_start_date,
+                    client_custom_end_date=client_custom_end_date,
+                    news_aggregator_config_from_search_params=news_aggregator_config_from_search_params
+                )
             )
             pipeline_execution_tasks.append(data_collection_task)
 
@@ -151,31 +179,53 @@ class AnalysisOrchestrator:
             logger.error(f"Session [{self.session_id}]: Pipeline failed - {e}", exc_info=True)
             self._create_status_marker("_JOB_FAILED", content={"error": str(e), "details": "Check logs for more info."})
 
-    async def _gather_trends(self, base_keywords: list) -> list:
-        logger.info(f"Session [{self.session_id}]: Gathering trends based on: {base_keywords}")
-        if not base_keywords:
-            logger.info(f"Session [{self.session_id}]: No base keywords provided for trend analysis, skipping.")
-            return []
+    async def _gather_trends(self) -> list: # Removed base_keywords parameter
+        logger.info(f"Session [{self.session_id}]: Gathering general trends.")
+        # Removed: if not base_keywords: block, as it's now fetching general trends
+
         try:
+            # Make location and count configurable
+            location = self.config.get("TRENDS_GENERAL_LOCATION", "Turkey")
+            count = self.config.get("TRENDS_GENERAL_COUNT", 10)
+            
+            # Check if essential Twitter API configuration is present
+            # If any key is missing, log and return empty list to avoid API errors with partial/dummy keys.
+            required_twitter_keys = ['TWITTER_API_KEY', 'TWITTER_API_SECRET', 'TWITTER_ACCESS_TOKEN', 'TWITTER_ACCESS_SECRET']
+            if not all(self.config.get(key) for key in required_twitter_keys):
+                logger.warning(f"Session [{self.session_id}]: Twitter API configuration is incomplete. Skipping trend gathering.")
+                return []
+
             trends_analyzer = TrendsAnalyzer(
                 twitter_api_key=self.config.get('TWITTER_API_KEY'),
                 twitter_api_secret=self.config.get('TWITTER_API_SECRET'),
                 twitter_access_token=self.config.get('TWITTER_ACCESS_TOKEN'),
                 twitter_access_secret=self.config.get('TWITTER_ACCESS_SECRET')
             )
-            # Location can be made configurable
-            trending_topics_objects = trends_analyzer.get_trending_topics(keywords=base_keywords, location="Turkey", count=10)
+            
+            # Call get_trending_topics with an empty list for keywords to fetch general trends for the location.
+            # This assumes TrendsAnalyzer handles keywords=[] or keywords=None for general trends.
+            logger.info(f"Session [{self.session_id}]: Fetching general trends for location '{location}' with count {count}.")
+            trending_topics_objects = trends_analyzer.get_trending_topics(keywords=[], location=location, count=count)
             trending_keywords = [topic.name for topic in trending_topics_objects]
             
-            with open(os.path.join(self.session_path, "trending_keywords.json"), 'w', encoding='utf-8') as f:
+            # Save the fetched general trends
+            trending_keywords_filepath = os.path.join(self.session_path, "trending_keywords.json")
+            with open(trending_keywords_filepath, 'w', encoding='utf-8') as f:
                 json.dump(trending_keywords, f, ensure_ascii=False, indent=2)
-            logger.info(f"Session [{self.session_id}]: Found trending keywords: {trending_keywords}")
+            logger.info(f"Session [{self.session_id}]: Found general trending keywords: {trending_keywords}. Saved to {trending_keywords_filepath}")
             return trending_keywords
         except Exception as e:
-            logger.error(f"Session [{self.session_id}]: Error gathering trends - {e}", exc_info=True)
-            return [] # Return empty list on error but don't fail the whole pipeline yet
+            logger.error(f"Session [{self.session_id}]: Error gathering general trends - {e}", exc_info=True)
+            # Ensure an empty list is returned on any error (e.g., API key issue, network error)
+            return []
 
-    async def _fetch_and_scrape_news(self, keywords: list, urls_to_scrape: list):
+    async def _fetch_and_scrape_news(self, 
+                                     keywords: list, 
+                                     urls_to_scrape: list,
+                                     client_time_range: str = None,
+                                     client_custom_start_date: str = None,
+                                     client_custom_end_date: str = None,
+                                     news_aggregator_config_from_search_params: dict = None):
         logger.info(f"Session [{self.session_id}]: Fetching and scraping news. Keywords: {keywords}, URLs: {urls_to_scrape}")
         
         active_tasks_with_names = [] # Stores tuples of (asyncio.Task, task_name_str)
@@ -203,6 +253,52 @@ class AnalysisOrchestrator:
                 cache_dir=self.config.get('CACHE_DIR'),
                 cache_expiration_hours=self.config.get('CACHE_EXPIRATION', 1)
             )
+
+            # Configure NewsAggregator with parameters (client > search_params > news_aggregator_default)
+            # Time range configuration
+            time_range_to_set = client_time_range # Highest priority: client
+            custom_start_to_set = client_custom_start_date
+            custom_end_to_set = client_custom_end_date
+
+            if not time_range_to_set and news_aggregator_config_from_search_params:
+                time_range_to_set = news_aggregator_config_from_search_params.get('time_range') # Second priority: search_parameters.json
+            
+            # Max results configuration
+            max_results_to_set = None
+            if news_aggregator_config_from_search_params and news_aggregator_config_from_search_params.get('max_results_news') is not None:
+                max_results_to_set = news_aggregator_config_from_search_params.get('max_results_news')
+                logger.info(f"Session [{self.session_id}]: Using 'max_results_news' from search_parameters.json: {max_results_to_set}")
+            elif self.config.get("AGGREGATOR_LIMIT_PER_SOURCE") is not None:
+                max_results_to_set = self.config.get("AGGREGATOR_LIMIT_PER_SOURCE")
+                logger.info(f"Session [{self.session_id}]: Using 'AGGREGATOR_LIMIT_PER_SOURCE' from app config: {max_results_to_set}")
+            else:
+                # Critical: No max_results defined in search_parameters.json or app config.
+                error_message = f"Session [{self.session_id}]: NewsAggregator 'max_results_news' is not defined in search_parameters.json and 'AGGREGATOR_LIMIT_PER_SOURCE' is not in app config. Cannot proceed with news aggregation."
+                logger.error(error_message)
+                # Option 1: Raise an exception to halt this part or the pipeline
+                raise ValueError(error_message)
+                # Option 2: Skip NewsAggregator task (if preferred, but user asked to fail)
+                # logger.warning(f"Session [{self.session_id}]: Skipping NewsAggregator task due to missing max_results configuration.")
+                # aggregator_task_obj = None # Ensure it's None so it's not added to tasks
+
+            # Ensure max_results_to_set is an integer if it was found
+            if max_results_to_set is not None:
+                try:
+                    max_results_to_set = int(max_results_to_set)
+                except ValueError:
+                    error_message = f"Session [{self.session_id}]: Invalid non-integer value for max_results: {max_results_to_set}."
+                    logger.error(error_message)
+                    raise ValueError(error_message)
+            
+            # Client-provided max_results (if we add it to AnalysisRequest later) would have higher priority here.
+
+            news_aggregator.configure(
+                time_range=time_range_to_set,
+                custom_start_date=custom_start_to_set,
+                custom_end_date=custom_end_to_set,
+                max_results=max_results_to_set # Pass the determined max_results
+            )
+
             aggregator_coro = news_aggregator.fetch_news_for_session(
                 session_id=self.session_id,
                 base_workspace_path=self.base_workspace_path,

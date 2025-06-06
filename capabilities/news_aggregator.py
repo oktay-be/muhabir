@@ -33,13 +33,13 @@ class NewsAggregator:
         self.cache_dir = cache_dir
         self.cache_expiration_hours = cache_expiration_hours
         self.seen_articles: Set[str] = set()
-        self.default_keywords = ["Turkey", "Fenerbahçe"]
-        self.additional_keywords = []
+        # self.default_keywords = ["Turkey", "Fenerbahçe"] # Removed: Keywords will be passed explicitly
+        self.additional_keywords = [] # This will store the keywords passed for the current operation
         self.team_ids = [8650]  # Default: Fenerbahçe
         self.languages = ["tr", "en"]
         self.domains = []
-        self.max_results = 50
-        self.time_range = TimeRangeEnum.LAST_24_HOURS
+        self.max_results = 50 # Default max results for the class instance, can be configured
+        self.time_range = TimeRangeEnum.LAST_24_HOURS # Default time_range for the class instance, can be configured
         self.custom_start_date = None
         self.custom_end_date = None
         
@@ -47,7 +47,7 @@ class NewsAggregator:
         os.makedirs(self.cache_dir, exist_ok=True)
         
     def configure(self, 
-                 default_keywords: Optional[List[str]] = None,
+                 # default_keywords: Optional[List[str]] = None, # Removed default_keywords from config
                  team_ids: Optional[List[int]] = None,
                  languages: Optional[List[str]] = None,
                  domains: Optional[List[str]] = None,
@@ -56,8 +56,8 @@ class NewsAggregator:
                  custom_start_date: Optional[str] = None,
                  custom_end_date: Optional[str] = None) -> None:
         """Configure the news aggregator"""
-        if default_keywords is not None:
-            self.default_keywords = default_keywords
+        # if default_keywords is not None:
+        #     self.default_keywords = default_keywords # Removed
         
         if team_ids is not None:
             self.team_ids = team_ids
@@ -80,10 +80,10 @@ class NewsAggregator:
         if custom_end_date is not None:
             self.custom_end_date = custom_end_date
         
-        logger.info(f"Configured news aggregator with {len(self.default_keywords)} keywords, {len(self.team_ids)} team IDs")
+        logger.info(f"Configured news aggregator. Team IDs: {self.team_ids}, Max Results: {self.max_results}") # Updated log
     
     def update_keywords(self, keywords: List[str]) -> None:
-        """Update additional keywords"""
+        """Update keywords for the current news fetching operation."""
         # Ensure keywords is a flat list of strings
         if keywords and isinstance(keywords, list) and all(isinstance(item, str) for item in keywords):
             self.additional_keywords = keywords
@@ -130,18 +130,20 @@ class NewsAggregator:
         cache_file = os.path.join(self.cache_dir, "newsapi_cache.json")
         
         # Create a unique cache key based on parameters
-        cache_key = hashlib.md5(f"{self.default_keywords}-{self.additional_keywords}-{self.time_range}-{self.languages}-{self.domains}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"{self.additional_keywords}-{self.time_range}-{self.languages}-{self.domains}".encode()).hexdigest()
         cache_file = os.path.join(self.cache_dir, f"newsapi_{cache_key}.json")
         
         # Check for cached data
         cached_data = self._read_from_cache(cache_file)
         if cached_data:
-            logger.info(f"Returning {len(cached_data)} articles from NewsAPI cache")
+            logger.info(f"Returning {len(cached_data)} articles from NewsAPI cache for key: {cache_key}") # Added cache key to log
             return cached_data
             
-        # Combine default and additional keywords
-        keywords = self.default_keywords + self.additional_keywords
-        query = " OR ".join(keywords)
+        # Use current operational keywords (set via update_keywords)
+        if not self.additional_keywords:
+            logger.warning("NewsAPI: No keywords provided for fetching. Returning empty list.")
+            return []
+        query = " OR ".join(self.additional_keywords) # Use additional_keywords which are the operational ones
         
         # Get date range
         date_range = self.get_date_range()
@@ -168,6 +170,7 @@ class NewsAggregator:
                 ) as response:
                     response.raise_for_status()
                     data = await response.json()  # await response.json()
+                    logger.debug(f"NewsAPI raw response data: {json.dumps(data, indent=2, ensure_ascii=False)}")
             
             # Format the results
             articles = [{
@@ -254,18 +257,20 @@ class NewsAggregator:
             return []
             
         # Create a unique cache key based on parameters
-        cache_key = hashlib.md5(f"worldnews-{self.default_keywords}-{self.additional_keywords}-{self.time_range}-{self.languages}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"worldnews-{self.additional_keywords}-{self.time_range}-{self.languages}".encode()).hexdigest()
         cache_file = os.path.join(self.cache_dir, f"worldnewsapi_{cache_key}.json")
         
         # Check for cached data
         cached_data = self._read_from_cache(cache_file)
         if cached_data:
-            logger.info(f"Returning {len(cached_data)} articles from WorldNewsAPI cache")
+            logger.info(f"Returning {len(cached_data)} articles from WorldNewsAPI cache for key: {cache_key}") # Added cache key to log
             return cached_data
             
-        # Combine default and additional keywords
-        keywords = self.default_keywords + self.additional_keywords
-        query = " OR ".join(keywords)
+        # Use current operational keywords
+        if not self.additional_keywords:
+            logger.warning("WorldNewsAPI: No keywords provided for fetching. Returning empty list.")
+            return []
+        query = " OR ".join(self.additional_keywords) # Use additional_keywords
         
         # Get date range
         date_range = self.get_date_range()
@@ -323,18 +328,20 @@ class NewsAggregator:
             return []
             
         # Create a unique cache key based on parameters
-        cache_key = hashlib.md5(f"gnews-{self.default_keywords}-{self.additional_keywords}-{self.time_range}-{self.languages}".encode()).hexdigest()
+        cache_key = hashlib.md5(f"gnews-{self.additional_keywords}-{self.time_range}-{self.languages}".encode()).hexdigest()
         cache_file = os.path.join(self.cache_dir, f"gnews_{cache_key}.json")
         
         # Check for cached data
         cached_data = self._read_from_cache(cache_file)
         if cached_data:
-            logger.info(f"Returning {len(cached_data)} articles from Gnews cache")
+            logger.info(f"Returning {len(cached_data)} articles from Gnews cache for key: {cache_key}") # Added cache key to log
             return cached_data
             
-        # Combine default and additional keywords
-        keywords = self.default_keywords + self.additional_keywords
-        query = " OR ".join(keywords)
+        # Use current operational keywords
+        if not self.additional_keywords:
+            logger.warning("GNews: No keywords provided for fetching. Returning empty list.")
+            return []
+        query = " OR ".join(self.additional_keywords) # Use additional_keywords
         
         # Get date range
         date_range = self.get_date_range()
@@ -539,9 +546,11 @@ class NewsAggregator:
             logger.error(f"Error reading from cache: {str(e)}")
             return None
 
-    async def fetch_news_for_session(self, session_id: str, base_workspace_path: str, query: List[str], sources: Optional[List[str]] = None, limit: Optional[int] = None) -> None:
+    async def fetch_news_for_session(self, session_id: str, base_workspace_path: str, query: List[str], sources: Optional[List[str]] = None, limit: Optional[int] = None) -> List[str]:
         """
         Fetches news from specified sources and saves each article to a session-specific directory.
+        The 'limit' parameter here allows overriding self.max_results for this specific call.
+        It's generally recommended to use `configure()` to set `max_results`.
 
         Args:
             session_id (str): The unique ID for this analysis session.
@@ -549,13 +558,26 @@ class NewsAggregator:
             query (List[str]): List of keywords to search for.
             sources (Optional[List[str]]): List of sources to fetch from (e.g., ['newsapi', 'gnews']). 
                                          If None, uses all available/configured sources.
-            limit (Optional[int]): Maximum number of articles to fetch per source.
+            limit (Optional[int]): If provided, this will override `self.max_results` (set via `configure()`) 
+                                   for the duration of this method call.
+        Returns:
+            List[str]: A list of absolute file paths to the saved articles.
         """
-        logger.info(f"Session [{session_id}]: Starting news aggregation. Query: {query}, Sources: {sources}, Limit: {limit}")
+        logger.info(f"Session [{session_id}]: Starting news aggregation. Query: {query}, Sources: {sources}, Configured Max Results: {self.max_results}, Call-specific Limit: {limit}")
         self.update_keywords(query) # Set the keywords for this run
 
+        # Determine the actual max_results to use for API calls within this method execution.
+        # Priority: 1. call-specific `limit`, 2. `self.max_results` (which should have been set by `configure`).
+        original_instance_max_results = self.max_results 
+        effective_max_results = original_instance_max_results
+
         if limit is not None:
-            self.max_results = limit # Override default max_results if limit is provided
+            effective_max_results = limit
+            self.max_results = effective_max_results # Temporarily set for fetch_from_source calls
+            logger.info(f"Session [{session_id}]: Call-specific limit ({limit}) provided. Using {effective_max_results} as max results for this fetch operation, overriding instance default ({original_instance_max_results}).")
+        else:
+            logger.info(f"Session [{session_id}]: Using configured max_results: {self.max_results} for this fetch operation.")
+
 
         session_raw_articles_path = os.path.join(base_workspace_path, session_id, "raw_articles")
         os.makedirs(session_raw_articles_path, exist_ok=True)
@@ -564,14 +586,15 @@ class NewsAggregator:
         
         fetch_tasks = []
         for source_name in target_sources:
-            # Note: fetch_from_source internally uses self.max_results which we've set via 'limit'
+            # fetch_from_source will use the current self.max_results value
             fetch_tasks.append(self.fetch_from_source(source_name)) 
-            logger.debug(f"Session [{session_id}]: Added task for source: {source_name} with query: {query} and limit: {self.max_results}")
+            logger.debug(f"Session [{session_id}]: Added task for source: {source_name} with query: {query} and effective max_results: {self.max_results}")
 
         all_articles_lists = await asyncio.gather(*fetch_tasks, return_exceptions=True)
         
-        processed_urls = set() # To avoid saving duplicates if different sources return the same article URL
+        processed_urls = set() 
         articles_saved_count = 0
+        saved_article_filepaths = [] # To store paths of saved articles
 
         for i, result_list in enumerate(all_articles_lists):
             source_name = target_sources[i]
@@ -613,8 +636,15 @@ class NewsAggregator:
                     with open(filepath, 'w', encoding='utf-8') as f:
                         json.dump(article, f, ensure_ascii=False, indent=2)
                     articles_saved_count += 1
+                    saved_article_filepaths.append(filepath) # Add path to list
                     logger.debug(f"Session [{session_id}]: Saved article to {filepath}")
                 except Exception as e:
-                    logger.error(f"Session [{session_id}]: Failed to save article {title_for_filename} to {filepath} - {e}")
+                    logger.error(f"Session [{session_id}]: Error saving article {filename} - {e}", exc_info=True)
+                    
+        # Restore original self.max_results if it was temporarily changed by a call-specific limit
+        if limit is not None:
+            self.max_results = original_instance_max_results
+            logger.debug(f"Session [{session_id}]: Restored instance max_results to {self.max_results}.")
         
         logger.info(f"Session [{session_id}]: News aggregation complete. Saved {articles_saved_count} articles to {session_raw_articles_path}.")
+        return saved_article_filepaths
