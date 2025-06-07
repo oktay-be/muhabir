@@ -5,6 +5,7 @@ This module handles fetching news from various sources including NewsAPI, WorldN
 """
 
 import os
+import sys
 import hashlib
 import json
 import logging
@@ -14,8 +15,26 @@ import asyncio  # Added for asyncio operations
 import aiohttp  # Added for asynchronous HTTP requests
 import pandas as pd
 from soccerdata import FotMob
-from api.models import TimeRangeEnum
 from werkzeug.utils import secure_filename # Added for filename sanitization
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from api.models import TimeRangeEnum
+except ImportError:
+    # Fallback: define TimeRangeEnum locally to avoid circular dependency
+    from enum import Enum
+    
+    class TimeRangeEnum(str, Enum):
+        """Time range options for news queries"""
+        LAST_HOUR = "last_hour" 
+        LAST_6_HOURS = "last_6_hours"
+        LAST_12_HOURS = "last_12_hours"
+        LAST_24_HOURS = "last_24_hours"
+        LAST_WEEK = "last_week"
+        LAST_MONTH = "last_month"
+        CUSTOM = "custom"
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +44,14 @@ class NewsAggregator:
     
     def __init__(self, newsapi_key: str, worldnewsapi_key: Optional[str] = None, 
                  gnews_api_key: Optional[str] = None, cache_dir: str = "./cache", 
-                 cache_expiration_hours: int = 1):
+                 cache_expiration_hours: int = 1, enable_cache: bool = True):
         """Initialize the news aggregator"""
         self.newsapi_key = newsapi_key
         self.worldnewsapi_key = worldnewsapi_key
         self.gnews_api_key = gnews_api_key
         self.cache_dir = cache_dir
         self.cache_expiration_hours = cache_expiration_hours
+        self.enable_cache = enable_cache
         self.seen_articles: Set[str] = set()
         # self.default_keywords = ["Turkey", "Fenerbahçe"] # Removed: Keywords will be passed explicitly
         self.additional_keywords = [] # This will store the keywords passed for the current operation
@@ -159,15 +179,16 @@ class NewsAggregator:
         query = " OR ".join(self.additional_keywords) # Use additional_keywords which are the operational ones
         
         # Get date range
-        date_range = self.get_date_range()
-        
+        date_range = self.get_date_range()        
         params = {
             "q": query,
-            "language": ",".join(self.languages),
+            "language": self.languages[0] if self.languages else "en",  # Use single language instead of multiple
             "from": date_range["from"],
             "to": date_range["to"],
             "apiKey": self.newsapi_key,
-            "pageSize": self.max_results
+            "pageSize": min(self.max_results, 10),  # Limit to 10 for better reliability
+            "sortBy": "publishedAt",  # Add sortBy parameter
+            "searchIn": "title,description"  # Add searchIn parameter
         }
         
         # Add domain filtering if specified
