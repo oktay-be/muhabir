@@ -1,0 +1,22 @@
+*** Running Simple Modular Component Tests ***
+==================================================
+Testing imports...
+[06/07/25 20:18:38] INFO     No custom team name replacements     _config.py:91
+                             found. You can configure these in                 
+                             C:\Users\oktay\soccerdata\config\tea              
+                             mname_replacements.json.                          
+                    INFO     No custom league dict found. You    _config.py:197
+                             can configure additional leagues in               
+                             C:\Users\oktay\soccerdata\config\le               
+                             ague_dict.json.                                   
+SUCCESS: Main scraping components imported successfully
+SUCCESS: Extractor components imported successfully
+ERROR: Import failed: cannot import name 'WebScraper' from 'capabilities.web_scraper' (c:\Users\oktay\Documents\aisports\capabilities\web_scraper.py)
+
+Testing basic initialization...
+SUCCESS: Config initialized with 7 sites
+SUCCESS: SessionManager initialized
+SUCCESS: CacheManager initialized
+
+==================================================
+ERROR: Some tests failed!

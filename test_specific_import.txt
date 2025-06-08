@@ -1,0 +1,11 @@
+[06/07/25 18:53:52] INFO     No custom team name replacements     _config.py:91
+                             found. You can configure these in                 
+                             C:\Users\oktay\soccerdata\config\tea              
+                             mname_replacements.json.                          
+                    INFO     No custom league dict found. You    _config.py:197
+                             can configure additional leagues in               
+                             C:\Users\oktay\soccerdata\config\le               
+                             ague_dict.json.                                   
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: cannot import name 'WebScraper' from 'capabilities.web_scraper' (c:\Users\oktay\Documents\aisports\capabilities\web_scraper.py)
