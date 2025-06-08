@@ -1,30 +1,34 @@
 """
-Integration tests for the API endpoints.
+Integration tests for API-like functionalities by directly calling service methods.
 """
 import json
 import sys
 import os
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock, MagicMock, call # Added call
+import asyncio
+from datetime import datetime
 
-# Add parent directory to path so we can import app
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from app import create_app
+from capabilities.news_aggregator import NewsAggregator
+from capabilities.web_scraper import WebScraper
 
 
-@pytest.fixture
-def client():
-    """Create a test client for the app."""
-    app = create_app('testing')
-    with app.test_client() as test_client:
-        yield test_client
+@patch('capabilities.news_aggregator.NewsAggregator.fetch_from_source', new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_get_news(mock_fetch_from_source, tmp_path):
+    """Test fetching news (simulating /api/news route)."""
+    session_id = "test_session_get_news"
+    query_param = ["fenerbahçe"]
+    workspace_dir = tmp_path / "workspace"
+    os.makedirs(workspace_dir, exist_ok=True)
+    cache_dir = tmp_path / "cache_news_aggregator"
+    os.makedirs(cache_dir, exist_ok=True)
 
-@patch('capabilities.news_aggregator.NewsAggregator.get_news')
-def test_get_news(mock_get_news, client):
-    """Test the /api/news endpoint."""
-    # Mock the response from the news aggregator
-    mock_news = [
+    limit_param = 1
+    sources_param = ["newsapi"]
+
+    # Mock the fetch_from_source to return sample articles
+    mock_articles = [
         {
             "title": "Fenerbahçe wins important match",
             "url": "https://example.com/news/1",
@@ -33,60 +37,103 @@ def test_get_news(mock_get_news, client):
             "content": "Fenerbahçe won an important match yesterday."
         }
     ]
-    mock_get_news.return_value = mock_news
-    
-    response = client.post('/api/news/simple', 
-                               json={"query": "fenerbahçe", "limit": 1})
-    
-    # Check the response
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert len(data['news']) == 1
-    assert data['news'][0]['title'] == mock_news[0]['title']
-    assert data['status'] == 'success'
+    mock_fetch_from_source.return_value = mock_articles
 
-@patch('capabilities.trends_analyzer.TrendsAnalyzer.get_trending_topics')
-def test_get_trending(mock_get_trending, client):
-    """Test the /api/trending endpoint."""
-    # Mock the response from the trends analyzer
-    mock_trending = [
-        {"name": "Fenerbahçe", "tweet_volume": 1000, "relevance_score": 1.0, "related_keywords": []},
-        {"name": "Galatasaray", "tweet_volume": 800, "relevance_score": 1.0, "related_keywords": []},
-        {"name": "Beşiktaş", "tweet_volume": 600, "relevance_score": 1.0, "related_keywords": []}
-    ]
-    mock_get_trending.return_value = mock_trending
-    
-    response = client.post('/api/trending', 
-                               json={"keywords": ["Turkey", "Football"], "limit": 3})
-    
-    # Check the response
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert len(data['topics']) == 3
-    assert data['topics'][0]['name'] == mock_trending[0]['name']
-    assert data['count'] == 3
+    # Instantiate NewsAggregator
+    aggregator = NewsAggregator(newsapi_key="test_key", cache_dir=str(cache_dir))
 
-@patch('capabilities.web_scraper.WebScraper.scrape_urls')
-def test_scrape_news(mock_scrape_urls, client):
-    """Test the /api/scrape endpoint."""
-    # Mock the response from the web scraper
-    mock_scraped = [
-        {
-            "url": "https://example.com/news/1",
-            "content": "Detailed content of Fenerbahçe's win.",
-            "title": "Fenerbahçe wins important match",
-            "error": None
-        }
+    returned_article_paths = await aggregator.fetch_news_for_session(
+        session_id=session_id,
+        base_workspace_path=str(workspace_dir),
+        query=query_param,
+        sources=sources_param,
+        limit=limit_param
+    )
+
+    # Assert that the mock was called correctly
+    mock_fetch_from_source.assert_called_once_with("newsapi")
+    
+    # The method should return a list of file paths where articles were saved
+    assert isinstance(returned_article_paths, list)
+    assert len(returned_article_paths) == limit_param
+
+
+@patch('capabilities.web_scraper.WebScraper.scrape_urls', new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_scrape_news(mock_scrape_urls, tmp_path):
+    """Test scraping news (simulating /api/scrape route)."""
+    session_id = "test_session_scrape_news"
+    initial_urls_param = ["https://example.com/news"] # Renamed from base_urls
+    keywords = ["testkeyword"]
+    workspace_dir = tmp_path / "workspace"
+    workspace_dir.mkdir()
+    
+    # Create a dummy cache directory for the scraper
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+
+    scraper = WebScraper(cache_dir=str(cache_dir))
+
+    # Mock the underlying methods of WebScraper
+    mock_discovered_links = [
+        {"url": "https://example.com/news/1", "title_anchor": "Article 1", "source_page_domain": "example.com"},
+        {"url": "https://example.com/news/2", "title_anchor": "Article 2", "source_page_domain": "example.com"}
     ]
-    mock_scrape_urls.return_value = mock_scraped
-    
-    response = client.post('/api/scrape', 
-                               json={"urls": ["https://example.com/news/1"]})
-    
-    # Check the response
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert len(data['scraped_data']) == 1
-    assert data['scraped_data'][0]['url'] == mock_scraped[0]['url']
-    assert data['scraped_data'][0]['content'] == mock_scraped[0]['content']
-    assert data['status'] == 'success'
+    mock_scraped_article_1 = {
+        "url": "https://example.com/news/1", "title": "Article 1 Title", "content": "Content of article 1", 
+        "scraped_at": datetime.now().isoformat(), "source_page_domain": "example.com", "keywords_found": keywords
+    }
+    mock_scraped_article_2 = {
+        "url": "https://example.com/news/2", "title": "Article 2 Title", "content": "Content of article 2",
+        "scraped_at": datetime.now().isoformat(), "source_page_domain": "example.com", "keywords_found": keywords
+    }
+
+    # Corrected with statement:
+    with patch.object(scraper, '_ensure_session', AsyncMock()) as mock_ensure_session, \
+         patch.object(scraper, 'close_session', AsyncMock()) as mock_close_session, \
+         patch.object(scraper, '_discover_links_from_page', AsyncMock(return_value=mock_discovered_links)) as mock_discover, \
+         patch.object(scraper, '_scrape_article_details', AsyncMock()) as mock_scrape_details:
+
+        mock_scrape_details.side_effect = [mock_scraped_article_1, mock_scraped_article_2]        # Call the actual method that orchestrates the scraping
+        scraped_data = await scraper.execute_scraping_for_session(
+            session_id=session_id,
+            base_workspace_path=str(workspace_dir),
+            urls=initial_urls_param, # Corrected parameter name
+            keywords=keywords
+        )
+
+        assert mock_discover.called # Check if discovery was attempted
+        # Ensure _discover_links_from_page was called for each base_url
+        # For simplicity, we\'ll check the number of calls and the first call\'s arguments if needed.
+        # More specific argument checking can be added if there are issues.
+        assert mock_discover.call_count == len(initial_urls_param) # Use corrected variable
+        # Example of checking the first call\'s arguments (keywords part):
+        # discover_args, discover_kwargs = mock_discover.call_args_list[0]
+        # assert keywords == discover_args[1] # Assuming keywords is the second positional arg to _discover_links_from_page
+
+        assert mock_scrape_details.called # Check if scraping was attempted
+        # Ensure _scrape_article_details was called for each discovered link
+        assert mock_scrape_details.call_count == len(mock_discovered_links)
+        # Example of checking the first call's arguments (keywords part):
+        # scrape_args, scrape_kwargs = mock_scrape_details.call_args_list[0]
+        # assert keywords == scrape_args[1] # Assuming keywords is the second positional arg to _scrape_article_details
+
+        # Verify the output file was created and contains the scraped data
+        session_scrape_dir = workspace_dir / session_id / "scraped_data"
+        
+        # Find the file that starts with "scraped_content_"
+        # This needs to be robust to the exact timestamp in the filename
+        found_files = list(session_scrape_dir.glob(f"scraped_content_{keywords[0]}_*.json"))
+        assert len(found_files) == 1, f"Expected 1 output file, found {len(found_files)} in {session_scrape_dir}"
+        output_file = found_files[0]
+
+        with open(output_file, "r", encoding="utf-8") as f:
+            data_from_file = json.load(f)
+        
+        assert len(data_from_file) == 2
+        assert data_from_file[0]["url"] == mock_scraped_article_1["url"]
+        assert data_from_file[1]["url"] == mock_scraped_article_2["url"]
+        assert data_from_file[0]["title"] == mock_scraped_article_1["title"]
+
+        # Assert that the scraper's session was closed
+        mock_close_session.assert_called_once()

@@ -123,10 +123,19 @@ class LdJsonExtractor(BaseExtractor):
         elif last_bracket != -1:
             end_index = last_bracket
         
-        if start_index != -1 and end_index != -1 and end_index > start_index:
+        # If no opening delimiter is found, return the original string.
+        if start_index == -1:
+            return json_string
+
+        # If both start and end delimiters are found and valid, extract the JSON substring.
+        if end_index != -1 and end_index > start_index:
             return json_string[start_index:end_index + 1]
-        
-        return json_string
+        else:
+            # If a start delimiter is found but no valid end delimiter,
+            # return the string from the start delimiter to the end.
+            # This handles cases like ' { "key" : "value" ' -> '{ "key" : "value" ',
+            # satisfying the failing test.
+            return json_string[start_index:]
     
     def _extract_from_ld_data(self, ld_data: Any) -> tuple[str, str]:
         """
@@ -150,6 +159,18 @@ class LdJsonExtractor(BaseExtractor):
             if isinstance(ld_data.get("@graph"), list):
                 items_to_check.extend(ld_data["@graph"])
         
+        # Priority order for content types (higher priority types first)
+        type_priorities = {
+            "newsarticle": 5,
+            "article": 4, 
+            "reportage": 3,
+            "blogposting": 2,
+            "webpage": 1        }
+        
+        best_priority = 0
+        best_title = ""
+        best_body = ""
+        
         for item in items_to_check:
             if not isinstance(item, dict):
                 continue
@@ -160,8 +181,13 @@ class LdJsonExtractor(BaseExtractor):
             else:
                 item_type_str = str(item_type).lower()
             
-            # Check if this is an article-type item
-            if any(t in item_type_str for t in ["newsarticle", "article", "webpage", "reportage", "blogposting"]):
+            # Check if this is an article-type item and determine its priority
+            current_priority = 0
+            for type_name, priority in type_priorities.items():
+                if type_name in item_type_str:
+                    current_priority = max(current_priority, priority)
+            
+            if current_priority > 0:  # If it's a recognized content type
                 # Extract body
                 current_body = (
                     item.get("articleBody") or 
@@ -177,20 +203,25 @@ class LdJsonExtractor(BaseExtractor):
                     ""
                 )
                 
-                # Update if we found better content
-                if current_body and len(str(current_body)) > len(body):
-                    body = str(current_body)
+                # Convert lists to strings properly
+                if isinstance(current_body, list):
+                    current_body = "\\n\\n".join(filter(None, [str(p) for p in current_body]))
+                else:
+                    current_body = str(current_body) if current_body else ""
+                    
+                if isinstance(current_title, list):
+                    current_title = " ".join(filter(None, [str(t) for t in current_title]))
+                else:
+                    current_title = str(current_title) if current_title else ""
                 
-                if current_title and len(str(current_title)) > len(title):
-                    title = str(current_title)
+                # Update if we found higher priority content or same priority with longer content
+                if (current_priority > best_priority or 
+                    (current_priority == best_priority and current_body and len(current_body) > len(best_body))):
+                    best_body = current_body
+                    best_title = current_title  # Update title along with body when we find better content
+                    best_priority = current_priority
         
-        # Ensure strings
-        if isinstance(body, list):
-            body = "\n\n".join(filter(None, [str(p) for p in body]))
-        if isinstance(title, list):
-            title = " ".join(filter(None, [str(t) for t in title]))
-        
-        return title, body
+        return best_title, best_body
     
     def get_extraction_priority(self) -> int:
         """Get the priority of this extractor (highest priority)."""

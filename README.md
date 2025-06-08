@@ -107,29 +107,59 @@ make docker-run
 
 This project uses `pytest` for running automated tests.
 
-To run the tests, navigate to the `backend` directory and use the following commands depending on your operating system:
+To run the tests, ensure your virtual environment is activated:
+```cmd
+.venv\\Scripts\\activate
+```
 
-**Ubuntu/Alpine (and other Linux distributions):**
+Then, from the project root directory (`c:\\Users\\oktay\\Documents\\aisports`), you can use the following commands:
 
-```bash
-# Ensure your virtual environment is activated
-source venv/bin/activate
-
-# Run pytest
+**Running All Tests:**
+```cmd
 pytest
 ```
 
-**Windows:**
+**Running Specific Tests:**
 
-```bash
-# Ensure your virtual environment is activated
-.\\venv\\Scripts\\activate
-
-# Run pytest
-pytest
+You can run tests in a specific file:
+```cmd
+pytest tests/unit/scraping/test_config.py
 ```
 
-You should see output indicating the status of the tests (e.g., number of tests passed, failed, or skipped).
+Or a specific test function:
+```cmd
+pytest tests/unit/scraping/test_config.py::test_my_specific_config_feature
+```
+
+**Checking Code Coverage:**
+
+This project uses `pytest-cov` to measure code coverage.
+
+*   **View coverage report in the terminal (shows missing lines):**
+    ```cmd
+    pytest --cov=capabilities --cov-report=term-missing tests/unit
+    ```
+    *(You can also run this for `tests/integration` or all tests by adjusting the path)*
+
+*   **Generate an HTML coverage report:**
+    ```cmd
+    pytest --cov=capabilities --cov-report=html:cov_html tests/unit
+    ```
+    After running this, you can open `c:\\\\Users\\\\oktay\\\\Documents\\\\aisports\\\\cov_html\\\\index.html` in your web browser to see a detailed interactive report.
+
+*   **Checking coverage for a specific module:**
+
+    If you want to see the coverage for a single module (e.g., `config.py`) based on its specific test file (e.g., `test_config.py`), you can target the `--cov` flag more precisely:
+    ```cmd
+    pytest --cov=capabilities.scraping.config --cov-report=term-missing tests/unit/scraping/test_config.py
+    ```
+    And for an HTML report for that specific module:
+    ```cmd
+    pytest --cov=capabilities.scraping.config --cov-report=html:cov_html_config tests/unit/scraping/test_config.py
+    ```
+    (This will create a separate HTML report in `cov_html_config` for just that module).
+
+You should see output indicating the status of the tests (e.g., number of tests passed, failed, or skipped) and code coverage percentages. Our goal is to achieve at least 90% coverage for the `capabilities` module.
 
 ### Key Project Files
 

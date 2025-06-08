@@ -1,9 +1,0 @@
-[06/07/25 20:09:35] INFO     No custom team name replacements     _config.py:91
-                             found. You can configure these in                 
-                             C:\Users\oktay\soccerdata\config\tea              
-                             mname_replacements.json.                          
-                    INFO     No custom league dict found. You    _config.py:197
-                             can configure additional leagues in               
-                             C:\Users\oktay\soccerdata\config\le               
-                             ague_dict.json.                                   
-Import completed
