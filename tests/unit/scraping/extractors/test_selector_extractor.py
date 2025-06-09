@@ -22,12 +22,25 @@ def mock_config():
         "content_selector": "div.generic-content"
     }
     
-    def get_selectors_for_domain(domain):
+    # Make get_selectors_for_domain a simple MagicMock that can be overridden easily
+    config.get_selectors_for_domain = MagicMock()
+    
+    # Set a default side_effect, but allow return_value to override it
+    def default_get_selectors_for_domain(domain):
         if "specific.com" in domain:
             return config.site_specific_selectors["specific.com"]
         return config.generic_selectors
-        
-    config.get_selectors_for_domain = MagicMock(side_effect=get_selectors_for_domain)
+    
+    config.get_selectors_for_domain.side_effect = default_get_selectors_for_domain
+    
+    # Mock for config.get to handle MIN_PARAGRAPH_LENGTH
+    def mock_config_get_method(key, default=None):
+        if key == "MIN_PARAGRAPH_LENGTH":
+            return 20  # Ensure it returns an integer
+        return default # Simpler handling for other keys
+
+    config.get = MagicMock(side_effect=mock_config_get_method)
+    
     return config
 
 @pytest.fixture
@@ -92,6 +105,7 @@ async def test_extract_with_generic_selectors(extractor: SelectorExtractor, mock
 @pytest.mark.asyncio
 async def test_extract_title_fallback_to_html_title_tag(extractor: SelectorExtractor, mock_config):
     # No specific or generic title selectors match, but content selector might
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {"content_selector": ".some-content"}
     html_content = """
     <html><head><title>HTML Title Tag - Site Name</title></head>
@@ -107,6 +121,7 @@ async def test_extract_title_fallback_to_html_title_tag(extractor: SelectorExtra
 
 @pytest.mark.asyncio
 async def test_extract_title_fallback_no_site_name_in_html_title(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {"content_selector": ".some-content"}
     html_content = '''
     <html><head><title>Just The Title</title></head>
@@ -121,6 +136,7 @@ async def test_extract_title_fallback_no_site_name_in_html_title(extractor: Sele
 @pytest.mark.asyncio
 async def test_extract_body_fallback_to_structural_tags(extractor: SelectorExtractor, mock_config):
     # No specific or generic content selectors match
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {"title_selector": "h1.page-title"}
     html_content = """
     <html><head><title>Some Title</title></head>
@@ -153,6 +169,7 @@ async def test_extract_body_fallback_to_structural_tags(extractor: SelectorExtra
 
 @pytest.mark.asyncio
 async def test_extract_body_fallback_to_second_structural_tag(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {} # No selectors defined
     html_content = """
     <html><head><title>Title</title></head>
@@ -168,6 +185,7 @@ async def test_extract_body_fallback_to_second_structural_tag(extractor: Selecto
 
 @pytest.mark.asyncio
 async def test_extract_no_selectors_match_no_fallbacks_work(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {
         "title_selector": ".non-existent-title",
         "content_selector": ".non-existent-content"
@@ -203,6 +221,7 @@ def test_get_selector_type(extractor: SelectorExtractor, mock_config):
 
 @pytest.mark.asyncio
 async def test_extract_body_no_substantial_paragraphs_uses_full_text(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {"content_selector": "#main"}
     html_content = """
     <html><body>
@@ -214,10 +233,11 @@ async def test_extract_body_no_substantial_paragraphs_uses_full_text(extractor: 
     url = "http://shortparas.com"
     result = await extractor.extract(html_content, url)
     # _extract_text_from_content will find no p/divs > 20 chars, so it takes all text from #main
-    assert "Short. Also short. And this.\\nThis text is not in a p or div but is part of main. And it is long enough." in result["body"]
+    assert "Short. Also short. And this.\nThis text is not in a p or div but is part of main. And it is long enough." in result["body"]
 
 @pytest.mark.asyncio
 async def test_extract_body_unwanted_elements_cleaned_from_fallback(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {} # Force fallback
     html_content = """
     <html><body>
@@ -225,7 +245,7 @@ async def test_extract_body_unwanted_elements_cleaned_from_fallback(extractor: S
             <nav>Navigation menu</nav>
             <p>Good content here which is long enough.</p>
             <header>A header inside article</header>
-            <p>More good content.</p>
+            <p>More good content, and this text makes it long enough.</p>
             <footer>A footer inside article</footer>
             <aside>An aside</aside>
             <script>alert('test')</script>
@@ -236,7 +256,7 @@ async def test_extract_body_unwanted_elements_cleaned_from_fallback(extractor: S
     result = await extractor.extract(html_content, url)
     body = result["body"]
     assert "Good content here which is long enough." in body
-    assert "More good content." in body
+    assert "More good content, and this text makes it long enough." in body
     assert "Navigation menu" not in body
     assert "A header inside article" not in body # This might be kept if not explicitly removed by get_text of parent
     assert "A footer inside article" not in body # Same as header
@@ -248,6 +268,7 @@ async def test_extract_body_unwanted_elements_cleaned_from_fallback(extractor: S
 
 @pytest.mark.asyncio
 async def test_extract_body_from_div_elements(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {"content_selector": ".content-area"}
     html_content = """
     <html><body>
@@ -273,6 +294,7 @@ async def test_extract_empty_html(extractor: SelectorExtractor):
 
 @pytest.mark.asyncio
 async def test_extract_html_with_only_title_tag(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {} # No specific selectors
     html_content = "<html><head><title>Only Title Here</title></head><body></body></html>"
     url = "http://onlytitlehtml.com"
@@ -282,6 +304,7 @@ async def test_extract_html_with_only_title_tag(extractor: SelectorExtractor, mo
 
 @pytest.mark.asyncio
 async def test_extract_title_stripping_various_separators(extractor: SelectorExtractor, mock_config):
+    mock_config.get_selectors_for_domain.side_effect = None
     mock_config.get_selectors_for_domain.return_value = {} # No specific selectors
     test_cases = [
         ("Title - Site", "Title"),
