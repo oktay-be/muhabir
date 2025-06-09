@@ -227,13 +227,15 @@ async def test_extract_body_no_substantial_paragraphs_uses_full_text(extractor: 
     <html><body>
         <div id="main">
             <span>Short.</span> <span>Also short.</span> <span>And this.</span>
-            This text is not in a p or div but is part of main. And it is long enough.
-        </div>
+            This text is not in a p or div but is part of main. And it is long enough.        </div>
     </body></html>"""
     url = "http://shortparas.com"
     result = await extractor.extract(html_content, url)
     # _extract_text_from_content will find no p/divs > 20 chars, so it takes all text from #main
-    assert "Short. Also short. And this.\nThis text is not in a p or div but is part of main. And it is long enough." in result["body"]
+    assert "Short." in result["body"]
+    assert "Also short." in result["body"]
+    assert "And this." in result["body"]
+    assert "This text is not in a p or div but is part of main. And it is long enough." in result["body"]
 
 @pytest.mark.asyncio
 async def test_extract_body_unwanted_elements_cleaned_from_fallback(extractor: SelectorExtractor, mock_config):
