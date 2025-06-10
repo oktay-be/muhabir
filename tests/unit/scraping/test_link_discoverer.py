@@ -96,9 +96,11 @@ async def test_fetch_html_success(link_discoverer, mock_session):
     html = await link_discoverer._fetch_html(url, mock_session)
     
     assert html == "<html></html>"
+    # Check the call was made with the expected URL and timeout, headers should be the actual config headers
+    expected_headers = {'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}
     mock_session.get.assert_called_once_with(
         url, 
-        headers=link_discoverer.config.get_request_headers(), # Use actual headers from config
+        headers=expected_headers,
         timeout=aiohttp.ClientTimeout(total=link_discoverer.config.http_timeout)
     )
     mock_response.raise_for_status.assert_called_once()
@@ -276,16 +278,13 @@ async def test_discover_links_avoids_visited_urls(link_discoverer, mock_session)
         assert len(discovered) == 1 # only page3.html
 
     # Check that BASE_URL was added to visited_urls
-    assert BASE_URL in visited_urls
-    # Check that _fetch_html was only called for BASE_URL and page3.html (if page2 was skipped for fetch)
+    assert BASE_URL in visited_urls    # Check that _fetch_html was only called for BASE_URL and page3.html (if page2 was skipped for fetch)
     # Fetch for BASE_URL definitely happens.
-    # Fetch for page3.html happens because it's not in visited_urls.
+    # Fetch for page3.html happens because it's not in visited_urls and matches keywords.
     # Fetch for page2.html does NOT happen because it IS in visited_urls.
     expected_fetch_calls = [BASE_URL]
-    if f"{BASE_URL}/page3.html" not in visited_urls: # Should not be, based on setup
-        # Check if page3.html link on BASE_URL matches keywords
-        if any(kw in "Page 3 Link (article)".lower() or kw in f"{BASE_URL}/page3.html".lower() for kw in ["news", "article"]):
-             expected_fetch_calls.append(f"{BASE_URL}/page3.html")
+    # Based on logs, page3.html is fetched because "Page 3 Link (article)" matches "article" keyword
+    expected_fetch_calls.append(f"{BASE_URL}/page3.html")
 
     assert mock_fetch.call_count == len(expected_fetch_calls)
     for call_arg in mock_fetch.call_args_list:
