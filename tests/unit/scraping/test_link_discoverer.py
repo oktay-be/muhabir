@@ -141,7 +141,7 @@ async def test_fetch_html_timeout_error(link_discoverer, mock_session, caplog):
     html = await link_discoverer._fetch_html(url, mock_session)
     
     assert html is None
-    assert f"Timeout error fetching {url} after {link_discoverer.config.http_timeout}s." in caplog.text
+    assert f"Timeout error fetching {url} after {link_discoverer.config.http_timeout}s" in caplog.text
 
 @pytest.mark.asyncio
 async def test_fetch_html_non_html_content_type(link_discoverer, mock_session, caplog):

@@ -148,12 +148,12 @@ class TestWebScraper(unittest.IsolatedAsyncioTestCase): # Changed to IsolatedAsy
                     <div>Some other div</div>
                 </article>
             </body>
-        </html>        """
-        # Configure the mock for the session.get() call
+        </html>        """        # Configure the mock for the session.get() call
         async_mock_response = AsyncMock()
         async_mock_response.status = 200
         async_mock_response.text = AsyncMock(return_value=mock_html_content)
         async_mock_response.raise_for_status = MagicMock()
+        async_mock_response.headers = {"Content-Type": "text/html"}  # Add headers
 
         # This is for the `async with session.get(...) as response:` part
         mock_get.return_value.__aenter__.return_value = async_mock_response

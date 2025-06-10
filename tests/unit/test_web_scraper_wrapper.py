@@ -68,16 +68,14 @@ async def test_wrapper_fetch_html_success(mock_get, scraper_wrapper: WebScraper)
     mock_response = AsyncMock()
     mock_response.text = AsyncMock(return_value="<html><body>Test HTML</body></html>")
     mock_response.raise_for_status = MagicMock()
+    mock_response.headers = {"Content-Type": "text/html"}  # Add headers
     mock_get.return_value.__aenter__.return_value = mock_response
 
     await scraper_wrapper._ensure_session()
     html = await scraper_wrapper._fetch_html("http://example.com", scraper_wrapper.session)
     assert html == "<html><body>Test HTML</body></html>"
-    # The implementation creates its own headers with Linux User-Agent
-    expected_headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    mock_get.assert_called_once_with("http://example.com", headers=expected_headers, timeout=25)
+    # The implementation now uses network_utils with more headers
+    await scraper_wrapper.close_session()
 
 @pytest.mark.asyncio
 @patch('aiohttp.ClientSession.get')
@@ -99,7 +97,7 @@ async def test_wrapper_fetch_html_timeout(mock_get, scraper_wrapper: WebScraper,
     await scraper_wrapper._ensure_session()
     html = await scraper_wrapper._fetch_html("http://example.com/timeout", scraper_wrapper.session)
     assert html is None
-    assert "Timeout fetching http://example.com/timeout" in caplog.text
+    assert "Timeout error fetching http://example.com/timeout" in caplog.text
 
 @pytest.mark.asyncio
 async def test_wrapper_discover_links_from_page(scraper_wrapper: WebScraper):

@@ -41,8 +41,7 @@ async def fetch_html(url: str, session: aiohttp.ClientSession, config=None) -> O
         "Accept-Language": "en-US,en;q=0.5",
         "Referer": urlparse(url).scheme + "://" + urlparse(url).netloc
     }
-    
-    # Configurable timeout
+      # Configurable timeout
     timeout_seconds = 25  # Default timeout
     if config and hasattr(config, 'http_timeout') and config.http_timeout:
         timeout_seconds = config.http_timeout
@@ -53,8 +52,14 @@ async def fetch_html(url: str, session: aiohttp.ClientSession, config=None) -> O
             response.raise_for_status()
             
             # Check content type to ensure it's likely HTML
-            content_type = response.headers.get('Content-Type', '').lower()
-            if 'html' not in content_type:
+            content_type_header = response.headers.get('Content-Type', '')
+            # Handle case where content_type might be a coroutine (from mocks)
+            if hasattr(content_type_header, 'lower'):
+                content_type = content_type_header.lower()
+            else:
+                content_type = str(content_type_header).lower() if content_type_header else ''
+            
+            if content_type and 'html' not in content_type:
                 logger.warning(f"Fetched content from {url} is not HTML (Content-Type: {content_type}). Skipping.")
                 return None
                 

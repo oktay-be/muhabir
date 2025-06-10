@@ -19,6 +19,8 @@ from readability import Document
 from werkzeug.utils import secure_filename
 from .scraping import WebScraper as ModularWebScraper
 from .scraping.network_utils import fetch_html
+from .scraping.session_manager import SessionManager
+from .scraping.config import ScrapingConfig
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,11 @@ class WebScraper:
         """Initialize the web scraper"""
         self.cache_dir = cache_dir
         self.cache_expiration_hours = cache_expiration_hours
-        self.session: Optional[aiohttp.ClientSession] = None
+        
+        # Use SessionManager instead of direct session management
+        self.config = ScrapingConfig()
+        self.session_manager = SessionManager(self.config)
+        
         self.discover_semaphore = asyncio.Semaphore(3) # Limit concurrent discovery tasks
         self.scrape_semaphore = asyncio.Semaphore(5)   # Limit concurrent scraping tasks
 
@@ -93,17 +99,15 @@ class WebScraper:
             "content_selector": "article, .article-body, .article-content, .content-text, .news_body, [itemprop='articleBody']",
             "date_selector": ".date, .time, .published, .pubdate, time, [itemprop='datePublished']",
             "image_selector": "img, .image, .thumbnail, [itemprop='image']", # More specific for main image needed
-            "author_selector": ".author, .writer, .reporter, [itemprop='author']"
-        }
+            "author_selector": ".author, .writer, .reporter, [itemprop='author']"        }
 
     async def _ensure_session(self):
-        if self.session is None or self.session.closed:
-            self.session = aiohttp.ClientSession()
+        """Ensure session is active - now uses SessionManager"""
+        await self.session_manager.get_session()
 
     async def close_session(self):
-        if self.session and not self.session.closed:
-            await self.session.close()
-            self.session = None
+        """Close session - now uses SessionManager"""
+        await self.session_manager.close_session()
 
     async def _fetch_html(self, url: str, session: aiohttp.ClientSession) -> Optional[str]:
         """
@@ -478,12 +482,12 @@ class WebScraper:
     async def scrape_urls(self, initial_urls: List[str], keywords: List[str]) -> List[Dict[str, Any]]:
         """
         Scrapes news articles from a list of initial URLs.
-        1. Discovers relevant links on these pages based on keywords.
-        2. Scrapes the content of these discovered links.
+        1. Discovers relevant links on these pages based on keywords.        2. Scrapes the content of these discovered links.
         """
         await self._ensure_session()
-        if not self.session: # Should not happen if _ensure_session works
-            logger.error("Failed to initialize HTTP session.")
+        session = await self.session_manager.get_session()
+        if not session or session.closed:
+            logger.error("Failed to get active HTTP session.")
             return []
 
         all_discovered_links_info: List[Dict[str, str]] = []
@@ -493,7 +497,7 @@ class WebScraper:
             async def discover_with_semaphore(u_inner): # Renamed to avoid outer scope capture issues in loop
                 async with self.discover_semaphore:
                     logger.debug(f"Discovery semaphore acquired for {u_inner}")
-                    result = await self._discover_links_from_page(u_inner, keywords, self.session)
+                    result = await self._discover_links_from_page(u_inner, keywords, session)
                     logger.debug(f"Discovery semaphore released for {u_inner}")
                     return result
             discovery_tasks.append(discover_with_semaphore(url))
@@ -505,16 +509,15 @@ class WebScraper:
                 logger.error(f"Error discovering links from {initial_urls[i]}: {result}", exc_info=True)
             elif result:
                 all_discovered_links_info.extend(result)
-        
-        # Deduplicate discovered links based on URL to avoid scraping the same article multiple times
+          # Deduplicate discovered links based on URL to avoid scraping the same article multiple times
         unique_links_to_scrape_map: Dict[str, Dict[str,str]] = {}
         for link_info in all_discovered_links_info:
             if link_info["url"] not in unique_links_to_scrape_map:
-                 unique_links_to_scrape_map[link_info["url"]] = link_info
+                unique_links_to_scrape_map[link_info["url"]] = link_info
         
         unique_links_list = list(unique_links_to_scrape_map.values())
         logger.info(f"Total unique relevant links to scrape: {len(unique_links_list)}")
-
+        
         if not unique_links_list:
             return []
 
@@ -523,7 +526,7 @@ class WebScraper:
             async def scrape_with_semaphore(li_inner): # Renamed to avoid outer scope capture issues in loop
                 async with self.scrape_semaphore:
                     logger.debug(f"Scrape semaphore acquired for scraping {li_inner['url']}")
-                    result = await self._scrape_article_details(li_inner, keywords, self.session)
+                    result = await self._scrape_article_details(li_inner, keywords, session)
                     logger.debug(f"Scrape semaphore released for scraping {li_inner['url']}")
                     return result
             scraping_tasks.append(scrape_with_semaphore(link_info))
@@ -604,13 +607,13 @@ class WebScraper:
         Args:
             session_id (str): The unique ID for this analysis session.
             base_workspace_path (str): The root directory for all workspace data.
-            urls (List[str]): List of initial URLs to start discovery from.
-            keywords (List[str]): List of keywords to filter discovered links and content.
+            urls (List[str]): List of initial URLs to start discovery from.            keywords (List[str]): List of keywords to filter discovered links and content.
         """
         logger.info(f"Session [{session_id}]: Starting web scraping. Initial URLs: {urls}, Keywords: {keywords}")
         await self._ensure_session()
-        if not self.session:
-            logger.error(f"Session [{session_id}]: Failed to initialize HTTP session for web scraping.")
+        session = await self.session_manager.get_session()
+        if not session or session.closed:
+            logger.error(f"Session [{session_id}]: Failed to get active HTTP session for web scraping.")
             return
 
         session_scraped_articles_path = os.path.join(base_workspace_path, session_id) # Per spec, directly in session_path
@@ -624,7 +627,7 @@ class WebScraper:
                 async with self.discover_semaphore:
                     logger.debug(f"Session [{session_id}]: Discovery semaphore acquired for {u_inner}")
                     # Pass session_id for logging within _discover_links_from_page if it were to be refactored for it
-                    result = await self._discover_links_from_page(u_inner, keywords, self.session)
+                    result = await self._discover_links_from_page(u_inner, keywords, session)
                     logger.debug(f"Session [{session_id}]: Discovery semaphore released for {u_inner}")
                     return result
             discovery_tasks.append(discover_with_semaphore(url_to_discover_from))
@@ -648,16 +651,14 @@ class WebScraper:
         if not unique_links_list:
             logger.info(f"Session [{session_id}]: No relevant links found to scrape after discovery.")
             await self.close_session() # Close session if no more work
-            return
-
-        # Step 2: Scrape the discovered links
+            return        # Step 2: Scrape the discovered links
         scraping_tasks = []
         for link_info in unique_links_list:
             async def scrape_with_semaphore(li_inner):
                 async with self.scrape_semaphore:
                     logger.debug(f"Session [{session_id}]: Scrape semaphore acquired for scraping {li_inner['url']}")
                     # Pass session_id for logging within _scrape_article_details if it were to be refactored for it
-                    result = await self._scrape_article_details(li_inner, keywords, self.session)
+                    result = await self._scrape_article_details(li_inner, keywords, session)
                     logger.debug(f"Session [{session_id}]: Scrape semaphore released for scraping {li_inner['url']}")
                     return result
             scraping_tasks.append(scrape_with_semaphore(link_info))
@@ -710,8 +711,25 @@ class WebScraper:
         logger.info(f"Session [{session_id}]: Web scraping complete. Saved {articles_saved_count} articles to {session_scraped_articles_path}.")
         await self.close_session()
 
+    def __del__(self):
+        """Finalizer to ensure session cleanup if context manager isn't used"""
+        if hasattr(self, 'session_manager') and self.session_manager._session:
+            if not self.session_manager._session.closed:
+                logger.warning("WebScraper session not properly closed. Use async context manager or call close_session().")
+                # Note: Cannot call async method from __del__, so we log a warning
+                # Users should use async context manager or explicitly call close_session()
 
-# Example usage (for testing purposes, typically called from elsewhere)
+    async def __aenter__(self):
+        """Async context manager entry"""
+        await self._ensure_session()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.close_session()
+
+
+# Example usage (for testing purposes)
 async def main_test():
     scraper = WebScraper(cache_dir="./scraper_cache", cache_expiration_hours=1)
     # Test URLs and keywords
