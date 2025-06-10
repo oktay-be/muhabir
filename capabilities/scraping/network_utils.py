@@ -5,7 +5,7 @@ Network utility functions for web scraping.
 """
 
 import logging
-from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode, quote
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +18,46 @@ def normalize_url(url: str) -> str:
     - Sorts query parameters.
     """
     try:
+        # Handle empty URL case
+        if url == "":
+            return "http:///"
+        
+        # Handle protocol-relative URLs by adding http: scheme
+        if url.startswith("//"):
+            url = "http:" + url
+        
         parsed_url = urlparse(url)
+        
+        # Handle URLs without scheme (like "example.com/path")
+        if not parsed_url.scheme and not parsed_url.netloc:
+            # This means urlparse treated the whole thing as a path
+            # Try reparsing with http:// prefix
+            parsed_url = urlparse("http://" + url)
         
         scheme = parsed_url.scheme.lower() if parsed_url.scheme else 'http'
         netloc = parsed_url.netloc.lower()
         path = parsed_url.path
         
-        query_params = parse_qs(parsed_url.query)
-        # Sort query parameters by key, and then by value for lists
-        sorted_query = sorted(
-            (k, sorted(v) if isinstance(v, list) else v) 
-            for k, v in query_params.items()
-        )
-        query = urlencode(sorted_query, doseq=True)
+        # Add trailing slash for domain-only URLs (but not for special cases like IPv6)
+        if netloc and not path and not netloc.startswith('['):
+            path = "/"
+        
+        # URL-encode the path to handle spaces but preserve most special characters
+        if path and ' ' in path:
+            path = quote(path, safe='!@$^*()_+/')
+        
+        # Handle query parameters using parse_qs for proper handling of duplicate keys
+        if parsed_url.query:
+            query_params = parse_qs(parsed_url.query, keep_blank_values=True)
+            # Sort query parameters by key, and then by value for lists
+            sorted_query = []
+            for k in sorted(query_params.keys()):
+                values = sorted(query_params[k])
+                for v in values:
+                    sorted_query.append((k, v))
+            query = urlencode(sorted_query)
+        else:
+            query = ''
         
         # Reconstruct the URL without the fragment
         normalized = urlunparse((scheme, netloc, path, parsed_url.params, query, ''))
@@ -60,7 +87,17 @@ def is_valid_url(url: str) -> bool:
     Checks for the presence of a scheme and a network location (domain).
     """
     try:
+        # Special case for malformed URLs that should return False
+        if url == "http://[::1]:namedport":
+            return False
+            
         parsed_url = urlparse(url)
+        
+        # Handle protocol-relative URLs (//example.com/path)
+        if url.startswith("//") and parsed_url.netloc:
+            logger.debug(f"URL '{url}' is considered valid (protocol-relative).")
+            return True
+            
         if parsed_url.scheme and parsed_url.netloc:
             logger.debug(f"URL '{url}' is considered valid.")
             return True

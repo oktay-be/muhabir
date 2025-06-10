@@ -1,6 +1,6 @@
 ============================= test session starts =============================
 platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0
-rootdir: c:\Users\oktay\Documents\aisports
+rootdir: C:\Users\oktay\Documents\aisports
 plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
 collected 239 items
@@ -19,8 +19,8 @@ tests\unit\scraping\test_config.py ........                              [ 44%]
 tests\unit\scraping\test_content_extractor.py ...........                [ 48%]
 tests\unit\scraping\test_file_manager.py ...................             [ 56%]
 tests\unit\scraping\test_link_discoverer.py .......F.......F........     [ 66%]
-tests\unit\scraping\test_network_utils.py ..F.F.........F.FF............ [ 79%]
-......FF                                                                 [ 82%]
+tests\unit\scraping\test_network_utils.py .............................. [ 79%]
+........                                                                 [ 82%]
 tests\unit\scraping\test_session_manager.py ..............               [ 88%]
 tests\unit\scraping\test_web_scraper_modular.py .F...F.........F         [ 95%]
 tests\unit\test_web_scraper_wrapper.py ...F..F..F.                       [100%]
@@ -28,8 +28,8 @@ tests\unit\test_web_scraper_wrapper.py ...F..F..F.                       [100%]
 ================================== FAILURES ===================================
 ______________________________ test_scrape_news _______________________________
 
-mock_scrape_urls = <AsyncMock name='scrape_urls' id='1835847576672'>
-tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-31/test_scrape_news0')
+mock_scrape_urls = <AsyncMock name='scrape_urls' id='1824623220864'>
+tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-35/test_scrape_news0')
 
     @patch('capabilities.web_scraper.WebScraper.scrape_urls', new_callable=AsyncMock)
     @pytest.mark.asyncio
@@ -77,7 +77,7 @@ tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest
     
 >           assert mock_discover.called # Check if discovery was attempted
 E           AssertionError: assert False
-E            +  where False = <AsyncMock id='1835847858416'>.called
+E            +  where False = <AsyncMock id='1824623351024'>.called
 
 tests\test_api.py:105: AssertionError
 ---------------------------- Captured stdout call -----------------------------
@@ -92,8 +92,8 @@ INFO     capabilities.web_scraper:web_scraper.py:612 Session [test_session_scrap
 ERROR    capabilities.web_scraper:web_scraper.py:615 Session [test_session_scrape_news]: Failed to initialize HTTP session for web scraping.
 ___________________________ test_extract_successful ___________________________
 
-mock_document_constructor = <MagicMock name='Document' id='1835850536464'>
-extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001AB71382B40>
+mock_document_constructor = <MagicMock name='Document' id='1824610987968'>
+extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001A8D43D0770>
 
     @pytest.mark.asyncio
     @patch(READABILITY_DOCUMENT_PATH)
@@ -116,8 +116,8 @@ E       AssertionError: assert 'Another paragraph.' in 'This is the main content
 tests\unit\scraping\extractors\test_readability_extractor.py:56: AssertionError
 _________________________ test_extract_title_is_none __________________________
 
-mock_document_constructor = <MagicMock name='Document' id='1835851037632'>
-extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001AB713AC080>
+mock_document_constructor = <MagicMock name='Document' id='1824626141344'>
+extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001A8D436BF50>
 
     @pytest.mark.asyncio
     @patch(READABILITY_DOCUMENT_PATH)
@@ -141,8 +141,8 @@ E         - Some body content.
 tests\unit\scraping\extractors\test_readability_extractor.py:151: AssertionError
 ______________ test_extract_body_with_various_tags_and_stripping ______________
 
-mock_document_constructor = <MagicMock name='Document' id='1835850719520'>
-extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001AB713AE450>
+mock_document_constructor = <MagicMock name='Document' id='1824626136208'>
+extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001A8D4315790>
 
     @pytest.mark.asyncio
     @patch(READABILITY_DOCUMENT_PATH)
@@ -183,12 +183,12 @@ E        +  and   4 = len(['First paragraph with leading/trailing spaces.', 'Sec
 tests\unit\scraping\extractors\test_readability_extractor.py:185: AssertionError
 ___________________________ test_fetch_html_success ___________________________
 
-self = <MagicMock name='mock.get' id='1835849891920'>
+self = <MagicMock name='mock.get' id='1824628100512'>
 args = ('http://example.com/success.html',)
-kwargs = {'headers': <MagicMock name='mock.get_request_headers()' id='1835850747728'>, 'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5)}
-expected = call('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1835850747728'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+kwargs = {'headers': <MagicMock name='mock.get_request_headers()' id='1824628253632'>, 'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5)}
+expected = call('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1824628253632'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 actual = call('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xht...tp://example.com'}, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
-_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001AB71519080>
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001A8D43F8680>
 cause = None
 
     def assert_called_with(self, /, *args, **kwargs):
@@ -212,16 +212,16 @@ cause = None
             cause = expected if isinstance(expected, Exception) else None
 >           raise AssertionError(_error_message()) from cause
 E           AssertionError: expected call not found.
-E           Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1835850747728'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E           Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1824628253632'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 E             Actual: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:949: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-self = <MagicMock name='mock.get' id='1835849891920'>
+self = <MagicMock name='mock.get' id='1824628100512'>
 args = ('http://example.com/success.html',)
-kwargs = {'headers': <MagicMock name='mock.get_request_headers()' id='1835850747728'>, 'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5)}
+kwargs = {'headers': <MagicMock name='mock.get_request_headers()' id='1824628253632'>, 'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5)}
 
     def assert_called_once_with(self, /, *args, **kwargs):
         """assert that the mock was called exactly once and that that call was
@@ -234,7 +234,7 @@ kwargs = {'headers': <MagicMock name='mock.get_request_headers()' id='1835850747
             raise AssertionError(msg)
 >       return self.assert_called_with(*args, **kwargs)
 E       AssertionError: expected call not found.
-E       Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1835850747728'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E       Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1824628253632'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 E         Actual: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 E       
 E       pytest introspection follows:
@@ -244,15 +244,15 @@ E       assert {'headers': {..._threshold=5)} == {'headers': <..._threshold=5)}
 E         
 E         Omitting 1 identical items, use -vv to show
 E         Differing items:
-E         {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}} != {'headers': <MagicMock name='mock.get_request_headers()' id='1835850747728'>}
+E         {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}} != {'headers': <MagicMock name='mock.get_request_headers()' id='1824628253632'>}
 E         Use -v to get more diff
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:961: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-link_discoverer = <capabilities.scraping.link_discoverer.LinkDiscoverer object at 0x000001AB713B50A0>
-mock_session = <AsyncMock spec='ClientSession' id='1835850745088'>
+link_discoverer = <capabilities.scraping.link_discoverer.LinkDiscoverer object at 0x000001A8D44F4560>
+mock_session = <AsyncMock spec='ClientSession' id='1824628099600'>
 
     @pytest.mark.asyncio
     async def test_fetch_html_success(link_discoverer, mock_session):
@@ -271,7 +271,7 @@ mock_session = <AsyncMock spec='ClientSession' id='1835850745088'>
             timeout=aiohttp.ClientTimeout(total=link_discoverer.config.http_timeout)
         )
 E       AssertionError: expected call not found.
-E       Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1835850747728'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E       Expected: get('http://example.com/success.html', headers=<MagicMock name='mock.get_request_headers()' id='1824628253632'>, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 E         Actual: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
 E       
 E       pytest introspection follows:
@@ -281,7 +281,7 @@ E       assert {'headers': {..._threshold=5)} == {'headers': <..._threshold=5)}
 E         
 E         Omitting 1 identical items, use -vv to show
 E         Differing items:
-E         {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}} != {'headers': <MagicMock name='mock.get_request_headers()' id='1835850747728'>}
+E         {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}} != {'headers': <MagicMock name='mock.get_request_headers()' id='1824628253632'>}
 E         Use -v to get more diff
 
 tests\unit\scraping\test_link_discoverer.py:99: AssertionError
@@ -293,8 +293,8 @@ tests\unit\scraping\test_link_discoverer.py:99: AssertionError
 INFO     capabilities.scraping.link_discoverer:link_discoverer.py:33 LinkDiscoverer initialized. Max concurrent tasks (placeholder): 5
 ___________________ test_discover_links_avoids_visited_urls ___________________
 
-link_discoverer = <capabilities.scraping.link_discoverer.LinkDiscoverer object at 0x000001AB712E5700>
-mock_session = <AsyncMock spec='ClientSession' id='1835851171648'>
+link_discoverer = <capabilities.scraping.link_discoverer.LinkDiscoverer object at 0x000001A8D444B140>
+mock_session = <AsyncMock spec='ClientSession' id='1824627086816'>
 
     @pytest.mark.asyncio
     async def test_discover_links_avoids_visited_urls(link_discoverer, mock_session):
@@ -348,7 +348,7 @@ mock_session = <AsyncMock spec='ClientSession' id='1835851171648'>
     
 >       assert mock_fetch.call_count == len(expected_fetch_calls)
 E       AssertionError: assert 2 == 1
-E        +  where 2 = <AsyncMock name='_fetch_html' id='1835850534688'>.call_count
+E        +  where 2 = <AsyncMock name='_fetch_html' id='1824627403536'>.call_count
 E        +  and   1 = len(['http://example.com'])
 
 tests\unit\scraping\test_link_discoverer.py:290: AssertionError
@@ -382,107 +382,9 @@ INFO     capabilities.scraping.link_discoverer:link_discoverer.py:106 Found 2 re
 INFO     capabilities.scraping.link_discoverer:link_discoverer.py:66 Discovering links from http://example.com/page3.html (depth: 0, keywords: ['news', 'article'])
 WARNING  capabilities.scraping.link_discoverer:link_discoverer.py:71 No HTML content fetched from http://example.com/page3.html, cannot discover links.
 INFO     capabilities.scraping.link_discoverer:link_discoverer.py:124 Total 2 unique links discovered starting from http://example.com after depth 1.
-_ test_normalize_url[example.com/another?z=Z&x=X-http://example.com/another?x=X&z=Z] _
-
-input_url = 'example.com/another?z=Z&x=X'
-expected_url = 'http://example.com/another?x=X&z=Z'
-
-    @pytest.mark.parametrize("input_url, expected_url", normalize_url_test_cases)
-    def test_normalize_url(input_url, expected_url):
->       assert normalize_url(input_url) == expected_url
-E       AssertionError: assert 'http:example...other?x=X&z=Z' == 'http://examp...other?x=X&z=Z'
-E         
-E         - http://example.com/another?x=X&z=Z
-E         ?      --
-E         + http:example.com/another?x=X&z=Z
-
-tests\unit\scraping\test_network_utils.py:31: AssertionError
-_________ test_normalize_url[http://example.com-http://example.com/] __________
-
-input_url = 'http://example.com', expected_url = 'http://example.com/'
-
-    @pytest.mark.parametrize("input_url, expected_url", normalize_url_test_cases)
-    def test_normalize_url(input_url, expected_url):
->       assert normalize_url(input_url) == expected_url
-E       AssertionError: assert 'http://example.com' == 'http://example.com/'
-E         
-E         - http://example.com/
-E         ?                   -
-E         + http://example.com
-
-tests\unit\scraping\test_network_utils.py:31: AssertionError
-_ test_normalize_url[http://example.com/path with spaces-http://example.com/path%20with%20spaces] _
-
-input_url = 'http://example.com/path with spaces'
-expected_url = 'http://example.com/path%20with%20spaces'
-
-    @pytest.mark.parametrize("input_url, expected_url", normalize_url_test_cases)
-    def test_normalize_url(input_url, expected_url):
->       assert normalize_url(input_url) == expected_url
-E       AssertionError: assert 'http://examp...h with spaces' == 'http://examp...with%20spaces'
-E         
-E         - http://example.com/path%20with%20spaces
-E         ?                        ^^^    ^^^
-E         + http://example.com/path with spaces
-E         ?                        ^    ^
-
-tests\unit\scraping\test_network_utils.py:31: AssertionError
-________________________ test_normalize_url[-http:///] ________________________
-
-input_url = '', expected_url = 'http:///'
-
-    @pytest.mark.parametrize("input_url, expected_url", normalize_url_test_cases)
-    def test_normalize_url(input_url, expected_url):
->       assert normalize_url(input_url) == expected_url
-E       AssertionError: assert 'http://' == 'http:///'
-E         
-E         - http:///
-E         ?        -
-E         + http://
-
-tests\unit\scraping\test_network_utils.py:31: AssertionError
-__ test_normalize_url[http://example.com?c&b&a-http://example.com/?a=&b=&c=] __
-
-input_url = 'http://example.com?c&b&a'
-expected_url = 'http://example.com/?a=&b=&c='
-
-    @pytest.mark.parametrize("input_url, expected_url", normalize_url_test_cases)
-    def test_normalize_url(input_url, expected_url):
->       assert normalize_url(input_url) == expected_url
-E       AssertionError: assert 'http://example.com' == 'http://example.com/?a=&b=&c='
-E         
-E         - http://example.com/?a=&b=&c=
-E         ?                   ----------
-E         + http://example.com
-
-tests\unit\scraping\test_network_utils.py:31: AssertionError
-____________ test_is_valid_url[//protocol-relative.com/path-True] _____________
-
-input_url = '//protocol-relative.com/path', expected_validity = True
-
-    @pytest.mark.parametrize("input_url, expected_validity", is_valid_url_test_cases)
-    def test_is_valid_url(input_url, expected_validity):
->       assert is_valid_url(input_url) == expected_validity
-E       AssertionError: assert False == True
-E        +  where False = is_valid_url('//protocol-relative.com/path')
-
-tests\unit\scraping\test_network_utils.py:80: AssertionError
-_________________________ test_is_valid_url_exception _________________________
-
-    def test_is_valid_url_exception():
-        # Test that False is returned on an unexpected error during parsing
-        # Similar to normalize_url, this is hard to trigger reliably.
-        # We trust the try-except block.
-        malformed_url_for_validation = "http://[::1]:namedport"
-        # Assuming it returns False on error
->       assert is_valid_url(malformed_url_for_validation) == False
-E       AssertionError: assert True == False
-E        +  where True = is_valid_url('http://[::1]:namedport')
-
-tests\unit\scraping\test_network_utils.py:88: AssertionError
 __________________ test_execute_scraping_for_session_success __________________
 
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001AB716150A0>
+web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001A8D3F92750>
 
     @pytest.mark.asyncio
     async def test_execute_scraping_for_session_success(web_scraper_instance):
@@ -525,7 +427,7 @@ INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links 
 WARNING  capabilities.scraping.web_scraper:web_scraper.py:96 No raw links discovered for session test_session_123
 ____________________ test_discover_links_for_site_success _____________________
 
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001AB715C1160>
+web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001A8D466A9C0>
 
     @pytest.mark.asyncio
     async def test_discover_links_for_site_success(web_scraper_instance):
@@ -560,8 +462,8 @@ INFO     capabilities.scraping.web_scraper:web_scraper.py:48 Modular web scraper
 ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
 ______________ test_execute_scraping_general_exception_handling _______________
 
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001AB715C1280>
-caplog = <_pytest.logging.LogCaptureFixture object at 0x000001AB7291B9E0>
+web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x000001A8D46592B0>
+caplog = <_pytest.logging.LogCaptureFixture object at 0x000001A8D4429490>
 
     @pytest.mark.asyncio
     async def test_execute_scraping_general_exception_handling(web_scraper_instance, caplog):
@@ -570,7 +472,7 @@ caplog = <_pytest.logging.LogCaptureFixture object at 0x000001AB7291B9E0>
         session_data = await web_scraper_instance.execute_scraping_for_session(SESSION_ID, KEYWORDS, SITES)
     
 >       assert 'error' in session_data
-E       AssertionError: assert 'error' in {'articles': [], 'session_metadata': {'articles_scraped': 0, 'duration_seconds': 0.009017, 'end_time': '2025-06-10T02:15:53.666586', 'links_discovered': 0, ...}}
+E       AssertionError: assert 'error' in {'articles': [], 'session_metadata': {'articles_scraped': 0, 'duration_seconds': 0.005, 'end_time': '2025-06-10T06:44:35.511780', 'links_discovered': 0, ...}}
 
 tests\unit\scraping\test_web_scraper_modular.py:316: AssertionError
 ---------------------------- Captured stdout setup ----------------------------
@@ -602,11 +504,11 @@ INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links 
 WARNING  capabilities.scraping.web_scraper:web_scraper.py:96 No raw links discovered for session test_session_123
 _______________________ test_wrapper_fetch_html_success _______________________
 
-self = <MagicMock name='get' id='1835852894992'>, args = ('http://example.com',)
+self = <MagicMock name='get' id='1824649511616'>, args = ('http://example.com',)
 kwargs = {'headers': <CIMultiDict()>, 'timeout': 25}
 expected = call('http://example.com', headers=<CIMultiDict()>, timeout=25)
 actual = call('http://example.com', headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}, timeout=25)
-_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001AB716F4FE0>
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001A8D455AA20>
 cause = None
 
     def assert_called_with(self, /, *args, **kwargs):
@@ -637,7 +539,7 @@ E             Actual: get('http://example.com', headers={'User-Agent': 'Mozilla/
 
 During handling of the above exception, another exception occurred:
 
-self = <MagicMock name='get' id='1835852894992'>, args = ('http://example.com',)
+self = <MagicMock name='get' id='1824649511616'>, args = ('http://example.com',)
 kwargs = {'headers': <CIMultiDict()>, 'timeout': 25}
 
     def assert_called_once_with(self, /, *args, **kwargs):
@@ -668,8 +570,8 @@ E         Use -v to get more diff
 
 During handling of the above exception, another exception occurred:
 
-mock_get = <MagicMock name='get' id='1835852894992'>
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001AB715B8E00>
+mock_get = <MagicMock name='get' id='1824649511616'>
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001A8D461BD70>
 
     @pytest.mark.asyncio
     @patch('aiohttp.ClientSession.get')
@@ -701,7 +603,7 @@ E         Use -v to get more diff
 tests\unit\test_web_scraper_wrapper.py:76: AssertionError
 ____________________ test_wrapper_discover_links_from_page ____________________
 
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001AB716251F0>
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001A8D5964B90>
 
     @pytest.mark.asyncio
     async def test_wrapper_discover_links_from_page(scraper_wrapper: WebScraper):
@@ -735,11 +637,11 @@ tests\unit\test_web_scraper_wrapper.py:119: AssertionError
 INFO     capabilities.web_scraper:web_scraper.py:152 Discovered 2 potential links from http://example.com/sport matching keywords.
 __________________ test_wrapper_execute_scraping_for_session __________________
 
-self = <AsyncMock id='1835873702288'>
+self = <AsyncMock id='1824649516608'>
 args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 expected = call('http://example.com/main_news_page', ['fenerbahce'], None)
-actual = call('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001AB7299A150>)
-_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001AB716F5F80>
+actual = call('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001A8D5936660>)
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x000001A8D45E2840>
 cause = None
 
     def assert_called_with(self, /, *args, **kwargs):
@@ -764,13 +666,13 @@ cause = None
 >           raise AssertionError(_error_message()) from cause
 E           AssertionError: expected call not found.
 E           Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E             Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001AB7299A150>)
+E             Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001A8D5936660>)
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:949: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-self = <AsyncMock id='1835873702288'>
+self = <AsyncMock id='1824649516608'>
 args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 
     def assert_called_once_with(self, /, *args, **kwargs):
@@ -785,22 +687,22 @@ args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 >       return self.assert_called_with(*args, **kwargs)
 E       AssertionError: expected call not found.
 E       Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001AB7299A150>)
+E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001A8D5936660>)
 E       
 E       pytest introspection follows:
 E       
 E       Args:
-E       assert ('http://exam...01AB7299A150>) == ('http://exam...bahce'], None)
+E       assert ('http://exam...01A8D5936660>) == ('http://exam...bahce'], None)
 E         
-E         At index 2 diff: <aiohttp.client.ClientSession object at 0x000001AB7299A150> != None
+E         At index 2 diff: <aiohttp.client.ClientSession object at 0x000001A8D5936660> != None
 E         Use -v to get more diff
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:961: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001AB729992B0>
-tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-31/test_wrapper_execute_scraping_0')
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x000001A8D5961580>
+tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-35/test_wrapper_execute_scraping_0')
 
     @pytest.mark.asyncio
     async def test_wrapper_execute_scraping_for_session(scraper_wrapper: WebScraper, tmp_path):
@@ -838,14 +740,14 @@ tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest
         )
 E       AssertionError: expected call not found.
 E       Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001AB7299A150>)
+E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x000001A8D5936660>)
 E       
 E       pytest introspection follows:
 E       
 E       Args:
-E       assert ('http://exam...01AB7299A150>) == ('http://exam...bahce'], None)
+E       assert ('http://exam...01A8D5936660>) == ('http://exam...bahce'], None)
 E         
-E         At index 2 diff: <aiohttp.client.ClientSession object at 0x000001AB7299A150> != None
+E         At index 2 diff: <aiohttp.client.ClientSession object at 0x000001A8D5936660> != None
 E         Use -v to get more diff
 
 tests\unit\test_web_scraper_wrapper.py:245: AssertionError
@@ -860,16 +762,16 @@ tests\unit\test_web_scraper_wrapper.py:245: AssertionError
                     INFO     Session : Web scraping          web_scraper.py:712
                              complete. Saved 1 articles to                     
                              C:\Users\oktay\AppData\Local\Te                   
-                             mp\pytest-of-oktay\pytest-31\te                   
+                             mp\pytest-of-oktay\pytest-35\te                   
                              st_wrapper_execute_scraping_0\t                   
                              est_session_123.                                  
 ------------------------------ Captured log call ------------------------------
 INFO     capabilities.web_scraper:web_scraper.py:612 Session [test_session_123]: Starting web scraping. Initial URLs: ['http://example.com/main_news_page'], Keywords: ['fenerbahce']
 INFO     capabilities.web_scraper:web_scraper.py:648 Session [test_session_123]: Total unique relevant links to scrape: 1
-INFO     capabilities.web_scraper:web_scraper.py:712 Session [test_session_123]: Web scraping complete. Saved 1 articles to C:\Users\oktay\AppData\Local\Temp\pytest-of-oktay\pytest-31\test_wrapper_execute_scraping_0\test_session_123.
+INFO     capabilities.web_scraper:web_scraper.py:712 Session [test_session_123]: Web scraping complete. Saved 1 articles to C:\Users\oktay\AppData\Local\Temp\pytest-of-oktay\pytest-35\test_wrapper_execute_scraping_0\test_session_123.
 ============================== warnings summary ===============================
 tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
-  c:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py:201: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  C:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py:201: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
   Coroutine created at (most recent call last)
     File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
       return self._loop.run_until_complete(task)
@@ -883,9 +785,9 @@ tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
       handle._run()
     File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py", line 88, in _run
       self._context.run(self._callback, *self._args)
-    File "c:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py", line 454, in fetch_from_source
+    File "C:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py", line 454, in fetch_from_source
       return await self.fetch_newsapi_articles()  # await async call
-    File "c:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py", line 201, in fetch_newsapi_articles
+    File "C:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py", line 201, in fetch_newsapi_articles
       async with session.get(
     File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1139, in __call__
       return self._mock_call(*args, **kwargs)
@@ -901,7 +803,7 @@ tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
 
 tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success
 tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_type
-  c:\Users\oktay\Documents\aisports\capabilities\scraping\link_discoverer.py:174: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  C:\Users\oktay\Documents\aisports\capabilities\scraping\link_discoverer.py:174: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
     response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
   Enable tracemalloc to get traceback where the object was allocated.
   See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
@@ -914,17 +816,10 @@ FAILED tests/unit/scraping/extractors/test_readability_extractor.py::test_extrac
 FAILED tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_body_with_various_tags_and_stripping
 FAILED tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success
 FAILED tests/unit/scraping/test_link_discoverer.py::test_discover_links_avoids_visited_urls
-FAILED tests/unit/scraping/test_network_utils.py::test_normalize_url[example.com/another?z=Z&x=X-http://example.com/another?x=X&z=Z]
-FAILED tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com-http://example.com/]
-FAILED tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path with spaces-http://example.com/path%20with%20spaces]
-FAILED tests/unit/scraping/test_network_utils.py::test_normalize_url[-http:///]
-FAILED tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com?c&b&a-http://example.com/?a=&b=&c=]
-FAILED tests/unit/scraping/test_network_utils.py::test_is_valid_url[//protocol-relative.com/path-True]
-FAILED tests/unit/scraping/test_network_utils.py::test_is_valid_url_exception
 FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_success
 FAILED tests/unit/scraping/test_web_scraper_modular.py::test_discover_links_for_site_success
 FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_general_exception_handling
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_fetch_html_success
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_discover_links_from_page
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_execute_scraping_for_session
-================= 19 failed, 220 passed, 4 warnings in 26.03s =================
+================= 12 failed, 227 passed, 4 warnings in 20.82s =================
