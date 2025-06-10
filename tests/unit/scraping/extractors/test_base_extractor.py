@@ -1,5 +1,3 @@
-\
-# filepath: c:\\\\Users\\\\oktay\\\\Documents\\\\aisports\\\\tests\\\\unit\\\\scraping\\\\extractors\\\\test_base_extractor.py
 import pytest
 from abc import ABC, abstractmethod
 from capabilities.scraping.extractors.base_extractor import BaseExtractor
@@ -66,7 +64,7 @@ class TestBaseExtractor:
         """Test that BaseExtractor cannot be instantiated directly due to abstract methods."""
         with pytest.raises(TypeError) as excinfo:
             BaseExtractor() # type: ignore
-        assert "Can't instantiate abstract class BaseExtractor with abstract method extract" in str(excinfo.value)
+        assert "Can't instantiate abstract class BaseExtractor without an implementation for abstract method 'extract'" in str(excinfo.value)
 
 # To run these tests:
 # pytest tests/unit/scraping/extractors/test_base_extractor.py

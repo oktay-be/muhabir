@@ -54,11 +54,13 @@ def mock_ldjson_extractor(mock_config):
     mock_class_attr.__name__ = "LdJsonExtractor"
     extractor.__class__ = mock_class_attr
     extractor.get_extraction_priority.return_value = 50
-    async def extract(html_content, url, soup):
+    
+    async def extract_side_effect(html_content, url, soup=None):
         if "LD-JSON Title" in html_content:
             return {"title": "LD-JSON Title", "body": "LD-JSON body content, long enough.", "extraction_method": "LdJsonExtractor"}
         return None
-    extractor.extract = extract
+    
+    extractor.extract = AsyncMock(side_effect=extract_side_effect)
     return extractor
 
 @pytest.fixture
@@ -68,11 +70,13 @@ def mock_readability_extractor(mock_config):
     mock_class_attr.__name__ = "ReadabilityExtractor"
     extractor.__class__ = mock_class_attr
     extractor.get_extraction_priority.return_value = 40
-    async def extract(html_content, url, soup):
+    
+    async def extract_side_effect(html_content, url, soup=None):
         if "This is readability content" in html_content:
             return {"title": "Readability Title", "body": "This is readability content, also long enough.", "extraction_method": "ReadabilityExtractor"}
         return None
-    extractor.extract = extract
+    
+    extractor.extract = AsyncMock(side_effect=extract_side_effect)
     return extractor
     
 @pytest.fixture
@@ -82,11 +86,13 @@ def mock_selector_extractor(mock_config):
     mock_class_attr.__name__ = "SelectorExtractor"
     extractor.__class__ = mock_class_attr
     extractor.get_extraction_priority.return_value = 30
-    async def extract(html_content, url, soup):
+    
+    async def extract_side_effect(html_content, url, soup=None):
         if "Main Heading" in html_content: # Assume selector would find this
             return {"title": "Selector Title", "body": "Selector body from main heading paragraph, long enough.", "extraction_method": "SelectorExtractor"}
         return None
-    extractor.extract = extract
+    
+    extractor.extract = AsyncMock(side_effect=extract_side_effect)
     return extractor
 
 @pytest.fixture
@@ -96,9 +102,11 @@ def mock_fullpage_extractor(mock_config):
     mock_class_attr.__name__ = "FullPageExtractor"
     extractor.__class__ = mock_class_attr
     extractor.get_extraction_priority.return_value = 10
-    async def extract(html_content, url, soup):
+    
+    async def extract_side_effect(html_content, url, soup=None):
         return {"title": "Full Page Title", "body": html_content, "extraction_method": "FullPageExtractor"} # Simplified
-    extractor.extract = extract
+    
+    extractor.extract = AsyncMock(side_effect=extract_side_effect)
     return extractor
 
 @pytest.fixture

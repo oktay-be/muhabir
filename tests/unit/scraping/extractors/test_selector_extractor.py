@@ -181,6 +181,9 @@ async def test_extract_body_fallback_to_second_structural_tag(extractor: Selecto
     """
     url = "http://fallbacksite2.com/page"
     result = await extractor.extract(html_content, url)
+    print(f"DEBUG: result = {result}")
+    print(f"DEBUG: result['body'] = '{result['body']}'")
+    print(f"DEBUG: len(result['body']) = {len(result['body'])}")
     assert "Content from .story-content" in result["body"]
 
 @pytest.mark.asyncio
@@ -227,7 +230,8 @@ async def test_extract_body_no_substantial_paragraphs_uses_full_text(extractor: 
     <html><body>
         <div id="main">
             <span>Short.</span> <span>Also short.</span> <span>And this.</span>
-            This text is not in a p or div but is part of main. And it is long enough.        </div>
+            This text is not in a p or div but is part of main. And it is long enough.
+        </div>
     </body></html>"""
     url = "http://shortparas.com"
     result = await extractor.extract(html_content, url)

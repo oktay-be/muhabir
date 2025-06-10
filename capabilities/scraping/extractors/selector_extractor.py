@@ -107,13 +107,11 @@ class SelectorExtractor(BaseExtractor):
         
         for fallback_selector in fallback_selectors:
             content_tag = soup.select_one(fallback_selector)
-            if content_tag:
-                # Clean out unwanted elements
+            if content_tag:                # Clean out unwanted elements
                 for unwanted in content_tag.find_all(['nav', 'header', 'footer', 'aside', 'script', 'style']):
                     unwanted.decompose()
-                
                 text = content_tag.get_text(separator='\n', strip=True)
-                if text and len(text) > 100:
+                if text and len(text) > 20:  # Use same threshold as individual paragraphs
                     logger.debug(f"Found body using fallback selector '{fallback_selector}' for {url}")
                     return text
         
