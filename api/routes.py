@@ -16,7 +16,7 @@ from api.models import (
 )
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.trends_analyzer import TrendsAnalyzer
-from capabilities.web_scraper import WebScraper
+from capabilities.scraping.web_scraper import WebScraper # New import
 from utils.constants import DEFAULT_TEAM_IDS, DEFAULT_DOMAINS
 from utils.validators import validate_request_data
 from pydantic import ValidationError

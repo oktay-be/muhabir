@@ -8,7 +8,7 @@ from typing import List, Dict, Optional
 from werkzeug.utils import secure_filename
 
 from capabilities.trends_analyzer import TrendsAnalyzer
-from capabilities.web_scraper import WebScraper
+from capabilities.scraping.web_scraper import WebScraper
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.ai_summarizer import AISummarizer
 

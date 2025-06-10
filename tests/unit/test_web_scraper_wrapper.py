@@ -13,7 +13,7 @@ from unittest.mock import patch, AsyncMock, MagicMock, call, ANY
 # Ensure the capabilities directory is in the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-from capabilities.web_scraper import WebScraper
+from capabilities.scraping.web_scraper import WebScraper # New import
 
 CACHE_DIR_WRAPPER = "test_cache_wrapper"
 

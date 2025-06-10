@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from capabilities.news_aggregator import NewsAggregator
 from capabilities.trends_analyzer import TrendsAnalyzer
-from capabilities.web_scraper import WebScraper
+from capabilities.scraping.web_scraper import WebScraper # New import
 from api.models import TrendingTopic # Added for type hinting if needed
 
 

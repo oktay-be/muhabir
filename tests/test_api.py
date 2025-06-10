@@ -10,7 +10,7 @@ import asyncio
 from datetime import datetime
 
 from capabilities.news_aggregator import NewsAggregator
-from capabilities.web_scraper import WebScraper
+from capabilities.scraping.web_scraper import WebScraper # New import
 
 
 @patch('capabilities.news_aggregator.NewsAggregator.fetch_from_source', new_callable=AsyncMock)
