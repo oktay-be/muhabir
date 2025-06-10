@@ -64,3 +64,4 @@ cache/
 workspace/
 archive/
 example_project
+tmp*
