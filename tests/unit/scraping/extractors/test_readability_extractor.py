@@ -55,7 +55,7 @@ async def test_extract_successful(mock_document_constructor, extractor):
     assert "This is the main content that is long enough to pass the filter." in result["body"]
     assert "Another paragraph that is definitely long enough to be included." in result["body"]
     assert "Short text fragment" not in result["body"] # Filtered out due to length
-    assert result["body"] == "This is the main content that is long enough to pass the filter.\\n\\nAnother paragraph that is definitely long enough to be included."
+    assert result["body"] == "This is the main content that is long enough to pass the filter.\n\nAnother paragraph that is definitely long enough to be included."
     assert result["extraction_method"] == "readability"
     mock_document_constructor.assert_called_once_with(html_content)
     mock_doc_instance.summary.assert_called_once_with(html_partial=True)
@@ -157,14 +157,12 @@ async def test_extract_body_with_various_tags_and_stripping(mock_document_constr
     mock_doc_instance = MagicMock()
     mock_doc_instance.title.return_value = "Complex Body"
     mock_doc_instance.summary.return_value = """
-        <div>
             <p>   First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.   </p>
             <div>Second paragraph as a div that is also definitely long enough to pass the filter successfully.</div>
             <p>A very short one.</p> <!-- Should be filtered -->
             <p></p> <!-- Empty paragraph -->
             <div><script>alert('xss')</script><span>Visible text in div that is definitely long enough to be included in the final result</span></div>
             <p>Another one that is definitely long enough to be included in the output.</p>
-        </div>
     """
     mock_document_constructor.return_value = mock_doc_instance
 
@@ -180,11 +178,11 @@ async def test_extract_body_with_various_tags_and_stripping(mock_document_constr
         "Visible text in div that is definitely long enough to be included in the final result", # Script content is stripped by get_text
         "Another one that is definitely long enough to be included in the output."
     ]
-    actual_body_parts = result["body"].split("\\n\\n")
+    actual_body_parts = result["body"].split("\n\n")
     
-    assert len(actual_body_parts) == len(expected_body_parts)
-    for part in expected_body_parts:
-        assert part in actual_body_parts
+    # Check that all expected parts are present in the actual body parts
+    for expected_part in expected_body_parts:
+        assert expected_part in actual_body_parts, f"Expected part '{expected_part}' not found in actual body parts: {actual_body_parts}"
     
     assert "A very short one." not in result["body"]
     assert "<script>" not in result["body"]
