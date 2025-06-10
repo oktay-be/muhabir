@@ -22,137 +22,17 @@ tests\unit\scraping\test_link_discoverer.py ........................     [ 66%]
 tests\unit\scraping\test_network_utils.py .............................. [ 79%]
 ........                                                                 [ 82%]
 tests\unit\scraping\test_session_manager.py ..............               [ 88%]
-tests\unit\scraping\test_web_scraper_modular.py .F...F.........F         [ 95%]
+tests\unit\scraping\test_web_scraper_modular.py ................         [ 95%]
 tests\unit\test_web_scraper_wrapper.py ...F..F..F.                       [100%]
 
 ================================== FAILURES ===================================
-__________________ test_execute_scraping_for_session_success __________________
-
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x0000025C9D5D4EF0>
-
-    @pytest.mark.asyncio
-    async def test_execute_scraping_for_session_success(web_scraper_instance):
-        session_data = await web_scraper_instance.execute_scraping_for_session(SESSION_ID, KEYWORDS, SITES)
-    
-        assert session_data is not None
-        assert 'articles' in session_data
-        assert 'session_metadata' in session_data
->       assert len(session_data['articles']) == 2 # Based on mock_link_discoverer
-E       assert 0 == 2
-E        +  where 0 = len([])
-
-tests\unit\scraping\test_web_scraper_modular.py:90: AssertionError
----------------------------- Captured stdout setup ----------------------------
-                    INFO     Modular web scraper initialized  web_scraper.py:48
------------------------------ Captured log setup ------------------------------
-INFO     capabilities.scraping.web_scraper:web_scraper.py:48 Modular web scraper initialized
----------------------------- Captured stdout call -----------------------------
-                    INFO     Starting scraping session        web_scraper.py:64
-                             test_session_123 with keywords:                   
-                             ['test', 'news']                                  
-                    ERROR    Session not active or closed in web_scraper.py:162
-                             SessionManager, cannot discover                   
-                             links.                                            
-                    INFO     Discovered 0 links from          web_scraper.py:91
-                             http://site1.example.com                          
-                    ERROR    Session not active or closed in web_scraper.py:162
-                             SessionManager, cannot discover                   
-                             links.                                            
-                    INFO     Discovered 0 links from          web_scraper.py:91
-                             http://site2.example.com                          
-                    WARNING  No raw links discovered for      web_scraper.py:96
-                             session test_session_123                          
------------------------------- Captured log call ------------------------------
-INFO     capabilities.scraping.web_scraper:web_scraper.py:64 Starting scraping session test_session_123 with keywords: ['test', 'news']
-ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
-INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links from http://site1.example.com
-ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
-INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links from http://site2.example.com
-WARNING  capabilities.scraping.web_scraper:web_scraper.py:96 No raw links discovered for session test_session_123
-____________________ test_discover_links_for_site_success _____________________
-
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x0000025C9D704F20>
-
-    @pytest.mark.asyncio
-    async def test_discover_links_for_site_success(web_scraper_instance):
-        # This method is indirectly tested via execute_scraping_for_session
-        # Direct test to ensure it calls link_discoverer correctly
-        site_url = SITES[0]
-        expected_links = [{'url': 'http://site1.example.com/article1'}]
-        web_scraper_instance.link_discoverer.discover_links.return_value = expected_links
-    
-        # Need to mock get_session if it's not already done in the main fixture
-        mock_aiohttp_session = AsyncMock()
-        web_scraper_instance.session_manager.get_session = AsyncMock(return_value=mock_aiohttp_session)
-    
-        links = await web_scraper_instance._discover_links_for_site(site_url, KEYWORDS)
-    
->       assert links == expected_links
-E       AssertionError: assert [] == [{'url': 'htt...om/article1'}]
-E         
-E         Right contains one more item: {'url': 'http://site1.example.com/article1'}
-E         Use -v to get more diff
-
-tests\unit\scraping\test_web_scraper_modular.py:164: AssertionError
----------------------------- Captured stdout setup ----------------------------
-                    INFO     Modular web scraper initialized  web_scraper.py:48
------------------------------ Captured log setup ------------------------------
-INFO     capabilities.scraping.web_scraper:web_scraper.py:48 Modular web scraper initialized
----------------------------- Captured stdout call -----------------------------
-                    ERROR    Session not active or closed in web_scraper.py:162
-                             SessionManager, cannot discover                   
-                             links.                                            
------------------------------- Captured log call ------------------------------
-ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
-______________ test_execute_scraping_general_exception_handling _______________
-
-web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x0000025C9D7A0440>
-caplog = <_pytest.logging.LogCaptureFixture object at 0x0000025C9D7A0170>
-
-    @pytest.mark.asyncio
-    async def test_execute_scraping_general_exception_handling(web_scraper_instance, caplog):
-        web_scraper_instance.link_discoverer.discover_links.side_effect = Exception("Major discovery fail")
-    
-        session_data = await web_scraper_instance.execute_scraping_for_session(SESSION_ID, KEYWORDS, SITES)
-    
->       assert 'error' in session_data
-E       AssertionError: assert 'error' in {'articles': [], 'session_metadata': {'articles_scraped': 0, 'duration_seconds': 0.01, 'end_time': '2025-06-10T09:30:22.422627', 'links_discovered': 0, ...}}
-
-tests\unit\scraping\test_web_scraper_modular.py:316: AssertionError
----------------------------- Captured stdout setup ----------------------------
-                    INFO     Modular web scraper initialized  web_scraper.py:48
------------------------------ Captured log setup ------------------------------
-INFO     capabilities.scraping.web_scraper:web_scraper.py:48 Modular web scraper initialized
----------------------------- Captured stdout call -----------------------------
-                    INFO     Starting scraping session        web_scraper.py:64
-                             test_session_123 with keywords:                   
-                             ['test', 'news']                                  
-                    ERROR    Session not active or closed in web_scraper.py:162
-                             SessionManager, cannot discover                   
-                             links.                                            
-                    INFO     Discovered 0 links from          web_scraper.py:91
-                             http://site1.example.com                          
-                    ERROR    Session not active or closed in web_scraper.py:162
-                             SessionManager, cannot discover                   
-                             links.                                            
-                    INFO     Discovered 0 links from          web_scraper.py:91
-                             http://site2.example.com                          
-                    WARNING  No raw links discovered for      web_scraper.py:96
-                             session test_session_123                          
------------------------------- Captured log call ------------------------------
-INFO     capabilities.scraping.web_scraper:web_scraper.py:64 Starting scraping session test_session_123 with keywords: ['test', 'news']
-ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
-INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links from http://site1.example.com
-ERROR    capabilities.scraping.web_scraper:web_scraper.py:162 Session not active or closed in SessionManager, cannot discover links.
-INFO     capabilities.scraping.web_scraper:web_scraper.py:91 Discovered 0 links from http://site2.example.com
-WARNING  capabilities.scraping.web_scraper:web_scraper.py:96 No raw links discovered for session test_session_123
 _______________________ test_wrapper_fetch_html_success _______________________
 
-self = <MagicMock name='get' id='2596802058704'>, args = ('http://example.com',)
+self = <MagicMock name='get' id='2632259269600'>, args = ('http://example.com',)
 kwargs = {'headers': <CIMultiDict()>, 'timeout': 25}
 expected = call('http://example.com', headers=<CIMultiDict()>, timeout=25)
 actual = call('http://example.com', headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}, timeout=25)
-_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x0000025C9D51CAE0>
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x00000264DEEAE0C0>
 cause = None
 
     def assert_called_with(self, /, *args, **kwargs):
@@ -183,7 +63,7 @@ E             Actual: get('http://example.com', headers={'User-Agent': 'Mozilla/
 
 During handling of the above exception, another exception occurred:
 
-self = <MagicMock name='get' id='2596802058704'>, args = ('http://example.com',)
+self = <MagicMock name='get' id='2632259269600'>, args = ('http://example.com',)
 kwargs = {'headers': <CIMultiDict()>, 'timeout': 25}
 
     def assert_called_once_with(self, /, *args, **kwargs):
@@ -214,8 +94,8 @@ E         Use -v to get more diff
 
 During handling of the above exception, another exception occurred:
 
-mock_get = <MagicMock name='get' id='2596802058704'>
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x0000025C9D76C380>
+mock_get = <MagicMock name='get' id='2632259269600'>
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x00000264DEE0DC10>
 
     @pytest.mark.asyncio
     @patch('aiohttp.ClientSession.get')
@@ -247,7 +127,7 @@ E         Use -v to get more diff
 tests\unit\test_web_scraper_wrapper.py:76: AssertionError
 ____________________ test_wrapper_discover_links_from_page ____________________
 
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x0000025C9D2BAFC0>
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x00000264DF0FE8D0>
 
     @pytest.mark.asyncio
     async def test_wrapper_discover_links_from_page(scraper_wrapper: WebScraper):
@@ -281,11 +161,11 @@ tests\unit\test_web_scraper_wrapper.py:119: AssertionError
 INFO     capabilities.web_scraper:web_scraper.py:152 Discovered 2 potential links from http://example.com/sport matching keywords.
 __________________ test_wrapper_execute_scraping_for_session __________________
 
-self = <AsyncMock id='2596799557136'>
+self = <AsyncMock id='2632262337840'>
 args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 expected = call('http://example.com/main_news_page', ['fenerbahce'], None)
-actual = call('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0>)
-_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x0000025C9D7F19E0>
+actual = call('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x00000264DEAE05F0>)
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x00000264DEFEBF60>
 cause = None
 
     def assert_called_with(self, /, *args, **kwargs):
@@ -310,13 +190,13 @@ cause = None
 >           raise AssertionError(_error_message()) from cause
 E           AssertionError: expected call not found.
 E           Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E             Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0>)
+E             Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x00000264DEAE05F0>)
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:949: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-self = <AsyncMock id='2596799557136'>
+self = <AsyncMock id='2632262337840'>
 args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 
     def assert_called_once_with(self, /, *args, **kwargs):
@@ -331,22 +211,22 @@ args = ('http://example.com/main_news_page', ['fenerbahce'], None), kwargs = {}
 >       return self.assert_called_with(*args, **kwargs)
 E       AssertionError: expected call not found.
 E       Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0>)
+E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x00000264DEAE05F0>)
 E       
 E       pytest introspection follows:
 E       
 E       Args:
-E       assert ('http://exam...025C9D7A02C0>) == ('http://exam...bahce'], None)
+E       assert ('http://exam...0264DEAE05F0>) == ('http://exam...bahce'], None)
 E         
-E         At index 2 diff: <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0> != None
+E         At index 2 diff: <aiohttp.client.ClientSession object at 0x00000264DEAE05F0> != None
 E         Use -v to get more diff
 
 ..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:961: AssertionError
 
 During handling of the above exception, another exception occurred:
 
-scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x0000025C9D508740>
-tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-46/test_wrapper_execute_scraping_0')
+scraper_wrapper = <capabilities.web_scraper.WebScraper object at 0x00000264DEF1FEF0>
+tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest-48/test_wrapper_execute_scraping_0')
 
     @pytest.mark.asyncio
     async def test_wrapper_execute_scraping_for_session(scraper_wrapper: WebScraper, tmp_path):
@@ -384,14 +264,14 @@ tmp_path = WindowsPath('C:/Users/oktay/AppData/Local/Temp/pytest-of-oktay/pytest
         )
 E       AssertionError: expected call not found.
 E       Expected: mock('http://example.com/main_news_page', ['fenerbahce'], None)
-E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0>)
+E         Actual: mock('http://example.com/main_news_page', ['fenerbahce'], <aiohttp.client.ClientSession object at 0x00000264DEAE05F0>)
 E       
 E       pytest introspection follows:
 E       
 E       Args:
-E       assert ('http://exam...025C9D7A02C0>) == ('http://exam...bahce'], None)
+E       assert ('http://exam...0264DEAE05F0>) == ('http://exam...bahce'], None)
 E         
-E         At index 2 diff: <aiohttp.client.ClientSession object at 0x0000025C9D7A02C0> != None
+E         At index 2 diff: <aiohttp.client.ClientSession object at 0x00000264DEAE05F0> != None
 E         Use -v to get more diff
 
 tests\unit\test_web_scraper_wrapper.py:245: AssertionError
@@ -406,13 +286,13 @@ tests\unit\test_web_scraper_wrapper.py:245: AssertionError
                     INFO     Session : Web scraping          web_scraper.py:712
                              complete. Saved 1 articles to                     
                              C:\Users\oktay\AppData\Local\Te                   
-                             mp\pytest-of-oktay\pytest-46\te                   
+                             mp\pytest-of-oktay\pytest-48\te                   
                              st_wrapper_execute_scraping_0\t                   
                              est_session_123.                                  
 ------------------------------ Captured log call ------------------------------
 INFO     capabilities.web_scraper:web_scraper.py:612 Session [test_session_123]: Starting web scraping. Initial URLs: ['http://example.com/main_news_page'], Keywords: ['fenerbahce']
 INFO     capabilities.web_scraper:web_scraper.py:648 Session [test_session_123]: Total unique relevant links to scrape: 1
-INFO     capabilities.web_scraper:web_scraper.py:712 Session [test_session_123]: Web scraping complete. Saved 1 articles to C:\Users\oktay\AppData\Local\Temp\pytest-of-oktay\pytest-46\test_wrapper_execute_scraping_0\test_session_123.
+INFO     capabilities.web_scraper:web_scraper.py:712 Session [test_session_123]: Web scraping complete. Saved 1 articles to C:\Users\oktay\AppData\Local\Temp\pytest-of-oktay\pytest-48\test_wrapper_execute_scraping_0\test_session_123.
 ============================== warnings summary ===============================
 tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
   c:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py:201: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
@@ -454,10 +334,7 @@ tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_ty
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ===========================
-FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_success
-FAILED tests/unit/scraping/test_web_scraper_modular.py::test_discover_links_for_site_success
-FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_general_exception_handling
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_fetch_html_success
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_discover_links_from_page
 FAILED tests/unit/test_web_scraper_wrapper.py::test_wrapper_execute_scraping_for_session
-================= 6 failed, 233 passed, 4 warnings in 27.91s ==================
+================= 3 failed, 236 passed, 4 warnings in 26.58s ==================
