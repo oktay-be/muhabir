@@ -74,12 +74,20 @@ class ScrapingConfig:
            # HTTP settings
         self.user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         self.request_timeout = 25
-        
-        # Content quality thresholds
+          # Content quality thresholds
         self.min_body_length = 50
         self.min_title_length = 10
         self.high_quality_body_length = 500
         self.high_quality_title_length = 15
+        
+        # Suspicious content patterns to detect low-quality content
+        self.suspicious_patterns = [
+            'javascript required',
+            'enable javascript',
+            'cookie policy',
+            'privacy policy',
+            'terms of service'
+        ]
     
     def get_selectors_for_domain(self, domain: str) -> Dict[str, str]:
         """

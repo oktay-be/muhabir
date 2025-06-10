@@ -13,6 +13,15 @@ logger = logging.getLogger(__name__)
 class ReadabilityExtractor(BaseExtractor):
     """Extracts content using readability-lxml library."""
     
+    def __init__(self, config=None):
+        """
+        Initialize the readability extractor.
+        
+        Args:
+            config: Scraping configuration instance (optional)
+        """
+        self.config = config
+    
     async def extract(self, html_content: str, url: str, soup: BeautifulSoup = None) -> Dict[str, Any]:
         """
         Extract content using readability algorithm.

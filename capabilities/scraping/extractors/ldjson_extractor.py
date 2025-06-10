@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 class LdJsonExtractor(BaseExtractor):
     """Extracts content from JSON-LD structured data."""
     
+    def __init__(self, config=None):
+        """
+        Initialize the LD-JSON extractor.
+        
+        Args:
+            config: Scraping configuration instance (optional)
+        """
+        self.config = config
+    
     async def extract(self, html_content: str, url: str, soup: BeautifulSoup = None) -> Dict[str, Any]:
         """
         Extract content from JSON-LD structured data.

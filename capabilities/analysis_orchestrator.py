@@ -163,17 +163,14 @@ class AnalysisOrchestrator:
             )
             tasks.append(('news_fetch', news_fetch_task))
         else:
-            logger.info(f"Session [{session_id}]: No keywords provided for news aggregation.")
-
-        # Task 2: Web scraping (if URLs provided)
+            logger.info(f"Session [{session_id}]: No keywords provided for news aggregation.")        # Task 2: Web scraping (if URLs provided)
         if scrape_urls_for_session:
             logger.info(f"Session [{session_id}]: Creating web scraping task for URLs: {scrape_urls_for_session}")
             web_scrape_task = asyncio.create_task(
                 self.web_scraper.execute_scraping_for_session(
                     session_id=session_id,
-                    base_workspace_path=self.base_workspace_path,
-                    urls=scrape_urls_for_session,
-                    keywords=keywords_for_session
+                    keywords=keywords_for_session,
+                    sites=scrape_urls_for_session
                 )
             )
             tasks.append(('web_scrape', web_scrape_task))
@@ -189,8 +186,7 @@ class AnalysisOrchestrator:
             # Extract just the task objects for gather
             task_objects = [task[1] for task in tasks]
             results = await asyncio.gather(*task_objects, return_exceptions=True)
-            
-            # Process results based on task type
+              # Process results based on task type
             for i, (task_type, task_obj) in enumerate(tasks):
                 result = results[i]
                 
@@ -201,13 +197,36 @@ class AnalysisOrchestrator:
                         fetched_article_paths = result if result else []
                         logger.info(f"Session [{session_id}]: News fetching complete. Found {len(fetched_article_paths)} articles.")
                     elif task_type == 'web_scrape':
-                        # Web scraping saves files directly and doesn't return paths, so we need to construct them
-                        # The execute_scraping_for_session method saves files to the session directory
-                        session_scraped_path = os.path.join(self.base_workspace_path, session_id)
-                        if os.path.exists(session_scraped_path):
-                            scraped_files = [f for f in os.listdir(session_scraped_path) 
-                                           if f.endswith('.json') and not f.startswith('_')]
-                            scraped_article_paths = [os.path.join(session_scraped_path, f) for f in scraped_files]
+                        # New modular WebScraper returns session data with articles and metadata
+                        scraped_article_paths = []
+                        if result and isinstance(result, dict):
+                            # Extract articles from the session data
+                            articles = result.get('articles', [])
+                            
+                            # Save each article to the workspace session directory for analysis
+                            session_scraped_path = os.path.join(self.base_workspace_path, session_id)
+                            os.makedirs(session_scraped_path, exist_ok=True)
+                            
+                            for i, article in enumerate(articles):
+                                # Create a filename for each article
+                                article_filename = f"scraped_article_{i+1:03d}.json"
+                                article_path = os.path.join(session_scraped_path, article_filename)
+                                
+                                try:
+                                    with open(article_path, 'w', encoding='utf-8') as f:
+                                        json.dump(article, f, indent=2, ensure_ascii=False)
+                                    scraped_article_paths.append(article_path)
+                                except Exception as e:
+                                    logger.error(f"Failed to save scraped article to {article_path}: {e}")
+                            
+                            # Also save the complete session data
+                            session_data_path = os.path.join(session_scraped_path, "scraping_session_data.json")
+                            try:
+                                with open(session_data_path, 'w', encoding='utf-8') as f:
+                                    json.dump(result, f, indent=2, ensure_ascii=False)
+                            except Exception as e:
+                                logger.error(f"Failed to save session data to {session_data_path}: {e}")
+                        
                         logger.info(f"Session [{session_id}]: Web scraping complete. Found {len(scraped_article_paths)} scraped articles.")
         else:
             logger.info(f"Session [{session_id}]: No tasks to execute (no keywords or URLs provided).")

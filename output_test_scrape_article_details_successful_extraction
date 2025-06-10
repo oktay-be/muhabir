@@ -1,0 +1,518 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0 -- C:\Users\oktay\Documents\aisports\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\oktay\Documents\aisports
+plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_capabilities.py::TestWebScraper::test_scrape_article_details_successful_extraction FAILED [100%]
+
+================================== FAILURES ===================================
+______ TestWebScraper.test_scrape_article_details_successful_extraction _______
+
+self = <tests.test_capabilities.TestWebScraper testMethod=test_scrape_article_details_successful_extraction>
+mock_get = <MagicMock name='get' id='2200160366480'>
+
+    @patch('capabilities.scraping.session_manager.aiohttp.ClientSession.get') # Fixed path
+    async def test_scrape_article_details_successful_extraction(self, mock_get):
+        """Test scraping article details with successful extraction using readability."""
+        mock_html_content = """
+        <html>
+            <head><title>Test Article Title</title></head>
+            <body>
+                <article>
+                    <h1>Main Title</h1>
+                    <p>This is the first paragraph of the article.</p>
+                    <p>This is the second paragraph with more content.</p>
+                    <div>Some other div</div>
+                </article>
+            </body>
+        </html>        """
+        # Configure the mock for the session.get() call
+        async_mock_response = AsyncMock()
+        async_mock_response.status = 200
+        async_mock_response.text = AsyncMock(return_value=mock_html_content)
+        async_mock_response.raise_for_status = MagicMock()
+        async_mock_response.headers = {"Content-Type": "text/html"}  # Add headers
+    
+        # This is for the `async with session.get(...) as response:` part
+        mock_get.return_value.__aenter__.return_value = async_mock_response
+    
+        cache_dir_path = os.path.join(os.path.dirname(__file__), 'tmp_cache_scraper_details')
+        if not os.path.exists(cache_dir_path):
+            os.makedirs(cache_dir_path, exist_ok=True)
+    
+        scraper = WebScraper(cache_dir=cache_dir_path)
+    
+        url = "https://example.com/article1"
+        keywords = ["test"]
+    
+        # Mock the cache to return None initially (no cached content)
+        with patch.object(scraper.cache_manager, 'get_cached_content', return_value=None) as mock_get_cached, \
+             patch.object(scraper.cache_manager, 'cache_content', MagicMock()) as mock_cache_content, \
+             patch.object(scraper.file_manager, 'save_article', MagicMock()) as mock_save_article:
+    
+            # Use the new modular API
+            article_details = await scraper._scrape_single_article(url, keywords)
+    
+>       self.assertIsNotNone(article_details)
+E       AssertionError: unexpectedly None
+
+tests\test_capabilities.py:179: AssertionError
+---------------------------- Captured stdout call -----------------------------
+                    INFO     SessionManager initialized.  session_manager.py:28
+                    INFO     CacheManager initialized.      cache_manager.py:31
+                             Cache directory:                                  
+                             C:\Users\oktay\Documents\aispo                    
+                             rts\tests\tmp_cache_scraper_de                    
+                             tails, Expiration: 1 hours.                       
+                    INFO     LinkDiscoverer initialized.  link_discoverer.py:33
+                             Max concurrent tasks                              
+                             (placeholder): 3                                  
+                    INFO     Initialized 4 content      content_extractor.py:41
+                             extractors in order:                              
+                             ['SelectorExtractor',                             
+                             'ReadabilityExtractor',                           
+                             'LdJsonExtractor',                                
+                             'FullPageExtractor']                              
+                    INFO     FileManager initialized.        file_manager.py:34
+                             Session dir:                                      
+                             C:\Users\oktay\Documents\aispor                   
+                             ts\tests\tmp_cache_scraper_deta                   
+                             ils\sessions, Articles dir:                       
+                             C:\Users\oktay\Documents\aispor                   
+                             ts\tests\tmp_cache_scraper_deta                   
+                             ils\articles                                      
+                    INFO     Modular web scraper initialized  web_scraper.py:48
+                    INFO     Creating new HTTP session.   session_manager.py:36
+                    INFO     New HTTP session created     session_manager.py:40
+                             with timeout 25s.                                 
+                    INFO     Successfully fetched content session_manager.py:76
+                             from                                              
+                             https://example.com/article1                      
+                             (status: 200).                                    
+                    WARNING  Extractor                  content_extractor.py:74
+                             SelectorExtractor failed                          
+                             for                                               
+                             https://example.com/articl                        
+                             e1: 'ScrapingConfig'                              
+                             object has no attribute                           
+                             'suspicious_patterns'                             
+                             Traceback (most recent                            
+                             call last):                                       
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 65, in                                     
+                             extract_content                                   
+                                 if result and                                 
+                             self._is_quality_content(r                        
+                             esult, url): # Pass URL                           
+                             for logging in quality                            
+                             check                                             
+                                               ^^^^^^^^                        
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^                                               
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 126, in                                    
+                             _is_quality_content                               
+                                 suspicious_patterns =                         
+                             self.config.suspicious_pat                        
+                             terns or [                                        
+                                                                               
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^^^                                             
+                             AttributeError:                                   
+                             'ScrapingConfig' object                           
+                             has no attribute                                  
+                             'suspicious_patterns'                             
+                    WARNING  Extractor                  content_extractor.py:74
+                             ReadabilityExtractor                              
+                             failed for                                        
+                             https://example.com/articl                        
+                             e1: 'ScrapingConfig'                              
+                             object has no attribute                           
+                             'suspicious_patterns'                             
+                             Traceback (most recent                            
+                             call last):                                       
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 65, in                                     
+                             extract_content                                   
+                                 if result and                                 
+                             self._is_quality_content(r                        
+                             esult, url): # Pass URL                           
+                             for logging in quality                            
+                             check                                             
+                                               ^^^^^^^^                        
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^                                               
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 126, in                                    
+                             _is_quality_content                               
+                                 suspicious_patterns =                         
+                             self.config.suspicious_pat                        
+                             terns or [                                        
+                                                                               
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^^^                                             
+                             AttributeError:                                   
+                             'ScrapingConfig' object                           
+                             has no attribute                                  
+                             'suspicious_patterns'                             
+                    WARNING  Extractor                  content_extractor.py:74
+                             FullPageExtractor failed                          
+                             for                                               
+                             https://example.com/articl                        
+                             e1: 'ScrapingConfig'                              
+                             object has no attribute                           
+                             'suspicious_patterns'                             
+                             Traceback (most recent                            
+                             call last):                                       
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 65, in                                     
+                             extract_content                                   
+                                 if result and                                 
+                             self._is_quality_content(r                        
+                             esult, url): # Pass URL                           
+                             for logging in quality                            
+                             check                                             
+                                               ^^^^^^^^                        
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^                                               
+                               File                                            
+                             "C:\Users\oktay\Documents\                        
+                             aisports\capabilities\scra                        
+                             ping\content_extractor.py"                        
+                             , line 126, in                                    
+                             _is_quality_content                               
+                                 suspicious_patterns =                         
+                             self.config.suspicious_pat                        
+                             terns or [                                        
+                                                                               
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^                        
+                             ^^^^^                                             
+                             AttributeError:                                   
+                             'ScrapingConfig' object                           
+                             has no attribute                                  
+                             'suspicious_patterns'                             
+                    WARNING  All extractors failed to   content_extractor.py:76
+                             produce quality content                           
+                             for                                               
+                             https://example.com/articl                        
+                             e1                                                
+                    WARNING  Failed to extract quality       web_scraper.py:210
+                             content from                                      
+                             https://example.com/article1                      
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.session_manager:session_manager.py:28 SessionManager initialized.
+INFO     capabilities.scraping.cache_manager:cache_manager.py:31 CacheManager initialized. Cache directory: C:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details, Expiration: 1 hours.
+INFO     capabilities.scraping.link_discoverer:link_discoverer.py:33 LinkDiscoverer initialized. Max concurrent tasks (placeholder): 3
+INFO     capabilities.scraping.content_extractor:content_extractor.py:41 Initialized 4 content extractors in order: ['SelectorExtractor', 'ReadabilityExtractor', 'LdJsonExtractor', 'FullPageExtractor']
+INFO     capabilities.scraping.file_manager:file_manager.py:34 FileManager initialized. Session dir: C:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details\sessions, Articles dir: C:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details\articles
+INFO     capabilities.scraping.web_scraper:web_scraper.py:48 Modular web scraper initialized
+INFO     capabilities.scraping.session_manager:session_manager.py:36 Creating new HTTP session.
+INFO     capabilities.scraping.session_manager:session_manager.py:40 New HTTP session created with timeout 25s.
+INFO     capabilities.scraping.session_manager:session_manager.py:76 Successfully fetched content from https://example.com/article1 (status: 200).
+WARNING  capabilities.scraping.content_extractor:content_extractor.py:74 Extractor SelectorExtractor failed for https://example.com/article1: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+Traceback (most recent call last):
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 65, in extract_content
+    if result and self._is_quality_content(result, url): # Pass URL for logging in quality check
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 126, in _is_quality_content
+    suspicious_patterns = self.config.suspicious_patterns or [
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+WARNING  capabilities.scraping.content_extractor:content_extractor.py:74 Extractor ReadabilityExtractor failed for https://example.com/article1: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+Traceback (most recent call last):
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 65, in extract_content
+    if result and self._is_quality_content(result, url): # Pass URL for logging in quality check
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 126, in _is_quality_content
+    suspicious_patterns = self.config.suspicious_patterns or [
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+WARNING  capabilities.scraping.content_extractor:content_extractor.py:74 Extractor FullPageExtractor failed for https://example.com/article1: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+Traceback (most recent call last):
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 65, in extract_content
+    if result and self._is_quality_content(result, url): # Pass URL for logging in quality check
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\oktay\Documents\aisports\capabilities\scraping\content_extractor.py", line 126, in _is_quality_content
+    suspicious_patterns = self.config.suspicious_patterns or [
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ScrapingConfig' object has no attribute 'suspicious_patterns'
+WARNING  capabilities.scraping.content_extractor:content_extractor.py:76 All extractors failed to produce quality content for https://example.com/article1
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:210 Failed to extract quality content from https://example.com/article1
+=========================== short test summary info ===========================
+FAILED tests/test_capabilities.py::TestWebScraper::test_scrape_article_details_successful_extraction
+============================== 1 failed in 3.01s ==============================
+[06/10/25 21:44:18] ERROR    Unclosed client session                base_events.py:1833
+                             client_session:                                           
+                             <aiohttp.client.ClientSession object                      
+                             at 0x0000020043DA5C10>                                    
+                             source_traceback: Object created at                       
+                             (most recent call last):                                  
+                               File "<frozen runpy>", line 198, in                     
+                             _run_module_as_main                                       
+                               File "<frozen runpy>", line 88, in                      
+                             _run_code                                                 
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Scripts\pytest.exe\__main__.py",                       
+                             line 7, in <module>                                       
+                                 sys.exit(console_main())                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\config\__                    
+                             init__.py", line 201, in console_main                     
+                                 code = main()                                         
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\config\__                    
+                             init__.py", line 175, in main                             
+                                 ret: ExitCode | int =                                 
+                             config.hook.pytest_cmdline_main(config                    
+                             =config)                                                  
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_hooks.py"                    
+                             , line 512, in __call__                                   
+                                 return self._hookexec(self.name,                      
+                             self._hookimpls.copy(), kwargs,                           
+                             firstresult)                                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_manager.p                    
+                             y", line 120, in _hookexec                                
+                                 return                                                
+                             self._inner_hookexec(hook_name,                           
+                             methods, kwargs, firstresult)                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_callers.p                    
+                             y", line 121, in _multicall                               
+                                 res = hook_impl.function(*args)                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\main.py",                    
+                              line 330, in pytest_cmdline_main                         
+                                 return wrap_session(config, _main)                    
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\main.py",                    
+                              line 283, in wrap_session                                
+                                 session.exitstatus = doit(config,                     
+                             session) or 0                                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\main.py",                    
+                              line 337, in _main                                       
+                                 config.hook.pytest_runtestloop(ses                    
+                             sion=session)                                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_hooks.py"                    
+                             , line 512, in __call__                                   
+                                 return self._hookexec(self.name,                      
+                             self._hookimpls.copy(), kwargs,                           
+                             firstresult)                                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_manager.p                    
+                             y", line 120, in _hookexec                                
+                                 return                                                
+                             self._inner_hookexec(hook_name,                           
+                             methods, kwargs, firstresult)                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_callers.p                    
+                             y", line 121, in _multicall                               
+                                 res = hook_impl.function(*args)                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\main.py",                    
+                              line 362, in pytest_runtestloop                          
+                                 item.config.hook.pytest_runtest_pr                    
+                             otocol(item=item, nextitem=nextitem)                      
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_hooks.py"                    
+                             , line 512, in __call__                                   
+                                 return self._hookexec(self.name,                      
+                             self._hookimpls.copy(), kwargs,                           
+                             firstresult)                                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_manager.p                    
+                             y", line 120, in _hookexec                                
+                                 return                                                
+                             self._inner_hookexec(hook_name,                           
+                             methods, kwargs, firstresult)                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_callers.p                    
+                             y", line 121, in _multicall                               
+                                 res = hook_impl.function(*args)                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 113, in                                           
+                             pytest_runtest_protocol                                   
+                                 runtestprotocol(item,                                 
+                             nextitem=nextitem)                                        
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 132, in runtestprotocol                           
+                                 reports.append(call_and_report(ite                    
+                             m, "call", log))                                          
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 241, in call_and_report                           
+                                 call = CallInfo.from_call(                            
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 341, in from_call                                 
+                                 result: TResult | None = func()                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 242, in <lambda>                                  
+                                 lambda: runtest_hook(item=item,                       
+                             **kwds), when=when, reraise=reraise                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_hooks.py"                    
+                             , line 512, in __call__                                   
+                                 return self._hookexec(self.name,                      
+                             self._hookimpls.copy(), kwargs,                           
+                             firstresult)                                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_manager.p                    
+                             y", line 120, in _hookexec                                
+                                 return                                                
+                             self._inner_hookexec(hook_name,                           
+                             methods, kwargs, firstresult)                             
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\pluggy\_callers.p                    
+                             y", line 121, in _multicall                               
+                                 res = hook_impl.function(*args)                       
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\runner.py                    
+                             ", line 174, in pytest_runtest_call                       
+                                 item.runtest()                                        
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\.ve                    
+                             nv\Lib\site-packages\_pytest\unittest.                    
+                             py", line 332, in runtest                                 
+                                 testcase(result=self)                                 
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\case.py                    
+                             ", line 690, in __call__                                  
+                                 return self.run(*args, **kwds)                        
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\async_c                    
+                             ase.py", line 132, in run                                 
+                                 return super().run(result)                            
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\case.py                    
+                             ", line 634, in run                                       
+                                 self._callTestMethod(testMethod)                      
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\async_c                    
+                             ase.py", line 91, in _callTestMethod                      
+                                 if self._callMaybeAsync(method) is                    
+                             not None:                                                 
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\async_c                    
+                             ase.py", line 113, in _callMaybeAsync                     
+                                 return self._asyncioRunner.run(                       
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\runners.                    
+                             py", line 118, in run                                     
+                                 return                                                
+                             self._loop.run_until_complete(task)                       
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\base_eve                    
+                             nts.py", line 678, in                                     
+                             run_until_complete                                        
+                                 self.run_forever()                                    
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\windows_                    
+                             events.py", line 322, in run_forever                      
+                                 super().run_forever()                                 
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\base_eve                    
+                             nts.py", line 645, in run_forever                         
+                                 self._run_once()                                      
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\base_eve                    
+                             nts.py", line 1991, in _run_once                          
+                                 handle._run()                                         
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\asyncio\events.p                    
+                             y", line 88, in _run                                      
+                                 self._context.run(self._callback,                     
+                             *self._args)                                              
+                               File                                                    
+                             "C:\Users\oktay\AppData\Local\Programs                    
+                             \Python\Python312\Lib\unittest\mock.py                    
+                             ", line 1413, in patched                                  
+                                 return await func(*newargs,                           
+                             **newkeywargs)                                            
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\tes                    
+                             ts\test_capabilities.py", line 177, in                    
+                             test_scrape_article_details_successful                    
+                             _extraction                                               
+                                 article_details = await                               
+                             scraper._scrape_single_article(url,                       
+                             keywords)                                                 
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\cap                    
+                             abilities\scraping\web_scraper.py",                       
+                             line 202, in _scrape_single_article                       
+                                 html_content = await                                  
+                             self.session_manager.fetch_content(nor                    
+                             malized_url)                                              
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\cap                    
+                             abilities\scraping\session_manager.py"                    
+                             , line 67, in fetch_content                               
+                                 session = await self.get_session()                    
+                               File                                                    
+                             "C:\Users\oktay\Documents\aisports\cap                    
+                             abilities\scraping\session_manager.py"                    
+                             , line 39, in get_session                                 
+                                 self._session =                                       
+                             aiohttp.ClientSession(headers=headers,                    
+                             timeout=timeout)                                          

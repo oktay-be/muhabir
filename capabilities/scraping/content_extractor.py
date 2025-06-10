@@ -105,14 +105,13 @@ class ContentExtractor:
 
 
         # Check minimum length requirements
-        # Allow empty title if body is substantial, or vice-versa for some definitions of "quality"
-        # For now, strict check on body, lenient on title if body is good.
+        # Allow empty title if body is substantial, or vice-versa for some definitions of "quality"        # For now, strict check on body, lenient on title if body is good.
         if not body: # If body is empty, it's not quality content.
             logger.debug(f"Body is empty for {url}. Title: '{title[:50]}...'")
             return False
-
-        if len(body) < self.config.min_content_length:
-            logger.debug(f"Body too short for {url}: {len(body)} < {self.config.min_content_length}. Title: '{title[:50]}...'")
+        
+        if len(body) < self.config.min_body_length:
+            logger.debug(f"Body too short for {url}: {len(body)} < {self.config.min_body_length}. Title: '{title[:50]}...'")
             return False
         
         # Title is good to have, but might be missing. If body is good, we might accept.
@@ -134,7 +133,7 @@ class ContentExtractor:
             
             body_lower = body.lower()
             for pattern in suspicious_patterns:
-                if pattern in body_lower and len(body) < (self.config.min_content_length + 200): # More strict for short suspicious content
+                if pattern in body_lower and len(body) < (self.config.min_body_length + 200): # More strict for short suspicious content
                     logger.debug(f"Suspicious pattern '{pattern}' detected in relatively short body for {url}")
                     return False
         

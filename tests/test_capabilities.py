@@ -134,7 +134,7 @@ class TestTrendsAnalyzer(unittest.TestCase):
 class TestWebScraper(unittest.IsolatedAsyncioTestCase): # Changed to IsolatedAsyncioTestCase for async test
     """Test the web scraper capability."""
     
-    @patch('capabilities.web_scraper.aiohttp.ClientSession.get') # Changed back to normal patch
+    @patch('capabilities.scraping.session_manager.aiohttp.ClientSession.get') # Fixed path
     async def test_scrape_article_details_successful_extraction(self, mock_get):
         """Test scraping article details with successful extraction using readability."""
         mock_html_content = """
@@ -148,7 +148,8 @@ class TestWebScraper(unittest.IsolatedAsyncioTestCase): # Changed to IsolatedAsy
                     <div>Some other div</div>
                 </article>
             </body>
-        </html>        """        # Configure the mock for the session.get() call
+        </html>        """        
+        # Configure the mock for the session.get() call
         async_mock_response = AsyncMock()
         async_mock_response.status = 200
         async_mock_response.text = AsyncMock(return_value=mock_html_content)
@@ -164,25 +165,26 @@ class TestWebScraper(unittest.IsolatedAsyncioTestCase): # Changed to IsolatedAsy
             
         scraper = WebScraper(cache_dir=cache_dir_path)
         
-        link_info = {"url": "https://example.com/article1", "title_anchor": "Anchor Title"}
+        url = "https://example.com/article1"
         keywords = ["test"]
-        
-        with patch.object(scraper, '_read_from_cache', return_value=None) as mock_read_cache, \
-             patch.object(scraper, '_write_to_cache', MagicMock()) as mock_write_cache:
-            
-            await scraper._ensure_session() # Initialize the scraper's session
-            article_details = await scraper._scrape_article_details(link_info, keywords, scraper.session)
-            await scraper.close_session() # Clean up the session
+          # Mock the cache to return None initially (no cached content)
+        with patch.object(scraper.cache_manager, 'get_cached_content', return_value=None) as mock_get_cached, \
+             patch.object(scraper.cache_manager, 'cache_content', MagicMock()) as mock_cache_content, \
+             patch.object(scraper.file_manager, 'save_article', MagicMock()) as mock_save_article:
+
+            # Use the new modular API
+            article_details = await scraper._scrape_single_article(url, keywords)
         
         self.assertIsNotNone(article_details)
-        self.assertEqual(article_details['title'], 'Test Article Title') # readability should pick this up
-        self.assertIn("first paragraph", article_details['body'])  # Changed from 'content' to 'body'
-        self.assertIn("second paragraph", article_details['body'])  # Changed from 'content' to 'body'
-        self.assertEqual(article_details['url'], "https://example.com/article1")
+        self.assertEqual(article_details['title'], 'Main Title') # SelectorExtractor correctly finds h1 tag
+        self.assertIn("first paragraph", article_details['content'])  # Check which field name is used 
+        self.assertIn("second paragraph", article_details['content'])  # Check which field name is used
+        self.assertEqual(article_details['url'], url)
         
-        mock_read_cache.assert_called_once()
-        mock_write_cache.assert_called_once()
-        mock_get.assert_called() # Verify that the mocked session.get was called by _fetch_html
+        mock_get_cached.assert_called_once()
+        mock_cache_content.assert_called_once()
+        mock_save_article.assert_called_once()
+        mock_get.assert_called() # Verify that the mocked session.get was called
 
 
 # This is needed to run unittest.IsolatedAsyncioTestCase tests

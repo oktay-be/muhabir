@@ -37,7 +37,7 @@ class WebScraper:
         self.config = ScrapingConfig()
         self.session_manager = SessionManager(self.config)
         self.cache_manager = CacheManager(cache_dir, cache_expiration_hours)
-        self.link_discoverer = LinkDiscoverer(max_concurrent_tasks=3)
+        self.link_discoverer = LinkDiscoverer(config=self.config, max_concurrent_tasks=3) # Pass config
         self.content_extractor = ContentExtractor(self.config)
         self.file_manager = FileManager(cache_dir)
         

@@ -41,7 +41,7 @@ SAMPLE_HTML_SUSPICIOUS = """
 @pytest.fixture
 def mock_config():
     config = MagicMock(spec=ScrapingConfig)
-    config.min_content_length = 20
+    config.min_body_length = 20  # Fixed: was min_content_length
     config.min_title_length = 5
     config.suspicious_patterns = ["enable javascript"]
     config.title_body_ratio_threshold = 0.8 # Title can be 80% of body length
@@ -202,7 +202,7 @@ async def test_extract_content_quality_check_rejects_short_body(content_extracto
     content_extractor.extractors = [mock_fullpage_extractor] 
     mock_fullpage_extractor.extract = AsyncMock(return_value={"title": "Short Body Test", "body": "Too short.", "extraction_method": "FullPageExtractor"})
     
-    mock_config.min_content_length = 20
+    mock_config.min_body_length = 20
     
     result = await content_extractor.extract_content(url, SAMPLE_HTML_SHORT_BODY)
     assert result is None 
@@ -215,7 +215,7 @@ async def test_extract_content_quality_check_rejects_suspicious_content(content_
     mock_fullpage_extractor.extract = AsyncMock(return_value={"title": "Suspicious Content", "body": "Please enable JavaScript to continue. This page requires JavaScript and is long enough.", "extraction_method": "FullPageExtractor"})
     
     mock_config.suspicious_patterns = ["enable javascript"]
-    mock_config.min_content_length = 20
+    mock_config.min_body_length = 20
 
     result = await content_extractor.extract_content(url, SAMPLE_HTML_SUSPICIOUS)
     assert result is None 
@@ -299,7 +299,7 @@ def test_is_quality_content_various_scenarios(content_extractor: ContentExtracto
     assert content_extractor._is_quality_content(
         {"title": "Good Title", "body": "This is a good body of sufficient length."}, "url1"
     ) == True
-
+    
     assert content_extractor._is_quality_content(
         {"title": "Good Title", "body": "Too short."}, "url2"
     ) == False
@@ -307,21 +307,22 @@ def test_is_quality_content_various_scenarios(content_extractor: ContentExtracto
     mock_config.min_title_length = 10
     assert content_extractor._is_quality_content(
         {"title": "Short", "body": "This body is perfectly fine and long enough."}, "url3"
-    ) == True 
-
+    ) == True
+    
     assert content_extractor._is_quality_content(
         {"title": "Title Only", "body": ""}, "url4"
     ) == False
+    
     assert content_extractor._is_quality_content(
         {"title": "Title Only", "body": None}, "url4_none"
     ) == False
-
+    
     mock_config.suspicious_patterns = ["buy now"]
-    mock_config.min_content_length = 20
-    # Body length is 48. min_content_length (20) + 200 = 220. 48 < 220, so suspicious check applies.
+    mock_config.min_body_length = 20
+    # Body length is 48. min_body_length (20) + 200 = 220. 48 < 220, so suspicious check applies.
     assert content_extractor._is_quality_content(
         {"title": "Ad Page", "body": "This is an ad, buy now! It's just long enough."}, "url5" 
-    ) == False 
+    ) == False
 
     long_body_with_suspicion = "This is a very long article about finance. " + \
                                "It explains many concepts. Eventually, it mentions that you might want to " + \
@@ -331,8 +332,7 @@ def test_is_quality_content_various_scenarios(content_extractor: ContentExtracto
     ) == True
 
 
-    mock_config.title_body_ratio_threshold = 0.5
-    # title=50, body=11. ratio = 50/11 = 4.5 which is > 0.5. Title len > 20.
+    mock_config.title_body_ratio_threshold = 0.5    # title=50, body=11. ratio = 50/11 = 4.5 which is > 0.5. Title len > 20.
     assert content_extractor._is_quality_content(
         {"title": "This Title Is Extremely Long For Such A Small Body", "body": "Short body."}, "url7" 
     ) == False
@@ -343,13 +343,13 @@ def test_is_quality_content_various_scenarios(content_extractor: ContentExtracto
     
     assert content_extractor._is_quality_content(None, "url9") == False
     assert content_extractor._is_quality_content("not a dict", "url10") == False
-
+    
     # Test with body as a list (should be handled as not quality by current logic because len check fails)
     assert content_extractor._is_quality_content(
         {"title": "List Body", "body": ["item1", "item2 that is long enough"]}, "url11"
-    ) == False 
+    ) == False
 
-    mock_config.min_content_length = 15
+    mock_config.min_body_length = 15
     assert content_extractor._is_quality_content(
         {"title": "List Body", "body": ["item1", "item2 that is long enough"]}, "url11_pass_if_joined"
     ) == False 
