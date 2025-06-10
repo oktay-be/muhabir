@@ -5,9 +5,75 @@ Network utility functions for web scraping.
 """
 
 import logging
+import asyncio
+from typing import Optional
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode, quote
+import aiohttp
 
 logger = logging.getLogger(__name__)
+
+async def fetch_html(url: str, session: aiohttp.ClientSession, config=None) -> Optional[str]:
+    """
+    Consolidated HTTP fetching logic with comprehensive error handling.
+    
+    Args:
+        url: URL to fetch
+        session: Active aiohttp.ClientSession
+        config: Optional config object with user_agent and http_timeout attributes
+        
+    Returns:
+        HTML content or None if fetch fails
+    """
+    # Validate URL before making request
+    if not is_valid_url(url):
+        logger.warning(f"Invalid URL provided: {url}")
+        return None
+    
+    # Build headers with configurable User-Agent
+    default_user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    user_agent = default_user_agent
+    if config and hasattr(config, 'user_agent') and config.user_agent:
+        user_agent = config.user_agent
+    
+    headers = {
+        "User-Agent": user_agent,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Referer": urlparse(url).scheme + "://" + urlparse(url).netloc
+    }
+    
+    # Configurable timeout
+    timeout_seconds = 25  # Default timeout
+    if config and hasattr(config, 'http_timeout') and config.http_timeout:
+        timeout_seconds = config.http_timeout
+    
+    try:
+        logger.debug(f"Fetching HTML from {url} with timeout {timeout_seconds}s")
+        async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
+            response.raise_for_status()
+            
+            # Check content type to ensure it's likely HTML
+            content_type = response.headers.get('Content-Type', '').lower()
+            if 'html' not in content_type:
+                logger.warning(f"Fetched content from {url} is not HTML (Content-Type: {content_type}). Skipping.")
+                return None
+                
+            html = await response.text()
+            logger.debug(f"Successfully fetched HTML from {url} (length: {len(html)})")
+            return html
+            
+    except aiohttp.ClientResponseError as e:
+        logger.error(f"HTTP error fetching {url}: {e.status} {e.message}")
+    except aiohttp.ClientConnectionError as e:
+        logger.error(f"Connection error fetching {url}: {e}")
+    except asyncio.TimeoutError:
+        logger.error(f"Timeout error fetching {url} after {timeout_seconds}s")
+    except aiohttp.ClientError as e:
+        logger.error(f"Client error fetching {url}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error fetching {url}: {e}", exc_info=True)
+    
+    return None
 
 def normalize_url(url: str) -> str:
     """

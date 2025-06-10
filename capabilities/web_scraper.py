@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 from readability import Document
 from werkzeug.utils import secure_filename
 from .scraping import WebScraper as ModularWebScraper
+from .scraping.network_utils import fetch_html
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +86,8 @@ class WebScraper:
                 "date_selector": "div.meta-data time, .date, time",
                 "image_selector": "figure.news-image img, img.card-img-top, .news-image img",
                 "author_selector": "div.meta-data .author, .author"
-            }
-        }
-        
+            }        }
+
         self.generic_selectors = {
             "title_selector": "h1, h2, .article-title, .content-title, .news_title, [itemprop='headline']",
             "content_selector": "article, .article-body, .article-content, .content-text, .news_body, [itemprop='articleBody']",
@@ -106,20 +106,17 @@ class WebScraper:
             self.session = None
 
     async def _fetch_html(self, url: str, session: aiohttp.ClientSession) -> Optional[str]:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        try:
-            async with session.get(url, headers=headers, timeout=25) as response: # Increased timeout to 25
-                response.raise_for_status()
-                return await response.text()
-        except aiohttp.ClientError as e:
-            logger.error(f"HTTP error fetching {url}: {e}")
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout fetching {url}")
-        except Exception as e:
-            logger.error(f"Error fetching {url}: {e}", exc_info=True)
-        return None
+        """
+        Fetch HTML content from URL using shared network utility.
+        
+        Args:
+            url: URL to fetch
+            session: HTTP session to use
+              
+        Returns:
+            HTML content or None if fetch fails
+        """
+        return await fetch_html(url, session)
 
     async def _discover_links_from_page(self, page_url: str, keywords: List[str], session: aiohttp.ClientSession) -> List[Dict[str, str]]:
         """Fetches a page and discovers links relevant to keywords."""
