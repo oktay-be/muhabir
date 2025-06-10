@@ -154,13 +154,12 @@ class LinkDiscoverer:
         Args:
             url: URL to fetch
             session: HTTP session to use
-            
-        Returns:
+              Returns:
             HTML content or None if fetch fails
         """
         headers = {
             "User-Agent": self.config.user_agent if self.config and hasattr(self.config, 'user_agent') and self.config.user_agent 
-                          else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                          else "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": urlparse(url).scheme + "://" + urlparse(url).netloc # Basic referer

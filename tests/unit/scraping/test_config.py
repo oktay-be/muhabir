@@ -12,10 +12,8 @@ class TestScrapingConfig:
         assert isinstance(config.site_specific_selectors, dict)
         assert isinstance(config.generic_selectors, dict)
         assert len(config.site_specific_selectors) > 0  # Ensure some sites are preconfigured
-        assert len(config.generic_selectors) > 0    # Ensure generic selectors exist
-
-        # Check HTTP settings
-        assert config.user_agent == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        assert len(config.generic_selectors) > 0    # Ensure generic selectors exist        # Check HTTP settings
+        assert config.user_agent == "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         assert config.request_timeout == 25
         
         # Check content quality thresholds
@@ -99,15 +97,14 @@ class TestScrapingConfig:
         another_domain_substring = "nonexistentprefixfotomac.com.tr"
         selectors_another_fotomac = config.get_selectors_for_domain(another_domain_substring)
         assert selectors_another_fotomac == expected_fotomac
-
-
     def test_get_request_headers(self):
         """Test that get_request_headers returns the correct User-Agent."""
         config = ScrapingConfig()
         headers = config.get_request_headers()
+        
         assert "User-Agent" in headers
         assert headers["User-Agent"] == config.user_agent
-        assert headers["User-Agent"] == "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        assert headers["User-Agent"] == "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 
     def test_get_selectors_for_domain_case_insensitivity(self):
         """Test that domain matching for selectors is case-insensitive."""

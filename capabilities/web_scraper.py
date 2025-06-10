@@ -1,22 +1,23 @@
 """
-Web scraper capability for the Turkish Sports News API.
+BACKWARD COMPATIBILITY WRAPPER for the modular web scraper.
 
-This module handles scraping news from various Turkish sports websites by first
-discovering relevant links and then scraping their content.
+This module provides backward compatibility for existing code that uses the old WebScraper API.
+The actual implementation has been refactored into the scraping package.
 """
 
 import os
-import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
+import hashlib
 import asyncio
 import aiohttp
-from bs4 import BeautifulSoup
-from readability import Document # Added for readability
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional, Any
 from urllib.parse import urlparse, urljoin
-from werkzeug.utils import secure_filename # Added for filename sanitization
+from bs4 import BeautifulSoup
+from readability import Document
+from werkzeug.utils import secure_filename
+from .scraping import WebScraper as ModularWebScraper
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +79,7 @@ class WebScraper:
                 "date_selector": "div.article-info .date, .news-date",
                 "image_selector": "div.article-image img, .news-image img",
                 "author_selector": "div.article-info .author, .news-author"
-            },
-            "ntvspor.net": {
+            },            "ntvspor.net": {
                 "title_selector": "h1.news-title, h2, h3",
                 "content_selector": "div.news-content, .card-text, .summary",
                 "date_selector": "div.meta-data time, .date, time",
@@ -87,6 +87,7 @@ class WebScraper:
                 "author_selector": "div.meta-data .author, .author"
             }
         }
+        
         self.generic_selectors = {
             "title_selector": "h1, h2, .article-title, .content-title, .news_title, [itemprop='headline']",
             "content_selector": "article, .article-body, .article-content, .content-text, .news_body, [itemprop='articleBody']",
@@ -106,7 +107,7 @@ class WebScraper:
 
     async def _fetch_html(self, url: str, session: aiohttp.ClientSession) -> Optional[str]:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
         try:
             async with session.get(url, headers=headers, timeout=25) as response: # Increased timeout to 25
