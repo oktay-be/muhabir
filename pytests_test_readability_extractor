@@ -1,0 +1,95 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0 -- C:\Users\oktay\Documents\aisports\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\oktay\Documents\aisports
+plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/unit/scraping/extractors/test_readability_extractor.py::test_get_extraction_priority PASSED [ 12%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_successful FAILED [ 25%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_no_content PASSED [ 37%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_readability_exception PASSED [ 50%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_import_error PASSED [ 62%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_with_preparsed_soup PASSED [ 75%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_title_is_none PASSED [ 87%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_body_with_various_tags_and_stripping FAILED [100%]
+
+================================== FAILURES ===================================
+___________________________ test_extract_successful ___________________________
+
+mock_document_constructor = <MagicMock name='Document' id='1583748550864'>
+extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x000001709F1715B0>
+
+    @pytest.mark.asyncio
+    @patch(READABILITY_DOCUMENT_PATH)
+    async def test_extract_successful(mock_document_constructor, extractor):
+        mock_doc_instance = MagicMock()
+        mock_doc_instance.title.return_value = "Test Readability Title"
+        mock_doc_instance.summary.return_value = "<p>This is the main content that is long enough to pass the filter.</p><div>Another paragraph that is definitely long enough to be included.</div><p>Short text fragment</p>"
+        mock_document_constructor.return_value = mock_doc_instance
+    
+        html_content = "<html><body><article><h1>Test Readability Title</h1><p>This is the main content that is long enough to pass the filter.</p><div>Another paragraph that is definitely long enough to be included.</div><p>Short text fragment</p></article></body></html>"
+        url = "http://example.com/readability_success"
+    
+        result = await extractor.extract(html_content, url)
+    
+        assert result["title"] == "Test Readability Title"
+        assert "This is the main content that is long enough to pass the filter." in result["body"]
+        assert "Another paragraph that is definitely long enough to be included." in result["body"]
+        assert "Short text fragment" not in result["body"] # Filtered out due to length
+>       assert result["body"] == "This is the main content that is long enough to pass the filter.\\n\\nAnother paragraph that is definitely long enough to be included."
+E       AssertionError: assert 'This is the ... be included.' == 'This is the ... be included.'
+E         
+E         - This is the main content that is long enough to pass the filter.\n\nAnother paragraph that is definitely long enough to be included.
+E         + This is the main content that is long enough to pass the filter.
+E         + 
+E         + Another paragraph that is definitely long enough to be included.
+
+tests\unit\scraping\extractors\test_readability_extractor.py:58: AssertionError
+______________ test_extract_body_with_various_tags_and_stripping ______________
+
+mock_document_constructor = <MagicMock name='Document' id='1583797326320'>
+extractor = <capabilities.scraping.extractors.readability_extractor.ReadabilityExtractor object at 0x00000170C1B525D0>
+
+    @pytest.mark.asyncio
+    @patch(READABILITY_DOCUMENT_PATH)
+    async def test_extract_body_with_various_tags_and_stripping(mock_document_constructor, extractor):
+        mock_doc_instance = MagicMock()
+        mock_doc_instance.title.return_value = "Complex Body"
+        mock_doc_instance.summary.return_value = """
+            <div>
+                <p>   First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.   </p>
+                <div>Second paragraph as a div that is also definitely long enough to pass the filter successfully.</div>
+                <p>A very short one.</p> <!-- Should be filtered -->
+                <p></p> <!-- Empty paragraph -->
+                <div><script>alert('xss')</script><span>Visible text in div that is definitely long enough to be included in the final result</span></div>
+                <p>Another one that is definitely long enough to be included in the output.</p>
+            </div>
+        """
+        mock_document_constructor.return_value = mock_doc_instance
+    
+        html_content = "<html><body>...</body></html>"
+        url = "http://example.com/complex_body"
+    
+        result = await extractor.extract(html_content, url)
+    
+        assert result["title"] == "Complex Body"
+        expected_body_parts = [
+            "First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.",
+            "Second paragraph as a div that is also definitely long enough to pass the filter successfully.",
+            "Visible text in div that is definitely long enough to be included in the final result", # Script content is stripped by get_text
+            "Another one that is definitely long enough to be included in the output."
+        ]
+        actual_body_parts = result["body"].split("\\n\\n")
+    
+>       assert len(actual_body_parts) == len(expected_body_parts)
+E       AssertionError: assert 1 == 4
+E        +  where 1 = len(['First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.Second paragraph as a div that is also definitely long enough to pass the filter successfully.A very short one.Visible text in div that is definitely long enough to be included in the final resultAnother one that is definitely long enough to be included in the output.\n\nFirst paragraph with leading and trailing spaces that is definitely long enough to pass the filter.\n\nSecond paragraph as a div that is also definitely long enough to pass the filter successfully.\n\nVisible text in div that is definitely long enough to be included in the final result\n\nAnother one that is definitely long enough to be included in the output.'])
+E        +  and   4 = len(['First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.', 'Second paragraph as a div that is also definitely long enough to pass the filter successfully.', 'Visible text in div that is definitely long enough to be included in the final result', 'Another one that is definitely long enough to be included in the output.'])
+
+tests\unit\scraping\extractors\test_readability_extractor.py:185: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_successful
+FAILED tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_body_with_various_tags_and_stripping
+========================= 2 failed, 6 passed in 4.58s =========================

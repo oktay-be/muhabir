@@ -43,19 +43,19 @@ def test_get_extraction_priority(extractor):
 async def test_extract_successful(mock_document_constructor, extractor):
     mock_doc_instance = MagicMock()
     mock_doc_instance.title.return_value = "Test Readability Title"
-    mock_doc_instance.summary.return_value = "<p>This is the main content.</p><div>Another paragraph.</div><p>Short</p>"
+    mock_doc_instance.summary.return_value = "<p>This is the main content that is long enough to pass the filter.</p><div>Another paragraph that is definitely long enough to be included.</div><p>Short text fragment</p>"
     mock_document_constructor.return_value = mock_doc_instance
 
-    html_content = "<html><body><article><h1>Test Readability Title</h1><p>This is the main content.</p><div>Another paragraph.</div><p>Short</p></article></body></html>"
+    html_content = "<html><body><article><h1>Test Readability Title</h1><p>This is the main content that is long enough to pass the filter.</p><div>Another paragraph that is definitely long enough to be included.</div><p>Short text fragment</p></article></body></html>"
     url = "http://example.com/readability_success"
     
     result = await extractor.extract(html_content, url)
 
     assert result["title"] == "Test Readability Title"
-    assert "This is the main content." in result["body"]
-    assert "Another paragraph." in result["body"]
-    assert "Short" not in result["body"] # Filtered out due to length
-    assert result["body"] == "This is the main content.\\n\\nAnother paragraph."
+    assert "This is the main content that is long enough to pass the filter." in result["body"]
+    assert "Another paragraph that is definitely long enough to be included." in result["body"]
+    assert "Short text fragment" not in result["body"] # Filtered out due to length
+    assert result["body"] == "This is the main content that is long enough to pass the filter.\\n\\nAnother paragraph that is definitely long enough to be included."
     assert result["extraction_method"] == "readability"
     mock_document_constructor.assert_called_once_with(html_content)
     mock_doc_instance.summary.assert_called_once_with(html_partial=True)
@@ -139,16 +139,16 @@ async def test_extract_with_preparsed_soup(mock_document_constructor, extractor)
 async def test_extract_title_is_none(mock_document_constructor, extractor):
     mock_doc_instance = MagicMock()
     mock_doc_instance.title.return_value = None # Simulate readability returning None for title
-    mock_doc_instance.summary.return_value = "<p>Some body content.</p>"
+    mock_doc_instance.summary.return_value = "<p>Some body content that is definitely long enough to pass the filter test.</p>"
     mock_document_constructor.return_value = mock_doc_instance
 
-    html_content = "<html><body><p>Some body content.</p></body></html>"
+    html_content = "<html><body><p>Some body content that is definitely long enough to pass the filter test.</p></body></html>"
     url = "http://example.com/no_title"
     
     result = await extractor.extract(html_content, url)
 
     assert result["title"] == "" # Should default to empty string
-    assert result["body"] == "Some body content."
+    assert result["body"] == "Some body content that is definitely long enough to pass the filter test."
     assert result["extraction_method"] == "readability"
 
 @pytest.mark.asyncio
@@ -158,12 +158,12 @@ async def test_extract_body_with_various_tags_and_stripping(mock_document_constr
     mock_doc_instance.title.return_value = "Complex Body"
     mock_doc_instance.summary.return_value = """
         <div>
-            <p>   First paragraph with leading/trailing spaces.   </p>
-            <div>Second paragraph as a div.</div>
+            <p>   First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.   </p>
+            <div>Second paragraph as a div that is also definitely long enough to pass the filter successfully.</div>
             <p>A very short one.</p> <!-- Should be filtered -->
             <p></p> <!-- Empty paragraph -->
-            <div><script>alert('xss')</script><span>Visible text in div</span></div>
-            <p>Another one that is long enough to be included.</p>
+            <div><script>alert('xss')</script><span>Visible text in div that is definitely long enough to be included in the final result</span></div>
+            <p>Another one that is definitely long enough to be included in the output.</p>
         </div>
     """
     mock_document_constructor.return_value = mock_doc_instance
@@ -175,10 +175,10 @@ async def test_extract_body_with_various_tags_and_stripping(mock_document_constr
 
     assert result["title"] == "Complex Body"
     expected_body_parts = [
-        "First paragraph with leading/trailing spaces.",
-        "Second paragraph as a div.",
-        "Visible text in div", # Script content is stripped by get_text
-        "Another one that is long enough to be included."
+        "First paragraph with leading and trailing spaces that is definitely long enough to pass the filter.",
+        "Second paragraph as a div that is also definitely long enough to pass the filter successfully.",
+        "Visible text in div that is definitely long enough to be included in the final result", # Script content is stripped by get_text
+        "Another one that is definitely long enough to be included in the output."
     ]
     actual_body_parts = result["body"].split("\\n\\n")
     
