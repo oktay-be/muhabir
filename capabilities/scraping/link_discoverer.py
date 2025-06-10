@@ -7,10 +7,10 @@ from typing import List, Dict, Optional
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
 import aiohttp
+import asyncio # Added for TimeoutError
 
 # Assuming ScrapingConfig might be used for things like user-agent, timeouts, or link patterns
-from .config import ScrapingConfig
-from .network_utils import fetch_html
+from .config import ScrapingConfig 
 
 logger = logging.getLogger(__name__)
 
@@ -18,17 +18,13 @@ logger = logging.getLogger(__name__)
 class LinkDiscoverer:
     """Discovers relevant links from web pages based on keywords and site-specific patterns."""
     
-    def __init__(self, config: ScrapingConfig, max_concurrent_tasks: int = 5):
+    def __init__(self, max_concurrent_tasks: int = 5):
         """
         Initialize the link discoverer.
         
         Args:
-            config: ScrapingConfig instance for settings like user-agent, request timeouts.
-            max_concurrent_tasks: Maximum concurrent discovery tasks (not directly used in this class yet,
-                                  but could be for managing internal task queues if discovering from multiple
-                                  seed URLs simultaneously within this class).
+            max_concurrent_tasks: Maximum concurrent discovery tasks.
         """
-        self.config = config
         self.max_concurrent_tasks = max_concurrent_tasks # Placeholder for now
         logger.info(f"LinkDiscoverer initialized. Max concurrent tasks (placeholder): {max_concurrent_tasks}")
 
@@ -103,9 +99,7 @@ class LinkDiscoverer:
                         discovered_links_map[absolute_url] = link_info
                         links_on_this_page.append(absolute_url)
             
-            logger.info(f"Found {len(discovered_links_map)} relevant links on page {site_url}.")
-
-            # Recursive discovery if depth allows
+            logger.info(f"Found {len(discovered_links_map)} relevant links on page {site_url}.")            # Recursive discovery if depth allows
             if search_depth > 0:
                 for link_url in links_on_this_page: # Iterate over links found on *this* page
                     if link_url not in visited_urls: # Check before recursive call
@@ -149,13 +143,43 @@ class LinkDiscoverer:
     
     async def _fetch_html(self, url: str, session: aiohttp.ClientSession) -> Optional[str]:
         """
-        Fetch HTML content from URL using shared network utility.
+        Fetch HTML content from URL using settings from self.config.
         
         Args:
             url: URL to fetch
             session: HTTP session to use
-              
-        Returns:
+              Returns:
             HTML content or None if fetch fails
         """
-        return await fetch_html(url, session, self.config)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": urlparse(url).scheme + "://" + urlparse(url).netloc # Basic referer
+        }
+        
+        timeout_seconds = 20
+
+        try:
+            # logger.debug(f"Fetching HTML from {url} with timeout {timeout_seconds}s")
+            async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
+                response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+                # Check content type to ensure it's likely HTML
+                content_type = response.headers.get('Content-Type', '').lower()
+                if 'html' not in content_type:
+                    logger.warning(f"Fetched content from {url} is not HTML (Content-Type: {content_type}). Skipping.")
+                    return None
+                html = await response.text()
+                # logger.debug(f"Successfully fetched HTML from {url} (length: {len(html)})")
+                return html
+                
+        except aiohttp.ClientResponseError as e_resp:
+            logger.error(f"HTTP error fetching {url}: {e_resp.status} {e_resp.message}")
+        except aiohttp.ClientConnectionError as e_conn:
+            logger.error(f"Connection error fetching {url}: {e_conn}")
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout error fetching {url} after {timeout_seconds}s.")
+        except Exception as e_gen:
+            logger.error(f"Generic error fetching {url}: {e_gen}", exc_info=True)
+        
+        return None

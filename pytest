@@ -3,28 +3,554 @@ platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0
 rootdir: c:\Users\oktay\Documents\aisports
 plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 228 items
+collected 234 items
 
-tests\test_api.py ..                                                     [  0%]
-tests\test_capabilities.py .....                                         [  3%]
-tests\unit\scraping\extractors\test_base_extractor.py ......             [  5%]
-tests\unit\scraping\extractors\test_fullpage_extractor.py ...........    [ 10%]
-tests\unit\scraping\extractors\test_ldjson_extractor.py ................ [ 17%]
-................                                                         [ 24%]
-tests\unit\scraping\extractors\test_readability_extractor.py ........    [ 28%]
-tests\unit\scraping\extractors\test_selector_extractor.py .............. [ 34%]
-..                                                                       [ 35%]
-tests\unit\scraping\test_cache_manager.py ..................             [ 42%]
-tests\unit\scraping\test_config.py ........                              [ 46%]
-tests\unit\scraping\test_content_extractor.py ...........                [ 51%]
-tests\unit\scraping\test_file_manager.py ...................             [ 59%]
-tests\unit\scraping\test_link_discoverer.py ........................     [ 70%]
+test_enhanced_scraper.py s                                               [  0%]
+test_enhanced_scraper_final.py s                                         [  0%]
+test_entity_decoding.py s                                                [  1%]
+test_imports_debug.py .                                                  [  1%]
+test_simple_import.py .                                                  [  2%]
+test_url_filenames.py .                                                  [  2%]
+tests\test_api.py ..                                                     [  3%]
+tests\test_capabilities.py ....F                                         [  5%]
+tests\unit\scraping\extractors\test_base_extractor.py ......             [  8%]
+tests\unit\scraping\extractors\test_fullpage_extractor.py ...........    [ 12%]
+tests\unit\scraping\extractors\test_ldjson_extractor.py ................ [ 19%]
+................                                                         [ 26%]
+tests\unit\scraping\extractors\test_readability_extractor.py ........    [ 29%]
+tests\unit\scraping\extractors\test_selector_extractor.py .............. [ 35%]
+..                                                                       [ 36%]
+tests\unit\scraping\test_cache_manager.py ..................             [ 44%]
+tests\unit\scraping\test_config.py ........                              [ 47%]
+tests\unit\scraping\test_content_extractor.py ...........                [ 52%]
+tests\unit\scraping\test_file_manager.py ...................             [ 60%]
+tests\unit\scraping\test_link_discoverer.py EEEEEEEEEEEEEEEEEEEEEEEE     [ 70%]
 tests\unit\scraping\test_network_utils.py .............................. [ 83%]
-........                                                                 [ 86%]
-tests\unit\scraping\test_session_manager.py ..............               [ 92%]
-tests\unit\scraping\test_web_scraper_modular.py ................         [100%]
+........                                                                 [ 87%]
+tests\unit\scraping\test_session_manager.py ..............               [ 93%]
+tests\unit\scraping\test_web_scraper_modular.py .F....F.........         [100%]
 
+=================================== ERRORS ====================================
+____________ ERROR at setup of test_link_discoverer_initialization ____________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476344896'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/news/story1-Cool News Story-keywords0-True] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476183120'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/article/topic-An Interesting Article-keywords1-True] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476182928'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/info/page-Some Info-keywords2-False] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476179040'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/news/story1-Cool Story-keywords3-True] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476134352'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/news/story1-Cool NEWS Story-keywords4-True] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476131472'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_ ERROR at setup of test_matches_keywords[http://example.com/path-Anchor with NEWS-keywords5-True] _
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476133824'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+__________________ ERROR at setup of test_fetch_html_success __________________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476096496'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+________________ ERROR at setup of test_fetch_html_http_error _________________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476100768'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_____________ ERROR at setup of test_fetch_html_connection_error ______________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476096880'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_______________ ERROR at setup of test_fetch_html_timeout_error _______________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476102112'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+___________ ERROR at setup of test_fetch_html_non_html_content_type ___________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476097888'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+____________ ERROR at setup of test_discover_links_no_html_content ____________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476096256'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+________________ ERROR at setup of test_discover_links_depth_0 ________________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476103792'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+________________ ERROR at setup of test_discover_links_depth_1 ________________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476096208'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+__________ ERROR at setup of test_discover_links_avoids_visited_urls __________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476093136'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+___________ ERROR at setup of test_discover_links_max_depth_reached ___________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476102496'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+__ ERROR at setup of test_discover_links_handles_fetch_exception_gracefully ___
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476125760'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+______________ ERROR at setup of test_discover_links_empty_html _______________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476124464'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_______ ERROR at setup of test_discover_links_no_relevant_links_on_page _______
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476132288'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+________ ERROR at setup of test_discover_links_handles_malformed_href _________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476180144'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+______ ERROR at setup of test_discover_links_initial_url_already_visited ______
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476172512'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_________ ERROR at setup of test_discover_links_search_depth_negative _________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264476180960'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+_________ ERROR at setup of test_discover_links_no_keywords_provided __________
+
+mock_config = <MagicMock spec='ScrapingConfig' id='2264475657392'>
+
+    @pytest.fixture
+    def link_discoverer(mock_config):
+>       return LinkDiscoverer(config=mock_config)
+E       TypeError: LinkDiscoverer.__init__() got an unexpected keyword argument 'config'
+
+tests\unit\scraping\test_link_discoverer.py:69: TypeError
+================================== FAILURES ===================================
+______ TestWebScraper.test_scrape_article_details_successful_extraction _______
+
+self = <tests.test_capabilities.TestWebScraper testMethod=test_scrape_article_details_successful_extraction>
+mock_get = <MagicMock name='get' id='2264470976512'>
+
+    @patch('capabilities.scraping.session_manager.aiohttp.ClientSession.get') # Fixed path
+    async def test_scrape_article_details_successful_extraction(self, mock_get):
+        """Test scraping article details with successful extraction using readability."""
+        mock_html_content = """
+        <html>
+            <head><title>Test Article Title</title></head>
+            <body>
+                <article>
+                    <h1>Main Title</h1>
+                    <p>This is the first paragraph of the article.</p>
+                    <p>This is the second paragraph with more content.</p>
+                    <div>Some other div</div>
+                </article>
+            </body>
+        </html>        """
+        # Configure the mock for the session.get() call
+        async_mock_response = AsyncMock()
+        async_mock_response.status = 200
+        async_mock_response.text = AsyncMock(return_value=mock_html_content)
+        async_mock_response.raise_for_status = MagicMock()
+        async_mock_response.headers = {"Content-Type": "text/html"}  # Add headers
+    
+        # This is for the `async with session.get(...) as response:` part
+        mock_get.return_value.__aenter__.return_value = async_mock_response
+    
+        cache_dir_path = os.path.join(os.path.dirname(__file__), 'tmp_cache_scraper_details')
+        if not os.path.exists(cache_dir_path):
+            os.makedirs(cache_dir_path, exist_ok=True)
+    
+        scraper = WebScraper(cache_dir=cache_dir_path)
+    
+        url = "https://example.com/article1"
+        keywords = ["test"]
+          # Mock the cache to return None initially (no cached content)
+        with patch.object(scraper.cache_manager, 'get_cached_content', return_value=None) as mock_get_cached, \
+             patch.object(scraper.cache_manager, 'cache_content', MagicMock()) as mock_cache_content, \
+             patch.object(scraper.file_manager, 'save_article', MagicMock()) as mock_save_article:
+    
+            # Use the new modular API
+            article_details = await scraper._scrape_single_article(url, keywords)
+    
+        self.assertIsNotNone(article_details)
+>       self.assertEqual(article_details['title'], 'Main Title') # SelectorExtractor correctly finds h1 tag
+E       AssertionError: 'Test Article Title' != 'Main Title'
+E       - Test Article Title
+E       + Main Title
+
+tests\test_capabilities.py:179: AssertionError
+---------------------------- Captured stdout call -----------------------------
+                    INFO     SessionManager initialized.  session_manager.py:28
+                    INFO     CacheManager initialized.      cache_manager.py:31
+                             Cache directory:                                  
+                             c:\Users\oktay\Documents\aispo                    
+                             rts\tests\tmp_cache_scraper_de                    
+                             tails, Expiration: 1 hours.                       
+                    INFO     LinkDiscoverer initialized.  link_discoverer.py:29
+                             Max concurrent tasks                              
+                             (placeholder): 3                                  
+                    INFO     Initialized 4 content      content_extractor.py:41
+                             extractors in order:                              
+                             ['SelectorExtractor',                             
+                             'ReadabilityExtractor',                           
+                             'LdJsonExtractor',                                
+                             'FullPageExtractor']                              
+                    INFO     FileManager initialized.        file_manager.py:34
+                             Session dir:                                      
+                             c:\Users\oktay\Documents\aispor                   
+                             ts\tests\tmp_cache_scraper_deta                   
+                             ils\sessions, Articles dir:                       
+                             c:\Users\oktay\Documents\aispor                   
+                             ts\tests\tmp_cache_scraper_deta                   
+                             ils\articles                                      
+                    INFO     Modular web scraper initialized  web_scraper.py:56
+                    INFO     Creating new HTTP session.   session_manager.py:36
+                    INFO     New HTTP session created     session_manager.py:40
+                             with timeout 25s.                                 
+                    INFO     Successfully fetched content session_manager.py:76
+                             from                                              
+                             https://example.com/article1                      
+                             (status: 200).                                    
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             https://example.com/article1.                     
+                             Trying readability.                               
+                    INFO     Used readability for            web_scraper.py:378
+                             https://example.com/article1.                     
+                             Body len: 230, Title: 'Test                       
+                             Article Title...'                                 
+                    INFO     Content extraction complete for web_scraper.py:464
+                             https://example.com/article1.                     
+                             Method: readability:body ->                       
+                             readability:title, Title: 'Test                   
+                             Article Title...', Body length:                   
+                             230                                               
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.session_manager:session_manager.py:28 SessionManager initialized.
+INFO     capabilities.scraping.cache_manager:cache_manager.py:31 CacheManager initialized. Cache directory: c:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details, Expiration: 1 hours.
+INFO     capabilities.scraping.link_discoverer:link_discoverer.py:29 LinkDiscoverer initialized. Max concurrent tasks (placeholder): 3
+INFO     capabilities.scraping.content_extractor:content_extractor.py:41 Initialized 4 content extractors in order: ['SelectorExtractor', 'ReadabilityExtractor', 'LdJsonExtractor', 'FullPageExtractor']
+INFO     capabilities.scraping.file_manager:file_manager.py:34 FileManager initialized. Session dir: c:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details\sessions, Articles dir: c:\Users\oktay\Documents\aisports\tests\tmp_cache_scraper_details\articles
+INFO     capabilities.scraping.web_scraper:web_scraper.py:56 Modular web scraper initialized
+INFO     capabilities.scraping.session_manager:session_manager.py:36 Creating new HTTP session.
+INFO     capabilities.scraping.session_manager:session_manager.py:40 New HTTP session created with timeout 25s.
+INFO     capabilities.scraping.session_manager:session_manager.py:76 Successfully fetched content from https://example.com/article1 (status: 200).
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for https://example.com/article1. Trying readability.
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for https://example.com/article1. Body len: 230, Title: 'Test Article Title...'
+INFO     capabilities.scraping.web_scraper:web_scraper.py:464 Content extraction complete for https://example.com/article1. Method: readability:body -> readability:title, Title: 'Test Article Title...', Body length: 230
+__________________ test_execute_scraping_for_session_success __________________
+
+web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x0000020F3D5CF200>
+
+    @pytest.mark.asyncio
+    async def test_execute_scraping_for_session_success(web_scraper_instance):
+        session_data = await web_scraper_instance.execute_scraping_for_session(SESSION_ID, KEYWORDS, SITES)
+    
+        assert session_data is not None
+        assert 'articles' in session_data
+        assert 'session_metadata' in session_data
+>       assert len(session_data['articles']) == 2 # Based on mock_link_discoverer
+E       assert 0 == 2
+E        +  where 0 = len([])
+
+tests\unit\scraping\test_web_scraper_modular.py:91: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+                    INFO     Modular web scraper initialized  web_scraper.py:56
+----------------------------- Captured log setup ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:56 Modular web scraper initialized
+---------------------------- Captured stdout call -----------------------------
+                    INFO     Starting scraping session        web_scraper.py:72
+                             test_session_123 with keywords:                   
+                             ['test', 'news']                                  
+                    INFO     Discovered 2 links from          web_scraper.py:99
+                             http://site1.example.com                          
+                    INFO     Discovered 2 links from          web_scraper.py:99
+                             http://site2.example.com                          
+                    INFO     Total 4 raw links discovered    web_scraper.py:107
+                             across all sites                                  
+                    INFO     Normalized and filtered to 2    web_scraper.py:128
+                             unique, valid links.                              
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site1.example.com/articl                   
+                             e1. Trying readability.                           
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site1.example.com/articl                   
+                             e1. Body len: 9, Title: '...'                     
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site1.example.com/articl                   
+                             e1 (body len: 9). Falling back                    
+                             to CSS selectors.                                 
+                    ERROR    Failed to scrape article        web_scraper.py:242
+                             http://site1.example.com/articl                   
+                             e1 (original:                                     
+                             http://site1.example.com/articl                   
+                             e1): Mock object has no                           
+                             attribute 'generic_selectors'                     
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site2.example.com/news1.                   
+                             Trying readability.                               
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site2.example.com/news1.                   
+                             Body len: 9, Title: '...'                         
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site2.example.com/news1                    
+                             (body len: 9). Falling back to                    
+                             CSS selectors.                                    
+                    ERROR    Failed to scrape article        web_scraper.py:242
+                             http://site2.example.com/news1                    
+                             (original:                                        
+                             http://site2.example.com/news1)                   
+                             : Mock object has no attribute                    
+                             'generic_selectors'                               
+                    INFO     Successfully scraped 0 articles web_scraper.py:142
+                             out of 2 links                                    
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:72 Starting scraping session test_session_123 with keywords: ['test', 'news']
+INFO     capabilities.scraping.web_scraper:web_scraper.py:99 Discovered 2 links from http://site1.example.com
+INFO     capabilities.scraping.web_scraper:web_scraper.py:99 Discovered 2 links from http://site2.example.com
+INFO     capabilities.scraping.web_scraper:web_scraper.py:107 Total 4 raw links discovered across all sites
+INFO     capabilities.scraping.web_scraper:web_scraper.py:128 Normalized and filtered to 2 unique, valid links.
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site1.example.com/article1. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site1.example.com/article1. Body len: 9, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site1.example.com/article1 (body len: 9). Falling back to CSS selectors.
+ERROR    capabilities.scraping.web_scraper:web_scraper.py:242 Failed to scrape article http://site1.example.com/article1 (original: http://site1.example.com/article1): Mock object has no attribute 'generic_selectors'
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site2.example.com/news1. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site2.example.com/news1. Body len: 9, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site2.example.com/news1 (body len: 9). Falling back to CSS selectors.
+ERROR    capabilities.scraping.web_scraper:web_scraper.py:242 Failed to scrape article http://site2.example.com/news1 (original: http://site2.example.com/news1): Mock object has no attribute 'generic_selectors'
+INFO     capabilities.scraping.web_scraper:web_scraper.py:142 Successfully scraped 0 articles out of 2 links
+_________________ test_scrape_single_article_success_no_cache _________________
+
+web_scraper_instance = <capabilities.scraping.web_scraper.WebScraper object at 0x0000020F3D64B470>
+
+    @pytest.mark.asyncio
+    async def test_scrape_single_article_success_no_cache(web_scraper_instance):
+        url = "http://site1.example.com/article1_nocache"
+        expected_article_data = {
+            'url': url, # Assuming normalize_url returns it as is for simplicity here
+            'original_url': url,
+            'scraped_at': ANY, # datetime.now().isoformat()
+            'keywords_used': KEYWORDS,
+            'title': 'Mock Title',
+            'content': 'Mock body content.',
+            'extraction_method': 'MockExtractor',
+            'site': 'site1.example.com'
+        }
+    
+        # Ensure cache returns None
+        web_scraper_instance.cache_manager.get_cached_content.return_value = None
+        # Mock fetch_content for this specific call if needed, or rely on fixture's default
+        web_scraper_instance.session_manager.fetch_content = AsyncMock(return_value="<html>Mock HTML for nocache</html>")
+        web_scraper_instance.content_extractor.extract_content.return_value = {
+            'title': 'Mock Title', 'body': 'Mock body content.', 'extraction_method': 'MockExtractor'
+        }
+    
+        with patch('capabilities.scraping.web_scraper.normalize_url', lambda x: x) as mock_norm, \
+             patch('capabilities.scraping.web_scraper.is_valid_url', lambda x: True) as mock_valid:
+            article_data = await web_scraper_instance._scrape_single_article(url, KEYWORDS)
+    
+>       assert article_data is not None
+E       assert None is not None
+
+tests\unit\scraping\test_web_scraper_modular.py:199: AssertionError
+---------------------------- Captured stdout setup ----------------------------
+                    INFO     Modular web scraper initialized  web_scraper.py:56
+----------------------------- Captured log setup ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:56 Modular web scraper initialized
+---------------------------- Captured stdout call -----------------------------
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site1.example.com/articl                   
+                             e1_nocache. Trying readability.                   
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site1.example.com/articl                   
+                             e1_nocache. Body len: 21,                         
+                             Title: '...'                                      
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site1.example.com/articl                   
+                             e1_nocache (body len: 21).                        
+                             Falling back to CSS selectors.                    
+                    ERROR    Failed to scrape article        web_scraper.py:242
+                             http://site1.example.com/articl                   
+                             e1_nocache (original:                             
+                             http://site1.example.com/articl                   
+                             e1_nocache): Mock object has no                   
+                             attribute 'generic_selectors'                     
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site1.example.com/article1_nocache. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site1.example.com/article1_nocache. Body len: 21, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site1.example.com/article1_nocache (body len: 21). Falling back to CSS selectors.
+ERROR    capabilities.scraping.web_scraper:web_scraper.py:242 Failed to scrape article http://site1.example.com/article1_nocache (original: http://site1.example.com/article1_nocache): Mock object has no attribute 'generic_selectors'
 ============================== warnings summary ===============================
+test_enhanced_scraper.py::test_enhanced_scraper
+test_enhanced_scraper_final.py::test_enhanced_scraper_with_problematic_data
+test_entity_decoding.py::test_html_entity_decoding
+  C:\Users\oktay\Documents\aisports\.venv\Lib\site-packages\_pytest\python.py:148: PytestUnhandledCoroutineWarning: async def functions are not natively supported and have been skipped.
+  You need to install a suitable plugin for your async framework, for example:
+    - anyio
+    - pytest-asyncio
+    - pytest-tornasync
+    - pytest-trio
+    - pytest-twisted
+    warnings.warn(PytestUnhandledCoroutineWarning(msg.format(nodeid)))
+
+test_simple_import.py::test_import
+  C:\Users\oktay\Documents\aisports\.venv\Lib\site-packages\_pytest\python.py:163: PytestReturnNotNoneWarning: Expected None, but test_simple_import.py::test_import returned True, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
 tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
   c:\Users\oktay\Documents\aisports\capabilities\news_aggregator.py:201: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
   Coroutine created at (most recent call last)
@@ -56,12 +582,33 @@ tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
   C:\Users\oktay\Documents\aisports\.venv\Lib\site-packages\soccerdata\_common.py:432: UserWarning: The leagues have different default season codes. Using multi-year season codes.
     return SeasonCode.from_leagues(self.leagues)
 
-tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success
-tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_type
-  c:\Users\oktay\Documents\aisports\capabilities\scraping\network_utils.py:52: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
-    response.raise_for_status()
-  Enable tracemalloc to get traceback where the object was allocated.
-  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-====================== 228 passed, 4 warnings in 25.86s =======================
+=========================== short test summary info ===========================
+FAILED tests/test_capabilities.py::TestWebScraper::test_scrape_article_details_successful_extraction
+FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_success
+FAILED tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_success_no_cache
+ERROR tests/unit/scraping/test_link_discoverer.py::test_link_discoverer_initialization
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool News Story-keywords0-True]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/article/topic-An Interesting Article-keywords1-True]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/info/page-Some Info-keywords2-False]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool Story-keywords3-True]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool NEWS Story-keywords4-True]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/path-Anchor with NEWS-keywords5-True]
+ERROR tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success - ...
+ERROR tests/unit/scraping/test_link_discoverer.py::test_fetch_html_http_error
+ERROR tests/unit/scraping/test_link_discoverer.py::test_fetch_html_connection_error
+ERROR tests/unit/scraping/test_link_discoverer.py::test_fetch_html_timeout_error
+ERROR tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_type
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_html_content
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_depth_0
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_depth_1
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_avoids_visited_urls
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_max_depth_reached
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_handles_fetch_exception_gracefully
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_empty_html
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_relevant_links_on_page
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_handles_malformed_href
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_initial_url_already_visited
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_search_depth_negative
+ERROR tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_keywords_provided
+====== 3 failed, 204 passed, 3 skipped, 6 warnings, 24 errors in 21.48s =======

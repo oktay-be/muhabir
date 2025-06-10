@@ -79,8 +79,7 @@ class ScrapingConfig:
         self.min_title_length = 10
         self.high_quality_body_length = 500
         self.high_quality_title_length = 15
-        
-        # Suspicious content patterns to detect low-quality content
+          # Suspicious content patterns to detect low-quality content
         self.suspicious_patterns = [
             'javascript required',
             'enable javascript',
@@ -88,6 +87,11 @@ class ScrapingConfig:
             'privacy policy',
             'terms of service'
         ]
+        
+        # Additional settings for scraper
+        self.http_timeout = 25
+        self.max_retries = 3
+        self.link_discovery_depth = 1
     
     def get_selectors_for_domain(self, domain: str) -> Dict[str, str]:
         """
