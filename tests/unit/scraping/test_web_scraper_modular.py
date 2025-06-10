@@ -36,11 +36,11 @@ def web_scraper_instance(
     mock_config_instance # Use the fixture that returns a MagicMock spec'd as ScrapingConfig
 ):
     # Configure the ScrapingConfig mock to return our specific config mock instance
-    MockScrapingConfig.return_value = mock_config_instance 
-
-    # Configure other component mocks as needed
+    MockScrapingConfig.return_value = mock_config_instance     # Configure other component mocks as needed
     mock_session_manager_instance = MockSessionManager.return_value
-    mock_session_manager_instance.get_session = AsyncMock(return_value=AsyncMock()) # For _discover_links_for_site
+    # Create a proper mock session that the session manager returns
+    mock_aiohttp_session = AsyncMock()
+    mock_session_manager_instance.get_session = AsyncMock(return_value=mock_aiohttp_session) # For _discover_links_for_site
     mock_session_manager_instance.fetch_content = AsyncMock(return_value="<html>Mock HTML</html>")
 
     mock_cache_manager_instance = MockCacheManager.return_value

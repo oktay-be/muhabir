@@ -72,24 +72,29 @@ async def test_scrape_news(mock_scrape_urls, tmp_path):
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
 
-    scraper = WebScraper(cache_dir=str(cache_dir))
-
-    # Mock the underlying methods of WebScraper
+    scraper = WebScraper(cache_dir=str(cache_dir))    # Mock the underlying methods of WebScraper
     mock_discovered_links = [
         {"url": "https://example.com/news/1", "title_anchor": "Article 1", "source_page_domain": "example.com"},
         {"url": "https://example.com/news/2", "title_anchor": "Article 2", "source_page_domain": "example.com"}
     ]
     mock_scraped_article_1 = {
-        "url": "https://example.com/news/1", "title": "Article 1 Title", "content": "Content of article 1", 
+        "url": "https://example.com/news/1", "title": "Article 1 Title", "body": "Content of article 1", 
         "scraped_at": datetime.now().isoformat(), "source_page_domain": "example.com", "keywords_found": keywords
     }
     mock_scraped_article_2 = {
-        "url": "https://example.com/news/2", "title": "Article 2 Title", "content": "Content of article 2",
+        "url": "https://example.com/news/2", "title": "Article 2 Title", "body": "Content of article 2",
         "scraped_at": datetime.now().isoformat(), "source_page_domain": "example.com", "keywords_found": keywords
     }
-
+    # Create a mock session object
+    mock_session = AsyncMock()
+    
+    # Mock _ensure_session to actually set scraper.session
+    async def mock_ensure_session_func():
+        scraper.session = mock_session
+        return mock_session
+    
     # Corrected with statement:
-    with patch.object(scraper, '_ensure_session', AsyncMock()) as mock_ensure_session, \
+    with patch.object(scraper, '_ensure_session', side_effect=mock_ensure_session_func) as mock_ensure_session, \
          patch.object(scraper, 'close_session', AsyncMock()) as mock_close_session, \
          patch.object(scraper, '_discover_links_from_page', AsyncMock(return_value=mock_discovered_links)) as mock_discover, \
          patch.object(scraper, '_scrape_article_details', AsyncMock()) as mock_scrape_details:
@@ -112,28 +117,33 @@ async def test_scrape_news(mock_scrape_urls, tmp_path):
         # assert keywords == discover_args[1] # Assuming keywords is the second positional arg to _discover_links_from_page
 
         assert mock_scrape_details.called # Check if scraping was attempted
-        # Ensure _scrape_article_details was called for each discovered link
-        assert mock_scrape_details.call_count == len(mock_discovered_links)
+        # Ensure _scrape_article_details was called for each discovered link        assert mock_scrape_details.call_count == len(mock_discovered_links)
         # Example of checking the first call's arguments (keywords part):
         # scrape_args, scrape_kwargs = mock_scrape_details.call_args_list[0]
         # assert keywords == scrape_args[1] # Assuming keywords is the second positional arg to _scrape_article_details
 
         # Verify the output file was created and contains the scraped data
-        session_scrape_dir = workspace_dir / session_id / "scraped_data"
-        
-        # Find the file that starts with "scraped_content_"
-        # This needs to be robust to the exact timestamp in the filename
-        found_files = list(session_scrape_dir.glob(f"scraped_content_{keywords[0]}_*.json"))
-        assert len(found_files) == 1, f"Expected 1 output file, found {len(found_files)} in {session_scrape_dir}"
-        output_file = found_files[0]
+        session_scrape_dir = workspace_dir / session_id  # Files are saved directly to session directory        # Find the files that were saved
+        found_files = list(session_scrape_dir.glob("*.json"))
+        assert len(found_files) == 2, f"Expected 2 output files, found {len(found_files)} in {session_scrape_dir}"
 
-        with open(output_file, "r", encoding="utf-8") as f:
-            data_from_file = json.load(f)
+        # Load and verify both articles were saved correctly
+        saved_articles = []
+        for file_path in found_files:
+            with open(file_path, "r", encoding="utf-8") as f:
+                article_data = json.load(f)
+                saved_articles.append(article_data)
         
-        assert len(data_from_file) == 2
-        assert data_from_file[0]["url"] == mock_scraped_article_1["url"]
-        assert data_from_file[1]["url"] == mock_scraped_article_2["url"]
-        assert data_from_file[0]["title"] == mock_scraped_article_1["title"]
+        # Sort by URL for consistent comparison
+        saved_articles.sort(key=lambda x: x["url"])
+        expected_articles = [mock_scraped_article_1, mock_scraped_article_2]
+        expected_articles.sort(key=lambda x: x["url"])
+        
+        assert len(saved_articles) == 2
+        assert saved_articles[0]["url"] == expected_articles[0]["url"]
+        assert saved_articles[1]["url"] == expected_articles[1]["url"]
+        assert saved_articles[0]["title"] == expected_articles[0]["title"]
+        assert saved_articles[1]["title"] == expected_articles[1]["title"]
 
         # Assert that the scraper's session was closed
         mock_close_session.assert_called_once()
