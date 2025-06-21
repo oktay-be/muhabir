@@ -7,7 +7,9 @@
 aiohappyeyeballs==2.6.1
     # via aiohttp
 aiohttp==3.12.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   journ4list
 aiosignal==1.3.2
     # via aiohttp
 annotated-types==0.7.0
@@ -30,7 +32,9 @@ autogen-agentchat==0.5.7
 autogen-core==0.5.7
     # via autogen-agentchat
 beautifulsoup4==4.13.4
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   journ4list
 black==25.1.0
     # via -r requirements.in
 blinker==1.9.0
@@ -69,6 +73,8 @@ coverage[toml]==7.8.2
     #   pytest-cov
 cssselect==1.3.0
     # via readability-lxml
+datefinder==0.7.3
+    # via journ4list
 deprecated==1.2.18
     # via opentelemetry-api
 docstring-parser==0.16
@@ -186,11 +192,14 @@ itsdangerous==2.2.0
     # via flask
 jinja2==3.1.6
     # via flask
+journ4list==0.2.0
+    # via -r requirements.in
 jsonref==1.1.0
     # via autogen-core
 lxml[html-clean]==4.9.4
     # via
     #   -r requirements.in
+    #   journ4list
     #   readability-lxml
     #   soccerdata
 markdown-it-py==3.0.0
@@ -309,6 +318,7 @@ pytest-mock==3.14.1
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
+    #   datefinder
     #   google-cloud-bigquery
     #   pandas
 python-dotenv==1.1.0
@@ -316,9 +326,14 @@ python-dotenv==1.1.0
 pytz==2025.2
     # via
     #   -r requirements.in
+    #   datefinder
     #   pandas
 readability-lxml==0.8.4.1
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   journ4list
+regex==2024.11.6
+    # via datefinder
 requests==2.32.3
     # via
     #   -r requirements.in
@@ -327,6 +342,7 @@ requests==2.32.3
     #   google-cloud-bigquery
     #   google-cloud-storage
     #   google-genai
+    #   journ4list
     #   newsapi-python
     #   requests-toolbelt
     #   soccerdata
@@ -403,6 +419,7 @@ werkzeug==3.1.3
     # via
     #   flask
     #   flask-cors
+    #   journ4list
 wrapt==1.17.2
     # via deprecated
 wsproto==1.2.0

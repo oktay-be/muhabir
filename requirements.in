@@ -9,6 +9,7 @@ pydantic>=2.8.2
 python-dotenv>=1.0.1
 requests>=2.31.0
 aiohttp==3.12.2  # Added for asynchronous HTTP requests
+journ4list==0.2.0 # For fetching and processing news articles
 
 # News fetching
 newsapi-python>=0.2.7
