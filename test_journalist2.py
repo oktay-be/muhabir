@@ -29,7 +29,7 @@ async def main():
 
     ]
     
-    keywords = ["fenerbahce"]
+    keywords = ["fenerbahce", "aziz"]
     
     print(f"📰 Target URLs: {urls}")
     print(f"🔍 Keywords: {keywords}")
