@@ -3,8 +3,8 @@
 # pip-compile requirements.in
 
 # Core dependencies
-flask[async]>=2.3.2 # Added [async] extra
-flask-cors>=4.0.0
+quart>=0.20.0 # Async Flask-like framework
+quart-cors>=0.7.0 # CORS support for Quart
 pydantic>=2.8.2
 python-dotenv>=1.0.1
 requests>=2.31.0
@@ -33,7 +33,7 @@ pandas>=2.1.0
 pytz>=2024.1  # For timezone handling
 
 # API documentation
-flask-swagger-ui>=4.11.1
+quart-swagger>=0.1.0  # Swagger/OpenAPI for Quart
 apispec>=6.0.2
 
 # Caching

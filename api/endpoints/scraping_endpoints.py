@@ -5,7 +5,7 @@ These endpoints handle only scraping operations, completely separated from analy
 
 import asyncio
 import logging
-from flask import Blueprint, request, jsonify, current_app
+from quart import Blueprint, request, jsonify, current_app
 from typing import List, Dict, Any
 
 # Import the new scraping service
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 scraping_blueprint = Blueprint('scraping', __name__)
 
 @scraping_blueprint.route('/start', methods=['POST'])
-def start_scraping():
+async def start_scraping():
     """
     Start a scraping job using journ4list.
     Completely separated from other API calls and analysis.
@@ -96,7 +96,7 @@ def start_scraping():
         return jsonify({"error": f"Scraping endpoint error: {str(e)}"}), 500
 
 @scraping_blueprint.route('/latest', methods=['GET'])
-def get_latest_session():
+async def get_latest_session():
     """Get the latest scraping session data."""
     try:
         scraping_service = ScrapingService()
@@ -120,7 +120,7 @@ def get_latest_session():
         return jsonify({"error": str(e)}), 500
 
 @scraping_blueprint.route('/sessions', methods=['GET'])
-def list_sessions():
+async def list_sessions():
     """List all available scraping sessions."""
     try:
         scraping_service = ScrapingService()
@@ -143,7 +143,7 @@ def list_sessions():
         return jsonify({"error": str(e)}), 500
 
 @scraping_blueprint.route('/load', methods=['POST'])
-def load_session_data():
+async def load_session_data():
     """
     Load full session data from a specific session file.
     
@@ -175,7 +175,7 @@ def load_session_data():
         return jsonify({"error": str(e)}), 500
 
 @scraping_blueprint.route('/cleanup', methods=['POST'])
-def cleanup_sessions():
+async def cleanup_sessions():
     """
     Clean up old session files.
     
@@ -198,7 +198,7 @@ def cleanup_sessions():
         return jsonify({"error": str(e)}), 500
 
 @scraping_blueprint.route('/status', methods=['GET'])
-def get_scraping_status():
+async def get_scraping_status():
     """Get scraping service status and configuration."""
     try:
         scraping_service = ScrapingService()

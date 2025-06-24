@@ -8,8 +8,9 @@ import asyncio # Added for Quart compatibility if needed, and for running sync i
 import os # Add this import
 import json # Add this import
 from datetime import datetime # Add this import
-from flask import Blueprint, jsonify, request, current_app, url_for
+from quart import Blueprint, jsonify, request, current_app, url_for
 from werkzeug.utils import secure_filename # Add this import
+from journalist import Journalist # Add this import
 from api.models import (
     NewsRequest, NewsResponse, ErrorResponse, TrendingRequest, TrendingTopic, NewsArticle, 
     TimeRangeEnum, NewsSourceEnum, AnalysisRequest # Added AnalysisRequest
@@ -45,7 +46,7 @@ def run_orchestrator_in_thread(app_config, session_id, base_workspace_path, aggr
         # Orchestrator handles creating _JOB_FAILED marker.
 
 @api_blueprint.route('/analysis/start_job', methods=['POST'])
-def start_analysis_job():
+async def start_analysis_job():
     """
     Starts a new analysis job.
     Creates a unique session and triggers the analysis pipeline in a background thread.
@@ -179,7 +180,7 @@ def start_analysis_job():
         ).model_dump()), 500 # Use .model_dump() for Pydantic v2+ or .dict() for v1
 
 @api_blueprint.route('/analysis/job_status/<session_id>', methods=['GET'])
-def get_analysis_job_status(session_id: str):
+async def get_analysis_job_status(session_id: str):
     """
     Gets the status of an analysis job.
     Checks for status marker files in the session directory.
@@ -281,7 +282,7 @@ def get_analysis_job_status(session_id: str):
         ).dict()), 500
 
 @api_blueprint.route('/analysis/job_results/<session_id>', methods=['GET'])
-def get_job_results(session_id: str):
+async def get_job_results(session_id: str):
     """
     Gets the results of a completed analysis job.
     (Placeholder implementation)
@@ -343,11 +344,167 @@ def get_job_results(session_id: str):
             return jsonify(ErrorResponse(
                 error="Not Found", 
                 code=404, 
-                details=f"Session ID {session_id} not found, cannot determine job status for results."
+                details=f"Session ID {session_id} not found, cannot determine job status for results."                ).model_dump()), 404
+
+@api_blueprint.route('/diff', methods=['POST'])
+async def diff_scraping():
+    """
+    Endpoint that runs journalist.read simultaneously for two search parameter files:
+    - search_parameters_eu.json (European sports websites)
+    - search_parameters_tr.json (Turkish sports websites)
+    
+    Uses the same task creation, append, and gather pattern used in the codebase.
+    Both runs use persist: true mode.
+    """
+    try:
+        logger.info("Starting diff scraping for EU and TR sources")
+        
+        # Define the search parameter files
+        eu_params_file = "search_parameters_eu.json"
+        tr_params_file = "search_parameters_tr.json"
+        
+        # Load both search parameter files
+        try:
+            with open(eu_params_file, 'r', encoding='utf-8') as f:
+                eu_params = json.load(f)
+            logger.info(f"Loaded EU parameters: {len(eu_params.get('urls', []))} URLs, keywords: {eu_params.get('keywords', [])}")
+        except FileNotFoundError:
+            return jsonify(ErrorResponse(
+                error="EU Parameters Not Found",
+                code=404,
+                details=f"Search parameters file {eu_params_file} not found"
             ).model_dump()), 404
+        except Exception as e:
+            return jsonify(ErrorResponse(
+                error="EU Parameters Load Error",
+                code=500,
+                details=f"Error loading {eu_params_file}: {str(e)}"
+            ).model_dump()), 500
+        
+        try:
+            with open(tr_params_file, 'r', encoding='utf-8') as f:
+                tr_params = json.load(f)
+            logger.info(f"Loaded TR parameters: {len(tr_params.get('urls', []))} URLs, keywords: {tr_params.get('keywords', [])}")
+        except FileNotFoundError:
+            return jsonify(ErrorResponse(
+                error="TR Parameters Not Found",
+                code=404,
+                details=f"Search parameters file {tr_params_file} not found"
+            ).model_dump()), 404
+        except Exception as e:
+            return jsonify(ErrorResponse(
+                error="TR Parameters Load Error",
+                code=500,
+                details=f"Error loading {tr_params_file}: {str(e)}"
+            ).model_dump()), 500
+        
+        # Create tasks list for parallel execution
+        tasks = []
+        
+        # Task 1: EU scraping
+        logger.info("Creating EU scraping task")
+        eu_journalist = Journalist(persist=True, scrape_depth=eu_params.get('scrape_depth', 1))
+        eu_task = asyncio.create_task(
+            eu_journalist.read(
+                urls=eu_params.get('urls', []),
+                keywords=eu_params.get('keywords', [])
+            )
+        )
+        tasks.append(('eu_scraping', eu_task))
+        
+        # Task 2: TR scraping
+        logger.info("Creating TR scraping task")
+        tr_journalist = Journalist(persist=True, scrape_depth=tr_params.get('scrape_depth', 1))
+        tr_task = asyncio.create_task(
+            tr_journalist.read(
+                urls=tr_params.get('urls', []),
+                keywords=tr_params.get('keywords', [])
+            )
+        )
+        tasks.append(('tr_scraping', tr_task))
+        
+        # Execute tasks in parallel using gather (following codebase pattern)
+        logger.info(f"Executing {len(tasks)} scraping tasks in parallel: {[task[0] for task in tasks]}")
+        
+        # Extract just the task objects for gather
+        task_objects = [task[1] for task in tasks]
+        
+        start_time = time.time()
+        results = await asyncio.gather(*task_objects, return_exceptions=True)
+        end_time = time.time()
+        
+        # Process results based on task type
+        eu_result = None
+        tr_result = None        
+        for i, (task_type, task_obj) in enumerate(tasks):
+            result = results[i]
+            
+            if isinstance(result, Exception):
+                logger.error(f"Error in {task_type} task: {result}", exc_info=True)
+                # For journalist.read(), on error we just return empty list
+                if task_type == 'eu_scraping':
+                    eu_result = []  # Empty list for failed scraping
+                elif task_type == 'tr_scraping':
+                    tr_result = []  # Empty list for failed scraping
+            else:
+                logger.info(f"{task_type} completed successfully")
+                if task_type == 'eu_scraping':
+                    eu_result = result
+                elif task_type == 'tr_scraping':
+                    tr_result = result
+          # Extract statistics - journalist.read() returns a list of articles directly
+        eu_articles = eu_result if eu_result and isinstance(eu_result, list) else []
+        tr_articles = tr_result if tr_result and isinstance(tr_result, list) else []
+        
+        # For session IDs, we need to get them from the Journalist instances
+        # Since journalist runs in persist mode, we can get session info differently
+        eu_session_id = getattr(eu_journalist, 'session_id', None) if 'eu_journalist' in locals() else None
+        tr_session_id = getattr(tr_journalist, 'session_id', None) if 'tr_journalist' in locals() else None
+          # Prepare response
+        response_data = {
+            "message": "Diff scraping completed",
+            "execution_time_seconds": round(end_time - start_time, 2),
+            "results": {
+                "eu_sources": {
+                    "session_id": eu_session_id,
+                    "articles_count": len(eu_articles),
+                    "urls_scraped": len(eu_params.get('urls', [])),
+                    "keywords_used": eu_params.get('keywords', []),
+                    "articles": eu_articles[:5] if len(eu_articles) > 5 else eu_articles,  # Limit to first 5 for response size
+                    "has_more": len(eu_articles) > 5
+                },
+                "tr_sources": {
+                    "session_id": tr_session_id,
+                    "articles_count": len(tr_articles),
+                    "urls_scraped": len(tr_params.get('urls', [])),
+                    "keywords_used": tr_params.get('keywords', []),
+                    "articles": tr_articles[:5] if len(tr_articles) > 5 else tr_articles,  # Limit to first 5 for response size
+                    "has_more": len(tr_articles) > 5
+                }
+            },
+            "summary": {
+                "total_articles": len(eu_articles) + len(tr_articles),
+                "eu_articles": len(eu_articles),
+                "tr_articles": len(tr_articles),
+                "eu_session_saved": eu_session_id is not None,
+                "tr_session_saved": tr_session_id is not None
+            }
+        }
+        
+        logger.info(f"Diff scraping completed: EU={len(eu_articles)} articles, TR={len(tr_articles)} articles")
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        logger.error(f"Error in diff scraping endpoint: {str(e)}", exc_info=True)
+        return jsonify(ErrorResponse(
+            error="Diff Scraping Error",
+            code=500,
+            details=str(e)
+        ).model_dump()), 500
 
 @api_blueprint.route('/docs')
-def api_docs():
+async def api_docs():
     """API documentation endpoint"""
     return jsonify({
         "name": "Turkish Sports News API Documentation",
@@ -373,14 +530,37 @@ def api_docs():
                     "keywords": ["Turkey", "Fenerbahçe", "football"],
                     "location": "Turkey",
                     "limit": 10
-                }
-            },            {
+                }            },            {
                 "path": "/api/scrape",
                 "method": "POST",
                 "description": "Scrape specified URLs for sports news",
                 "request_body": {
                     "urls": ["https://example.com/sports"],
                     "keywords": ["Turkey", "Fenerbahçe"]
+                }
+            },
+            {
+                "path": "/api/diff",
+                "method": "POST",
+                "description": "Run simultaneous scraping comparison between European and Turkish sports sources",
+                "request_body": {},
+                "response": {
+                    "message": "Diff scraping completed",
+                    "execution_time_seconds": 15.32,
+                    "results": {
+                        "eu_sources": {
+                            "session_id": "20250622_001234_567890",
+                            "articles_count": 25,
+                            "urls_scraped": 9,
+                            "keywords_used": ["fenerbahce", "mourinho", "galatasaray"]
+                        },
+                        "tr_sources": {
+                            "session_id": "20250622_001234_567891", 
+                            "articles_count": 18,
+                            "urls_scraped": 2,
+                            "keywords_used": ["fenerbahce", "mourinho", "galatasaray"]
+                        }
+                    }
                 }
             }
         ]
