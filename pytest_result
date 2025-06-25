@@ -1,0 +1,568 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0 -- C:\Users\oktay\Documents\archive\aisports\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: c:\Users\oktay\Documents\archive\aisports
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 241 items
+
+tests/test_api.py::test_get_news PASSED                                  [  0%]
+tests/test_api.py::test_scrape_news PASSED                               [  0%]
+tests/test_capabilities.py::TestNewsAggregator::test_fetch_worldnewsapi_articles PASSED [  1%]
+tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api PASSED [  1%]
+tests/test_capabilities.py::TestTrendsAnalyzer::test_get_trending_topics_no_keys PASSED [  2%]
+tests/test_capabilities.py::TestTrendsAnalyzer::test_get_trending_topics_with_dummy_keys PASSED [  2%]
+tests/test_capabilities.py::TestWebScraper::test_scrape_article_details_successful_extraction PASSED [  2%]
+tests/test_journalist_integration.py::test_journalist_library_integration PASSED [  3%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_client_initialization PASSED [  3%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_save_prepared_post PASSED [  4%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_prepared_posts PASSED [  4%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_update_post_status PASSED [  4%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_posts_by_articles FAILED [  5%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_articles_by_source FAILED [  5%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_articles_by_source_not_found PASSED [  6%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_search_articles FAILED [  6%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_save_collection_run FAILED [  7%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_save_source_summary FAILED [  7%]
+tests/test_mongodb_client.py::TestMongoDBClient::test_error_handling FAILED [  7%]
+tests/test_mongodb_client.py::TestMongoDBClientIntegration::test_real_database_operations PASSED [  8%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_base_extractor_is_abc PASSED [  8%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_abstract_method_defined PASSED [  9%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_default_priority PASSED [  9%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_concrete_extractor_implementation PASSED [  9%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_concrete_extractor_error_scenario PASSED [ 10%]
+tests/unit/scraping/extractors/test_base_extractor.py::TestBaseExtractor::test_cannot_instantiate_base_extractor_directly PASSED [ 10%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_get_extraction_priority PASSED [ 11%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_with_title_tag PASSED [ 11%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_fallback_to_h1 PASSED [ 12%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_title_tag_preferred_over_h1 PASSED [ 12%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_no_title_or_h1 PASSED [ 12%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_empty_html PASSED [ 13%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_with_preparsed_soup PASSED [ 13%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_title_tag_with_whitespace PASSED [ 14%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_h1_tag_with_whitespace PASSED [ 14%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_empty_title_and_h1_tags PASSED [ 14%]
+tests/unit/scraping/extractors/test_fullpage_extractor.py::test_extract_full_page_config_param_is_optional_and_not_used PASSED [ 15%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_get_extraction_priority PASSED [ 15%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_no_ldjson PASSED [ 16%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_simple_ldjson PASSED [ 16%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_with_list PASSED [ 17%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_with_graph PASSED [ 17%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_multiple_ldjson_scripts PASSED [ 17%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_various_fields PASSED [ 18%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_malformed_ldjson PASSED [ 18%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_with_preparsed_soup PASSED [ 19%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_empty_script_tag PASSED [ 19%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_script_tag_with_only_whitespace PASSED [ 19%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_body_is_list PASSED [ 20%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_title_is_list PASSED [ 20%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_chooses_longer_content PASSED [ 21%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_stops_if_substantial_content_found PASSED [ 21%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_clean_json_string PASSED [ 21%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_parse_ld_json PASSED [ 22%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_single_dict PASSED [ 22%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_list_of_dicts PASSED [ 23%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_graph PASSED [ 23%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_type_list PASSED [ 24%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_no_relevant_type PASSED [ 24%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_prioritizes_fields PASSED [ 24%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_body_is_list PASSED [ 25%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_title_is_list PASSED [ 25%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_from_ld_data_empty_inputs PASSED [ 26%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_with_special_characters_in_script PASSED [ 26%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_complex_nested_structure PASSED [ 26%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_multiple_types_in_one_object PASSED [ 27%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_with_comments_in_script_tag_outside_json PASSED [ 27%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_malformed_but_cleanable PASSED [ 28%]
+tests/unit/scraping/extractors/test_ldjson_extractor.py::test_extract_ldjson_completely_invalid_json_after_cleaning PASSED [ 28%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_get_extraction_priority PASSED [ 29%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_successful PASSED [ 29%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_no_content PASSED [ 29%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_readability_exception PASSED [ 30%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_import_error PASSED [ 30%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_with_preparsed_soup PASSED [ 31%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_title_is_none PASSED [ 31%]
+tests/unit/scraping/extractors/test_readability_extractor.py::test_extract_body_with_various_tags_and_stripping PASSED [ 31%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_get_extraction_priority PASSED [ 32%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_with_site_specific_selectors PASSED [ 32%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_with_generic_selectors PASSED [ 33%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_title_fallback_to_html_title_tag PASSED [ 33%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_title_fallback_no_site_name_in_html_title PASSED [ 34%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_body_fallback_to_structural_tags PASSED [ 34%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_body_fallback_to_second_structural_tag PASSED [ 34%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_no_selectors_match_no_fallbacks_work PASSED [ 35%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_with_preparsed_soup PASSED [ 35%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_get_selector_type PASSED [ 36%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_body_no_substantial_paragraphs_uses_full_text PASSED [ 36%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_body_unwanted_elements_cleaned_from_fallback PASSED [ 36%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_body_from_div_elements PASSED [ 37%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_empty_html PASSED [ 37%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_html_with_only_title_tag PASSED [ 38%]
+tests/unit/scraping/extractors/test_selector_extractor.py::test_extract_title_stripping_various_separators PASSED [ 38%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_initialization PASSED [ 39%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key[http://example.com-None-http://example.com] PASSED [ 39%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key[http://example.com-params1-http://example.com-key:value] PASSED [ 39%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key[http://example.com-params2-http://example.com-a:1-b:2] PASSED [ 40%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key[http://example.com-params3-http://example.com-list_param:a|z] PASSED [ 40%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key[http://example.com-params4-http://example.com-k:v1|v2-p:val] PASSED [ 41%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_generate_cache_key_for_article PASSED [ 41%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_cache_content_and_get_cached_content_valid PASSED [ 41%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_expired PASSED [ 42%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_file_not_found PASSED [ 42%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_corrupted_json PASSED [ 43%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_missing_timestamp PASSED [ 43%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_cache_content_error_writing PASSED [ 43%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_cleanup_expired_cache PASSED [ 44%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_cleanup_expired_cache_empty_dir PASSED [ 44%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_cleanup_expired_cache_no_expired_files PASSED [ 45%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_removes_expired_file PASSED [ 45%]
+tests/unit/scraping/test_cache_manager.py::TestCacheManager::test_get_cached_content_removes_corrupted_file PASSED [ 46%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_initialization_defaults PASSED [ 46%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_known_domain PASSED [ 46%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_known_domain_with_subdomain PASSED [ 47%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_unknown_domain PASSED [ 47%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_empty_domain PASSED [ 48%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_partial_match_domain PASSED [ 48%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_request_headers PASSED [ 48%]
+tests/unit/scraping/test_config.py::TestScrapingConfig::test_get_selectors_for_domain_case_insensitivity PASSED [ 49%]
+tests/unit/scraping/test_content_extractor.py::test_content_extractor_initialization PASSED [ 49%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_uses_highest_priority_successful_extractor PASSED [ 50%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_falls_back_to_next_priority PASSED [ 50%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_all_extractors_fail_returns_none PASSED [ 51%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_quality_check_rejects_short_body PASSED [ 51%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_quality_check_rejects_suspicious_content PASSED [ 51%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_adds_extraction_method_if_missing PASSED [ 52%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_handles_extractor_exception_gracefully PASSED [ 52%]
+tests/unit/scraping/test_content_extractor.py::test_get_extractor_info PASSED [ 53%]
+tests/unit/scraping/test_content_extractor.py::test_extract_content_beautifulsoup_creation_failure PASSED [ 53%]
+tests/unit/scraping/test_content_extractor.py::test_is_quality_content_various_scenarios PASSED [ 53%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_initialization PASSED [ 54%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_sanitize_filename[valid_id-valid_id] PASSED [ 54%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_sanitize_filename[id with spaces-id_with_spaces] PASSED [ 55%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_sanitize_filename[../../../etc/passwd-etc_passwd] PASSED [ 55%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_sanitize_filename[long_name_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-long_name_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] PASSED [ 56%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_sanitize_filename[special-!@#$%^&*()-+=.json-special--.json] PASSED [ 56%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_get_session_file_path PASSED [ 56%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_get_article_file_path PASSED [ 57%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_save_and_load_json_data_success PASSED [ 57%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_load_json_data_file_not_found PASSED [ 58%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_load_json_data_corrupted_file PASSED [ 58%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_save_json_data_io_error PASSED [ 58%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_save_and_load_session_data PASSED [ 59%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_load_session_data_mismatch_id PASSED [ 59%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_save_and_load_article_data PASSED [ 60%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_cleanup_old_files PASSED [ 60%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_cleanup_old_files_non_existent_dir PASSED [ 60%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_cleanup_old_sessions PASSED [ 61%]
+tests/unit/scraping/test_file_manager.py::TestFileManager::test_cleanup_old_articles PASSED [ 61%]
+tests/unit/scraping/test_link_discoverer.py::test_link_discoverer_initialization PASSED [ 62%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool News Story-keywords0-True] PASSED [ 62%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/article/topic-An Interesting Article-keywords1-True] PASSED [ 63%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/info/page-Some Info-keywords2-False] PASSED [ 63%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool Story-keywords3-True] PASSED [ 63%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/news/story1-Cool NEWS Story-keywords4-True] PASSED [ 64%]
+tests/unit/scraping/test_link_discoverer.py::test_matches_keywords[http://example.com/path-Anchor with NEWS-keywords5-True] PASSED [ 64%]
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success FAILED [ 65%]
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_http_error PASSED [ 65%]
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_connection_error PASSED [ 65%]
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_timeout_error PASSED [ 66%]
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_type PASSED [ 66%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_html_content PASSED [ 67%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_depth_0 PASSED [ 67%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_depth_1 PASSED [ 68%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_avoids_visited_urls PASSED [ 68%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_max_depth_reached PASSED [ 68%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_handles_fetch_exception_gracefully PASSED [ 69%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_empty_html PASSED [ 69%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_relevant_links_on_page PASSED [ 70%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_handles_malformed_href PASSED [ 70%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_initial_url_already_visited PASSED [ 70%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_search_depth_negative PASSED [ 71%]
+tests/unit/scraping/test_link_discoverer.py::test_discover_links_no_keywords_provided PASSED [ 71%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?b=2&a=1#fragment-http://example.com/path?a=1&b=2] PASSED [ 72%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[HTTPS://Example.com:8080/Path?c=3&b=2&a=1&a=0-https://example.com:8080/Path?a=0&a=1&b=2&c=3] PASSED [ 72%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[example.com/another?z=Z&x=X-http://example.com/another?x=X&z=Z] PASSED [ 73%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[ftp://test.com/resource-ftp://test.com/resource] PASSED [ 73%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com-http://example.com/] PASSED [ 73%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/-http://example.com/] PASSED [ 74%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?c=3&a=1&b=2-http://example.com/path?a=1&b=2&c=3] PASSED [ 74%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?param=value#section1-http://example.com/path?param=value] PASSED [ 75%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[HTTP://WWW.EXAMPLE.COM/PATH-http://www.example.com/PATH] PASSED [ 75%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[//no-scheme.com/path?q=1-http://no-scheme.com/path?q=1] PASSED [ 75%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?listParam=b&listParam=a-http://example.com/path?listParam=a&listParam=b] PASSED [ 76%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?z=2&y=1&listParam=b&listParam=a&x=0-http://example.com/path?listParam=a&listParam=b&x=0&y=1&z=2] PASSED [ 76%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?b=B&a=A-http://example.com/path?a=A&b=B] PASSED [ 77%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path?B=2&A=1-http://example.com/path?A=1&B=2] PASSED [ 77%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/path with spaces-http://example.com/path%20with%20spaces] PASSED [ 78%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com/!@$^*()_+-http://example.com/!@$^*()_+] PASSED [ 78%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[-http:///] PASSED [ 78%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url[http://example.com?c&b&a-http://example.com/?a=&b=&c=] PASSED [ 79%]
+tests/unit/scraping/test_network_utils.py::test_normalize_url_error_case PASSED [ 79%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[http://example.com/path-example.com] PASSED [ 80%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[https://www.example.co.uk:8080/path?query=1-www.example.co.uk:8080] PASSED [ 80%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[ftp://user:pass@example.com:21/resource-user:pass@example.com:21] PASSED [ 80%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[example.com/path-] PASSED [ 81%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[http:///path-] PASSED [ 81%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[invalid-url-] PASSED [ 82%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[-] PASSED     [ 82%]
+tests/unit/scraping/test_network_utils.py::test_get_domain[//protocol-relative.com/path-protocol-relative.com] PASSED [ 82%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[http://example.com-True] PASSED [ 83%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[https://example.com/path?query=1-True] PASSED [ 83%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[ftp://example.com-True] PASSED [ 84%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[example.com-False] PASSED [ 84%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[http://-False] PASSED [ 85%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[://example.com-False] PASSED [ 85%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[https://localhost:3000-True] PASSED [ 85%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[invalid-url-False] PASSED [ 86%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[-False] PASSED [ 86%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url[//protocol-relative.com/path-True] PASSED [ 87%]
+tests/unit/scraping/test_network_utils.py::test_is_valid_url_exception PASSED [ 87%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_initialization PASSED [ 87%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_get_session_creates_new_session PASSED [ 88%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_get_session_returns_existing_session PASSED [ 88%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_get_session_recreates_closed_session PASSED [ 89%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_close_session_closes_active_session PASSED [ 89%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_close_session_no_active_session PASSED [ 90%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_close_session_already_closed PASSED [ 90%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_context_manager_usage PASSED [ 90%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_success PASSED [ 91%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_http_error_404_no_retry PASSED [ 91%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_server_error_with_retries PASSED [ 92%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_client_connection_error_with_retries PASSED [ 92%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_timeout_error_with_retries PASSED [ 92%]
+tests/unit/scraping/test_session_manager.py::TestSessionManager::test_fetch_content_all_retries_fail PASSED [ 93%]
+tests/unit/scraping/test_web_scraper_modular.py::test_web_scraper_initialization PASSED [ 93%]
+tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_success FAILED [ 94%]
+tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_cached_session PASSED [ 94%]
+tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_no_links_discovered PASSED [ 95%]
+tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_no_valid_links_after_processing PASSED [ 95%]
+tests/unit/scraping/test_web_scraper_modular.py::test_discover_links_for_site_success PASSED [ 95%]
+tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_success_no_cache FAILED [ 96%]
+tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_cached PASSED [ 96%]
+tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_fetch_fails PASSED [ 97%]
+tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_extraction_fails PASSED [ 97%]
+tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_invalid_url PASSED [ 97%]
+tests/unit/scraping/test_web_scraper_modular.py::test_create_session_metadata PASSED [ 98%]
+tests/unit/scraping/test_web_scraper_modular.py::test_get_scraper_info PASSED [ 98%]
+tests/unit/scraping/test_web_scraper_modular.py::test_cleanup_old_data PASSED [ 99%]
+tests/unit/scraping/test_web_scraper_modular.py::test_web_scraper_async_context_manager PASSED [ 99%]
+tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_general_exception_handling PASSED [100%]
+
+================================== FAILURES ===================================
+________________ TestMongoDBClient.test_get_posts_by_articles _________________
+tests\test_mongodb_client.py:198: in test_get_posts_by_articles
+    assert len(result) == 1
+E   assert 0 == 1
+E    +  where 0 = len([])
+---------------------------- Captured stdout call -----------------------------
+                    ERROR    Error getting posts by       mongodb_client.py:445
+                             articles: object Mock can't                       
+                             be used in 'await'                                
+                             expression                                        
+------------------------------ Captured log call ------------------------------
+ERROR    database.mongodb_client:mongodb_client.py:445 Error getting posts by articles: object Mock can't be used in 'await' expression
+________________ TestMongoDBClient.test_get_articles_by_source ________________
+tests\test_mongodb_client.py:234: in test_get_articles_by_source
+    assert len(result) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+---------------------------- Captured stdout call -----------------------------
+                    ERROR    Error getting articles by    mongodb_client.py:517
+                             source: 'coroutine' object                        
+                             has no attribute 'get'                            
+------------------------------ Captured log call ------------------------------
+ERROR    database.mongodb_client:mongodb_client.py:517 Error getting articles by source: 'coroutine' object has no attribute 'get'
+___________________ TestMongoDBClient.test_search_articles ____________________
+tests\test_mongodb_client.py:283: in test_search_articles
+    assert len(result) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+---------------------------- Captured stdout call -----------------------------
+                    ERROR    Error searching articles:    mongodb_client.py:554
+                             object Mock can't be used in                      
+                             'await' expression                                
+------------------------------ Captured log call ------------------------------
+ERROR    database.mongodb_client:mongodb_client.py:554 Error searching articles: object Mock can't be used in 'await' expression
+_________________ TestMongoDBClient.test_save_collection_run __________________
+..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:928: in assert_called_once
+    raise AssertionError(msg)
+E   AssertionError: Expected 'insert_one' to have been called once. Called 0 times.
+
+During handling of the above exception, another exception occurred:
+tests\test_mongodb_client.py:317: in test_save_collection_run
+    mock_collection.insert_one.assert_called_once()
+E   AssertionError: Expected 'insert_one' to have been called once. Called 0 times.
+---------------------------- Captured stdout call -----------------------------
+                    INFO     Saved collection run:        mongodb_client.py:181
+                             test_run_123                                      
+------------------------------ Captured log call ------------------------------
+INFO     database.mongodb_client:mongodb_client.py:181 Saved collection run: test_run_123
+_________________ TestMongoDBClient.test_save_source_summary __________________
+tests\test_mongodb_client.py:348: in test_save_source_summary
+    assert result == "test_object_id"
+E   assert "<AsyncMock n...76232835200'>" == 'test_object_id'
+E     
+E     - test_object_id
+E     + <AsyncMock name='mock.insert_one().inserted_id' id='2476232835200'>
+---------------------------- Captured stdout call -----------------------------
+                    INFO     Saved source summary:        mongodb_client.py:266
+                             www_test_com                                      
+------------------------------ Captured log call ------------------------------
+INFO     database.mongodb_client:mongodb_client.py:266 Saved source summary: www_test_com
+____________________ TestMongoDBClient.test_error_handling ____________________
+tests\test_mongodb_client.py:366: in test_error_handling
+    with pytest.raises(Exception):
+E   Failed: DID NOT RAISE <class 'Exception'>
+---------------------------- Captured stdout call -----------------------------
+                    INFO     Saved prepared post: None    mongodb_client.py:389
+------------------------------ Captured log call ------------------------------
+INFO     database.mongodb_client:mongodb_client.py:389 Saved prepared post: None
+___________________________ test_fetch_html_success ___________________________
+..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:949: in assert_called_with
+    raise AssertionError(_error_message()) from cause
+E   AssertionError: expected call not found.
+E   Expected: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E     Actual: get('http://example.com/success.html', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+
+During handling of the above exception, another exception occurred:
+..\..\..\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:961: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+E   AssertionError: expected call not found.
+E   Expected: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E     Actual: get('http://example.com/success.html', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E   
+E   pytest introspection follows:
+E   
+E   Kwargs:
+E   assert {'headers': {..._threshold=5)} == {'headers': {..._threshold=5)}
+E     
+E     Omitting 1 identical items, use -vv to show
+E     Differing items:
+E     {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language'...r-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}} != {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}}
+E     
+E     Full diff:
+E       {...
+E     
+E     ...Full output truncated (10 lines hidden), use '-vv' to show
+
+During handling of the above exception, another exception occurred:
+tests\unit\scraping\test_link_discoverer.py:99: in test_fetch_html_success
+    mock_session.get.assert_called_once_with(
+E   AssertionError: expected call not found.
+E   Expected: get('http://example.com/success.html', headers={'User-Agent': 'Test User Agent', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E     Actual: get('http://example.com/success.html', headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com'}, timeout=ClientTimeout(total=20, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5))
+E   
+E   pytest introspection follows:
+E   
+E   Kwargs:
+E   assert {'headers': {..._threshold=5)} == {'headers': {..._threshold=5)}
+E     
+E     Omitting 1 identical items, use -vv to show
+E     Differing items:
+E     {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language'...r-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}} != {'headers': {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Accept-Language': 'en-US,en;q=0.5', 'Referer': 'http://example.com', 'User-Agent': 'Test User Agent'}}
+E     
+E     Full diff:
+E       {...
+E     
+E     ...Full output truncated (10 lines hidden), use '-vv' to show
+---------------------------- Captured stdout setup ----------------------------
+                    INFO     LinkDiscoverer initialized.  link_discoverer.py:29
+                             Max concurrent tasks                              
+                             (placeholder): 3                                  
+----------------------------- Captured log setup ------------------------------
+INFO     capabilities.scraping.link_discoverer:link_discoverer.py:29 LinkDiscoverer initialized. Max concurrent tasks (placeholder): 3
+__________________ test_execute_scraping_for_session_success __________________
+tests\unit\scraping\test_web_scraper_modular.py:98: in test_execute_scraping_for_session_success
+    assert len(session_data['articles']) == 2 # Based on mock_link_discoverer
+E   assert 0 == 2
+E    +  where 0 = len([])
+---------------------------- Captured stdout setup ----------------------------
+                    INFO     Modular web scraper initialized  web_scraper.py:56
+----------------------------- Captured log setup ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:56 Modular web scraper initialized
+---------------------------- Captured stdout call -----------------------------
+                    INFO     Starting scraping session        web_scraper.py:72
+                             test_session_123 with keywords:                   
+                             ['test', 'news']                                  
+                    INFO     Discovered 2 links from          web_scraper.py:99
+                             http://site1.example.com                          
+                    INFO     Discovered 2 links from          web_scraper.py:99
+                             http://site2.example.com                          
+                    INFO     Total 4 raw links discovered    web_scraper.py:107
+                             across all sites                                  
+                    INFO     Normalized and filtered to 2    web_scraper.py:128
+                             unique, valid links.                              
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site1.example.com/articl                   
+                             e1. Trying readability.                           
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site1.example.com/articl                   
+                             e1. Body len: 9, Title: '...'                     
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site1.example.com/articl                   
+                             e1 (body len: 9). Falling back                    
+                             to CSS selectors.                                 
+                    WARNING  All extraction strategies       web_scraper.py:426
+                             yielded minimal content for                       
+                             http://site1.example.com/articl                   
+                             e1. Using full page fallback.                     
+                    WARNING  All extraction strategies       web_scraper.py:460
+                             failed for                                        
+                             http://site1.example.com/articl                   
+                             e1. Final body length: 9                          
+                    WARNING  Failed to extract quality       web_scraper.py:220
+                             content from                                      
+                             http://site1.example.com/articl                   
+                             e1                                                
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site2.example.com/news1.                   
+                             Trying readability.                               
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site2.example.com/news1.                   
+                             Body len: 9, Title: '...'                         
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site2.example.com/news1                    
+                             (body len: 9). Falling back to                    
+                             CSS selectors.                                    
+                    WARNING  All extraction strategies       web_scraper.py:426
+                             yielded minimal content for                       
+                             http://site2.example.com/news1.                   
+                             Using full page fallback.                         
+                    WARNING  All extraction strategies       web_scraper.py:460
+                             failed for                                        
+                             http://site2.example.com/news1.                   
+                             Final body length: 9                              
+                    WARNING  Failed to extract quality       web_scraper.py:220
+                             content from                                      
+                             http://site2.example.com/news1                    
+                    INFO     Successfully scraped 0 articles web_scraper.py:142
+                             out of 2 links                                    
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:72 Starting scraping session test_session_123 with keywords: ['test', 'news']
+INFO     capabilities.scraping.web_scraper:web_scraper.py:99 Discovered 2 links from http://site1.example.com
+INFO     capabilities.scraping.web_scraper:web_scraper.py:99 Discovered 2 links from http://site2.example.com
+INFO     capabilities.scraping.web_scraper:web_scraper.py:107 Total 4 raw links discovered across all sites
+INFO     capabilities.scraping.web_scraper:web_scraper.py:128 Normalized and filtered to 2 unique, valid links.
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site1.example.com/article1. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site1.example.com/article1. Body len: 9, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site1.example.com/article1 (body len: 9). Falling back to CSS selectors.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:426 All extraction strategies yielded minimal content for http://site1.example.com/article1. Using full page fallback.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:460 All extraction strategies failed for http://site1.example.com/article1. Final body length: 9
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:220 Failed to extract quality content from http://site1.example.com/article1
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site2.example.com/news1. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site2.example.com/news1. Body len: 9, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site2.example.com/news1 (body len: 9). Falling back to CSS selectors.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:426 All extraction strategies yielded minimal content for http://site2.example.com/news1. Using full page fallback.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:460 All extraction strategies failed for http://site2.example.com/news1. Final body length: 9
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:220 Failed to extract quality content from http://site2.example.com/news1
+INFO     capabilities.scraping.web_scraper:web_scraper.py:142 Successfully scraped 0 articles out of 2 links
+_________________ test_scrape_single_article_success_no_cache _________________
+tests\unit\scraping\test_web_scraper_modular.py:206: in test_scrape_single_article_success_no_cache
+    assert article_data is not None
+E   assert None is not None
+---------------------------- Captured stdout setup ----------------------------
+                    INFO     Modular web scraper initialized  web_scraper.py:56
+----------------------------- Captured log setup ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:56 Modular web scraper initialized
+---------------------------- Captured stdout call -----------------------------
+                    INFO     ld+json found no body for       web_scraper.py:360
+                             http://site1.example.com/articl                   
+                             e1_nocache. Trying readability.                   
+                    INFO     ruthless removal did not work.  readability.py:245
+                    INFO     Used readability for            web_scraper.py:378
+                             http://site1.example.com/articl                   
+                             e1_nocache. Body len: 21,                         
+                             Title: '...'                                      
+                    WARNING  Readability/ld+json extracted   web_scraper.py:384
+                             little content for                                
+                             http://site1.example.com/articl                   
+                             e1_nocache (body len: 21).                        
+                             Falling back to CSS selectors.                    
+                    WARNING  All extraction strategies       web_scraper.py:426
+                             yielded minimal content for                       
+                             http://site1.example.com/articl                   
+                             e1_nocache. Using full page                       
+                             fallback.                                         
+                    WARNING  All extraction strategies       web_scraper.py:460
+                             failed for                                        
+                             http://site1.example.com/articl                   
+                             e1_nocache. Final body length:                    
+                             21                                                
+                    WARNING  Failed to extract quality       web_scraper.py:220
+                             content from                                      
+                             http://site1.example.com/articl                   
+                             e1_nocache                                        
+------------------------------ Captured log call ------------------------------
+INFO     capabilities.scraping.web_scraper:web_scraper.py:360 ld+json found no body for http://site1.example.com/article1_nocache. Trying readability.
+INFO     readability.readability:readability.py:245 ruthless removal did not work. 
+INFO     capabilities.scraping.web_scraper:web_scraper.py:378 Used readability for http://site1.example.com/article1_nocache. Body len: 21, Title: '[no-title]...'
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:384 Readability/ld+json extracted little content for http://site1.example.com/article1_nocache (body len: 21). Falling back to CSS selectors.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:426 All extraction strategies yielded minimal content for http://site1.example.com/article1_nocache. Using full page fallback.
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:460 All extraction strategies failed for http://site1.example.com/article1_nocache. Final body length: 21
+WARNING  capabilities.scraping.web_scraper:web_scraper.py:220 Failed to extract quality content from http://site1.example.com/article1_nocache
+============================== warnings summary ===============================
+tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
+  c:\Users\oktay\Documents\archive\aisports\capabilities\news_aggregator.py:201: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  Coroutine created at (most recent call last)
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+      return self._loop.run_until_complete(task)
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 678, in run_until_complete
+      self.run_forever()
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\windows_events.py", line 322, in run_forever
+      super().run_forever()
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 645, in run_forever
+      self._run_once()
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 1991, in _run_once
+      handle._run()
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\asyncio\events.py", line 88, in _run
+      self._context.run(self._callback, *self._args)
+    File "c:\Users\oktay\Documents\archive\aisports\capabilities\news_aggregator.py", line 454, in fetch_from_source
+      return await self.fetch_newsapi_articles()  # await async call
+    File "c:\Users\oktay\Documents\archive\aisports\capabilities\news_aggregator.py", line 201, in fetch_newsapi_articles
+      async with session.get(
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1139, in __call__
+      return self._mock_call(*args, **kwargs)
+    File "C:\Users\oktay\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1143, in _mock_call
+      return self._execute_mock_call(*args, **kwargs)
+    async with session.get(
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_capabilities.py::TestNewsAggregator::test_get_news_from_api
+  C:\Users\oktay\Documents\archive\aisports\.venv\Lib\site-packages\soccerdata\_common.py:432: UserWarning: The leagues have different default season codes. Using multi-year season codes.
+    return SeasonCode.from_leagues(self.leagues)
+
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_articles_by_source
+tests/test_mongodb_client.py::TestMongoDBClient::test_get_articles_by_source_not_found
+  c:\Users\oktay\Documents\archive\aisports\database\mongodb_client.py:518: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    return []
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success
+tests/unit/scraping/test_link_discoverer.py::test_fetch_html_non_html_content_type
+  c:\Users\oktay\Documents\archive\aisports\capabilities\scraping\link_discoverer.py:166: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_get_posts_by_articles
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_get_articles_by_source
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_search_articles
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_save_collection_run
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_save_source_summary
+FAILED tests/test_mongodb_client.py::TestMongoDBClient::test_error_handling
+FAILED tests/unit/scraping/test_link_discoverer.py::test_fetch_html_success
+FAILED tests/unit/scraping/test_web_scraper_modular.py::test_execute_scraping_for_session_success
+FAILED tests/unit/scraping/test_web_scraper_modular.py::test_scrape_single_article_success_no_cache
+================= 9 failed, 232 passed, 6 warnings in 16.10s ==================

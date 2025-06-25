@@ -47,10 +47,17 @@ async def test_journalist_library_integration():
         result = await journalist.read(
             urls=[url],
             keywords=keywords
-        )
-          # Assert that we got some results
+        )        # Assert that we got some results
         assert result is not None, "Journalist should return results"
-        assert isinstance(result, dict), "Result should be a dictionary"
+        assert isinstance(result, list), "Result should be a list of session results"
+        assert len(result) > 0, "Should have at least one session result"
+        
+        # Check the first session result
+        first_session = result[0]
+        assert isinstance(first_session, dict), "Each session result should be a dictionary"
+        assert 'articles' in first_session, "Session should contain articles"
+        assert first_session['articles_count'] > 0, "Should have scraped some articles"
+        
         logger.info("Integration test completed successfully")
         
         return result

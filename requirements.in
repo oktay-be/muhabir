@@ -33,11 +33,14 @@ pandas>=2.1.0
 pytz>=2024.1  # For timezone handling
 
 # API documentation
-quart-swagger>=0.1.0  # Swagger/OpenAPI for Quart
+# Note: quart-swagger doesn't exist - will use apispec directly if needed
 apispec>=6.0.2
 
 # Caching
 cachetools>=5.3.2
+
+# Database
+pymongo==4.13.2  # MongoDB driver with async support
 
 # Testing
 pytest>=7.4.0

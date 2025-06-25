@@ -1,0 +1,21 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.6.0 -- C:\Users\oktay\Documents\archive\aisports\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: c:\Users\oktay\Documents\archive\aisports
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.9.0, asyncio-1.0.0, cov-6.1.1, mock-3.14.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items / 1 error
+
+=================================== ERRORS ====================================
+________________ ERROR collecting tests/test_mongodb_client.py ________________
+tests\test_mongodb_client.py:383: in <module>
+    class TestMongoDBClientIntegration:
+tests\test_mongodb_client.py:384: in TestMongoDBClientIntegration
+    """Integration tests for MongoDB client (requires running MongoDB)."""    @pytest_asyncio.fixture
+E   TypeError: unsupported operand type(s) for @: 'str' and 'function'
+=========================== short test summary info ===========================
+ERROR tests/test_mongodb_client.py - TypeError: unsupported operand type(s) f...
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 error in 2.00s ===============================
