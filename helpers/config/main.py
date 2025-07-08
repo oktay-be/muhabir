@@ -3,25 +3,25 @@ Main configuration for the Turkish Sports News API.
 """
 
 import os
-from flask import Flask
+from quart import Quart
 from dotenv import load_dotenv
 import json
 
 def configure_app(name, config_name=None):
     """
-    Configure and return Flask application
+    Configure and return Quart application
     
     Args:
-        name: The name of the Flask application
+        name: The name of the Quart application
         config_name: Configuration name ('development', 'production', 'testing')
     
     Returns:
-        Configured Flask application
+        Configured Quart application
     """
     # Load environment variables from .env file
     load_dotenv()
-      # Create Flask app
-    app = Flask(name)
+      # Create Quart app
+    app = Quart(name)
       # Configure based on environment
     if config_name == 'testing':
         app.config['TESTING'] = True

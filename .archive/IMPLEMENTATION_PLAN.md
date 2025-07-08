@@ -1,493 +1,673 @@
-# AISports Refactoring Implementation Plan
+# AISports News Collection & Analysis System - Implementation Plan
 
-## Immediate Action Items (Next Steps)
+## Overview
 
-### 1. Project Setup and Dependencies
+This plan outlines the implementation of a comprehensive news collection and analysis system using MongoDB for data storage, AI for content processing, and a workflow that supports both automated collection and targeted re-scraping based on discovered gaps.
 
-#### Install journ4list
-```bash
-# Update requirements.txt
-echo "journ4list>=0.1.0" >> requirements.txt
-pip install journ4list
-```
+## Use Cases
 
-#### Create new directory structure
-```bash
-mkdir -p capabilities/services
-mkdir -p integrations
-mkdir -p api/endpoints
-mkdir -p config
-mkdir -p .archive/deprecated_scraping
-```
+### UseCase 1: Automated Full Collection
+1. **Raw Scraping**: Use journalist to scrape sources (results stored in memory or persisted based on config)
+2. **AI Summarization**: Process each source's raw data → generate summarized articles per source
+3. **AI Aggregation**: Combine source summaries by region → TR and EU article collections
+4. **EU Extension**: Extend EU data with NewsAPI → enhanced EU article collection
+5. **AI Diff Analysis**: Compare EU extended vs TR → return missing article objects
+6. **Database Storage**: Store all processed article results in MongoDB
+7. **Frontend Trigger**: Single button to initiate entire workflow
 
-### 2. Phase 1 Implementation (This Week)
+### UseCase 2: Targeted Re-scraping
+1. **Gap Identification**: User identifies missing entities from diff analysis
+2. **Targeted Scraping**: Scrape only EU sources with new keywords
+3. **AI Processing**: Follow same AI pipeline (summarize → store → display)
+4. **Frontend Integration**: Show results organized by source
 
-#### Step 1: Move deprecated scraping code to archive
-```bash
-# Archive the entire scraping infrastructure
-mv capabilities/scraping/* .archive/deprecated_scraping/
-# Keep the directory but empty it for now
-```
+### UseCase 3: Social Media Post Generation
+1. **Article Selection**: User selects article objects for post creation
+2. **AI Post Generation**: Create X/Twitter posts based on selected articles
+3. **Post Management**: Store and manage prepared posts
+4. **Post Publishing**: Publish prepared posts to X/Twitter
 
-#### Step 2: Create ScrapingService with journ4list
-```python
-# capabilities/services/scraping_service.py
-import asyncio
-import os
-import json
-import logging
-from typing import List, Dict, Any, Optional
-from journ4list import Journalist
+## Database Design (MongoDB)
 
-logger = logging.getLogger(__name__)
+### Collections Schema
 
-class ScrapingService:
-    """
-    Modern scraping service using journ4list library.
-    Replaces all custom scraping infrastructure.
-    """
-    
-    def __init__(self, workspace_dir: str = ".journalist_workspace"):
-        self.workspace_dir = workspace_dir
-        
-    async def scrape_with_keywords(self, urls: List[str], keywords: List[str], 
-                                 persist: bool = True, scrape_depth: int = 1) -> Dict[str, Any]:
-        """
-        Scrape URLs with keyword filtering using journ4list.
-        
-        Args:
-            urls: List of URLs to scrape
-            keywords: Keywords for relevance filtering
-            persist: Whether to save session data to files
-            scrape_depth: Depth level for link discovery
-            
-        Returns:
-            Dict with articles and session metadata
-        """
-        try:
-            journalist = Journalist(persist=persist, scrape_depth=scrape_depth)
-            
-            result = await journalist.read(urls=urls, keywords=keywords)
-            
-            logger.info(f"Scraping completed. Session: {result['session_id']}, "
-                       f"Articles: {len(result['articles'])}")
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Scraping failed: {e}")
-            return {
-                "session_id": None,
-                "articles": [],
-                "extraction_summary": {
-                    "error": str(e),
-                    "urls_processed": 0,
-                    "articles_extracted": 0
-                }
-            }
-    
-    def find_latest_session(self) -> Optional[str]:
-        """Find the latest journ4list session file."""
-        try:
-            if not os.path.exists(self.workspace_dir):
-                return None
-                
-            sessions = []
-            for item in os.listdir(self.workspace_dir):
-                item_path = os.path.join(self.workspace_dir, item)
-                if os.path.isdir(item_path) and item.startswith("202"):
-                    sessions.append(item)
-            
-            if not sessions:
-                return None
-                
-            sessions.sort(reverse=True)
-            latest_session_dir = sessions[0]
-            
-            session_path = os.path.join(self.workspace_dir, latest_session_dir)
-            for file in os.listdir(session_path):
-                if file.startswith("session_data") and file.endswith(".json"):
-                    return os.path.join(session_path, file)
-                    
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error finding latest session: {e}")
-            return None
-    
-    def load_session_data(self, session_file_path: str) -> Optional[Dict[str, Any]]:
-        """Load session data from file."""
-        try:
-            with open(session_file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading session data from {session_file_path}: {e}")
-            return None
-```
-
-#### Step 3: Create separated API endpoints
-```python
-# api/endpoints/scraping_endpoints.py
-import asyncio
-import logging
-from flask import Blueprint, request, jsonify, current_app
-from capabilities.services.scraping_service import ScrapingService
-from api.models import ScrapingRequest, ScrapingResponse
-
-logger = logging.getLogger(__name__)
-scraping_blueprint = Blueprint('scraping', __name__)
-
-@scraping_blueprint.route('/start', methods=['POST'])
-def start_scraping():
-    """
-    Start a scraping job using journ4list.
-    Separated from other API calls completely.
-    """
-    try:
-        data = request.get_json() or {}
-        
-        # Validate required fields
-        urls = data.get('urls', [])
-        if not urls:
-            return jsonify({"error": "URLs are required"}), 400
-            
-        keywords = data.get('keywords', [])
-        persist = data.get('persist', True)
-        scrape_depth = data.get('scrape_depth', 1)
-        
-        # Initialize scraping service
-        scraping_service = ScrapingService()
-        
-        # Run scraping asynchronously
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        try:
-            result = loop.run_until_complete(
-                scraping_service.scrape_with_keywords(
-                    urls=urls,
-                    keywords=keywords,
-                    persist=persist,
-                    scrape_depth=scrape_depth
-                )
-            )
-        finally:
-            loop.close()
-        
-        # Return standardized response
-        response = {
-            "session_id": result.get("session_id"),
-            "status": "completed" if result.get("session_id") else "failed",
-            "articles_found": len(result.get("articles", [])),
-            "extraction_summary": result.get("extraction_summary", {}),
-            "persist_enabled": persist
-        }
-        
-        if result.get("session_id"):
-            logger.info(f"Scraping completed successfully. Session: {result['session_id']}")
-            return jsonify(response), 200
-        else:
-            logger.error(f"Scraping failed: {result.get('extraction_summary', {}).get('error', 'Unknown error')}")
-            return jsonify(response), 500
-            
-    except Exception as e:
-        logger.error(f"Error in scraping endpoint: {e}")
-        return jsonify({"error": f"Scraping endpoint error: {str(e)}"}), 500
-
-@scraping_blueprint.route('/latest', methods=['GET'])
-def get_latest_session():
-    """Get the latest scraping session data."""
-    try:
-        scraping_service = ScrapingService()
-        latest_session_path = scraping_service.find_latest_session()
-        
-        if not latest_session_path:
-            return jsonify({"error": "No sessions found"}), 404
-            
-        session_data = scraping_service.load_session_data(latest_session_path)
-        if not session_data:
-            return jsonify({"error": "Failed to load session data"}), 500
-            
-        return jsonify({
-            "session_file": latest_session_path,
-            "session_data": session_data
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error getting latest session: {e}")
-        return jsonify({"error": str(e)}), 500
-```
-
-#### Step 4: Create analysis endpoint separated from scraping
-```python
-# api/endpoints/analysis_endpoints.py
-import asyncio
-import logging
-from flask import Blueprint, request, jsonify, current_app
-from capabilities.ai_summarizer import AISummarizer
-from capabilities.services.scraping_service import ScrapingService
-
-logger = logging.getLogger(__name__)
-analysis_blueprint = Blueprint('analysis', __name__)
-
-@analysis_blueprint.route('/process_scraped_data', methods=['POST'])
-def analyze_scraped_data():
-    """
-    Analyze scraped data using AI (separated from scraping process).
-    Can work with session_id or direct session_data.
-    """
-    try:
-        data = request.get_json() or {}
-        
-        # Initialize AI summarizer
-        google_api_key = current_app.config.get('GOOGLE_API_KEY')
-        if not google_api_key:
-            return jsonify({"error": "Google API key not configured"}), 500
-            
-        ai_summarizer = AISummarizer(google_api_key=google_api_key)
-        
-        session_data = None
-        session_source = None
-        
-        # Option 1: Direct session data (persist=false scenario)
-        if 'session_data' in data:
-            session_data = data['session_data']
-            session_source = "direct_data"
-            
-        # Option 2: Session file path (persist=true scenario)
-        elif 'session_file_path' in data:
-            scraping_service = ScrapingService()
-            session_data = scraping_service.load_session_data(data['session_file_path'])
-            session_source = f"file: {data['session_file_path']}"
-            
-        # Option 3: Latest session (convenience)
-        elif data.get('use_latest_session', False):
-            scraping_service = ScrapingService()
-            latest_path = scraping_service.find_latest_session()
-            if latest_path:
-                session_data = scraping_service.load_session_data(latest_path)
-                session_source = f"latest: {latest_path}"
-        
-        if not session_data:
-            return jsonify({"error": "No session data provided or found"}), 400
-        
-        # Run AI analysis
-        use_claude4 = data.get('use_claude4', True)
-        
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        try:
-            if session_source.startswith("file:"):
-                # Use persist=true scenario
-                result = loop.run_until_complete(
-                    ai_summarizer.process_news_with_claude4_prompt(
-                        session_file_path=session_source.replace("file: ", ""),
-                        use_claude4=use_claude4
-                    )
-                )
-            else:
-                # Use persist=false scenario
-                result = loop.run_until_complete(
-                    ai_summarizer.process_news_with_claude4_prompt(
-                        session_data=session_data,
-                        use_claude4=use_claude4
-                    )
-                )
-        finally:
-            loop.close()
-        
-        logger.info(f"AI analysis completed. Source: {session_source}, "
-                   f"Articles processed: {len(result.get('processed_articles', []))}")
-        
-        return jsonify({
-            "analysis_result": result,
-            "session_source": session_source,
-            "use_claude4": use_claude4
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Error in analysis endpoint: {e}")
-        return jsonify({"error": f"Analysis error: {str(e)}"}), 500
-```
-
-#### Step 5: Update main routes.py to use new endpoints
-```python
-# api/routes.py - SIMPLIFIED VERSION
-import logging
-from flask import Blueprint, jsonify, current_app
-from api.endpoints.scraping_endpoints import scraping_blueprint
-from api.endpoints.analysis_endpoints import analysis_blueprint
-
-logger = logging.getLogger(__name__)
-
-# Create main API blueprint
-api_blueprint = Blueprint('api', __name__)
-
-# Register sub-blueprints
-api_blueprint.register_blueprint(scraping_blueprint, url_prefix='/scraping')
-api_blueprint.register_blueprint(analysis_blueprint, url_prefix='/analysis')
-
-@api_blueprint.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint."""
-    return jsonify({
-        "status": "healthy",
-        "version": "2.0.0-refactored",
-        "services": {
-            "scraping": "journ4list",
-            "analysis": "google_genai + claude4"
-        }
-    }), 200
-
-@api_blueprint.route('/status', methods=['GET'])
-def get_status():
-    """Get overall system status."""
-    try:
-        from capabilities.services.scraping_service import ScrapingService
-        
-        scraping_service = ScrapingService()
-        latest_session = scraping_service.find_latest_session()
-        
-        return jsonify({
-            "scraping_service": "available",
-            "latest_session": latest_session is not None,
-            "workspace_dir": scraping_service.workspace_dir,
-            "google_api_configured": bool(current_app.config.get('GOOGLE_API_KEY'))
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Status check error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-# Remove all complex pipeline orchestration
-# Remove threading logic
-# Remove AnalysisOrchestrator usage
-```
-
-### 3. Testing the New Implementation
-
-#### Test 1: Basic journ4list integration
-```python
-# test_new_architecture.py
-import asyncio
-import json
-from capabilities.services.scraping_service import ScrapingService
-
-async def test_scraping_service():
-    """Test the new scraping service with journ4list."""
-    
-    scraping_service = ScrapingService()
-    
-    # Test URLs (Turkish sports sites)
-    test_urls = [
-        "https://www.fanatik.com.tr",
-        "https://www.fotomac.com.tr"
+```javascript
+// Collection: ai_summaries_per_source
+{
+  "_id": ObjectId,
+  "run_id": "run_20250624_153000",
+  "source_domain": "www_fanatik_com",
+  "source_url": "https://www.fanatik.com.tr",
+  "region": "TR" | "EU",
+  "summary_data": {
+    "processing_summary": {
+      "total_input_articles": 14,
+      "articles_after_deduplication": 5,
+      "articles_after_cleaning": 5,
+      "duplicates_removed": 9,
+      "empty_articles_removed": 0,
+      "processing_date": "2025-06-21T00:00:00Z"
+    },
+    "processed_articles": [
+      {
+        "id": "article_1",
+        "original_url": "https://www.fanatik.com.tr/basketbol/fenerbahceden-dario-saric-hamlesi-teklif-yapildi-2585851",
+        "title": "Fenerbahçe'den Dario Saric hamlesi! Teklif yapıldı",
+        "summary": "Fenerbahçe Beko has reportedly made an offer for Croatian NBA star Dario Saric...",
+        "key_entities": {
+          "teams": ["Fenerbahçe Beko", "Denver Nuggets"],
+          "players": ["Dario Saric"],
+          "amounts": ["5 million 426 thousand 400 Dolar"],
+          "dates": ["2014-2016"]
+        },
+        "categories": [
+          {
+            "tag": "transfers_rumors",
+            "confidence": 0.9,
+            "evidence": "Fenerbahçe Beko'nun NBA'de Denver Nuggets kadrosunda bulunan Hırvat yıldız Dario Saric için teklifini yaptığı belirtildi."
+          }
+        ],
+        "source": "www.fanatik.com.tr",
+        "published_date": "2025-06-21T19:45:15+03:00",
+        "keywords_matched": ["fenerbahce"],
+        "content_quality": "high",
+        "language": "turkish"
+      }
     ]
-    
-    test_keywords = ["Fenerbahçe", "transfer", "futbol"]
-    
-    print("Testing ScrapingService with journ4list...")
-    
-    result = await scraping_service.scrape_with_keywords(
-        urls=test_urls,
-        keywords=test_keywords,
-        persist=True,
-        scrape_depth=1
-    )
-    
-    print(f"Session ID: {result.get('session_id')}")
-    print(f"Articles found: {len(result.get('articles', []))}")
-    print(f"Extraction summary: {result.get('extraction_summary')}")
-    
-    # Test latest session finder
-    latest = scraping_service.find_latest_session()
-    print(f"Latest session file: {latest}")
-    
-    return result
+  },
+  "articles_count": 12,
+  "processing_time_seconds": 45,
+  "created_at": ISODate
+}
 
-if __name__ == "__main__":
-    asyncio.run(test_scraping_service())
+// Collection: ai_aggregated_results  
+{
+  "_id": ObjectId,
+  "run_id": "run_20250624_153000",
+  "region": "TR" | "EU",
+  "aggregation_type": "scraped_only" | "extended_with_newsapi",
+  "processed_articles": [
+    // Same article schema as above
+  ],
+  "processing_summary": {
+    "total_sources": 5,
+    "total_articles": 67,
+    "sources_included": ["www_fanatik_com", "www_fotomac_com"],
+    "newsapi_articles_added": 23 // Only for extended type
+  },
+  "created_at": ISODate
+}
+
+// Collection: ai_diff_results - SIMPLIFIED
+{
+  "_id": ObjectId,
+  "run_id": "run_20250624_153000",
+  "comparison": {
+    "eu_file_id": ObjectId,
+    "tr_file_id": ObjectId
+  },
+  "missing_in_tr": [
+    // Article objects using same schema - entities found in EU but not TR
+    {
+      "id": "article_eu_1",
+      "original_url": "https://example.com/vlahovic-news",
+      "title": "Vlahovic transfer news",
+      "summary": "...",
+      "key_entities": { "players": ["vlahovic"] },
+      "categories": [...],
+      "source": "bbc.com",
+      "published_date": "2025-06-21T19:45:15+03:00",
+      "keywords_matched": ["vlahovic"],
+      "content_quality": "high",
+      "language": "english"
+    }
+  ],
+  "missing_in_eu": [
+    // Article objects using same schema - entities found in TR but not EU
+  ],
+  "created_at": ISODate
+}
+
+// Collection: newsapi_data
+{
+  "_id": ObjectId,
+  "run_id": "run_20250624_153000",
+  "fetch_timestamp": ISODate,
+  "keywords_used": ["fenerbahce", "mourinho"],
+  "raw_articles": [
+    {
+      "source": {
+        "id": null,
+        "name": "Just Arsenal News"
+      },
+      "author": "Michelle",
+      "title": "Could Arteta Face the Same Fate? Turkish Board Resigns After Mourinho Leak",
+      "description": "Arsenal fans might take interest in recent events in Turkey...",
+      "url": "https://www.justarsenal.com/could-arteta-face-the-same-fate-turkish-board-resigns-after-mourinho-leak/395128",
+      "urlToImage": "https://icdn.justarsenal.com/wp-content/uploads/2025/06/Mourinho.jpg",
+      "publishedAt": "2025-06-23T17:00:00Z",
+      "content": "Arsenal fans might take interest in recent events in Turkey..."
+    }
+  ],
+  "transformed_articles": [
+    // Converted to our standard article schema
+  ],
+  "articles_count": 23,
+  "api_quota_used": 100
+}
+
+// Collection: ai_posts - NEW
+{
+  "_id": ObjectId,
+  "post_id": "post_20250624_001",
+  "based_on_articles": [ObjectId], // References to article IDs
+  "post_content": {
+    "text": "🔥 TRANSFER ALERT: Fenerbahçe reportedly making moves for Dario Saric! The Croatian star has a $5.4M option with Denver Nuggets... Will he return to Turkish basketball? 🏀 #Fenerbahce #TransferNews",
+    "hashtags": ["#Fenerbahce", "#TransferNews", "#Basketball"],
+    "mentions": ["@Fenerbahce"],
+    "character_count": 187
+  },
+  "post_status": "prepared" | "published" | "failed",
+  "created_at": ISODate,
+  "published_at": ISODate,
+  "x_post_id": "1234567890", // Twitter/X post ID after publishing
+  "engagement_stats": {
+    "likes": 0,
+    "retweets": 0,
+    "replies": 0
+  }
+}
 ```
 
-#### Test 2: API endpoint separation
-```bash
-# Test new endpoints with curl
+## Architecture Components
 
-# 1. Test scraping endpoint
-curl -X POST http://localhost:5000/api/scraping/start \
-  -H "Content-Type: application/json" \
-  -d '{
-    "urls": ["https://www.fanatik.com.tr"],
-    "keywords": ["Fenerbahçe", "transfer"],
-    "persist": true,
-    "scrape_depth": 1
-  }'
+### 1. Database Layer (`database/`)
 
-# 2. Test analysis endpoint with latest session
-curl -X POST http://localhost:5000/api/analysis/process_scraped_data \
-  -H "Content-Type: application/json" \
-  -d '{
-    "use_latest_session": true,
-    "use_claude4": true
-  }'
-
-# 3. Test health check
-curl http://localhost:5000/api/health
+#### `mongodb_client.py` (Enhanced)
+```python
+class MongoDBClient:
+    # Connection Management
+    async def connect() -> bool
+    async def disconnect()
+    async def ensure_indexes()
+    
+    # Collection Runs
+    async def create_collection_run(run_data: Dict) -> str
+    async def update_run_status(run_id: str, status: str, stats: Dict = None) -> bool
+    async def get_run(run_id: str) -> Optional[Dict]
+    async def get_latest_run(run_type: str = None) -> Optional[Dict]
+    async def list_runs(limit: int = 10) -> List[Dict]
+    
+    # Source Summaries
+    async def save_source_summary(summary_data: Dict) -> str
+    async def get_source_summaries(run_id: str, region: str = None) -> List[Dict]
+    async def get_source_summary(run_id: str, source_domain: str) -> Optional[Dict]
+    
+    # Aggregated Results
+    async def save_aggregated_result(aggregated_data: Dict) -> str
+    async def get_aggregated_result(run_id: str, region: str, type: str) -> Optional[Dict]
+    
+    # Diff Results
+    async def save_diff_result(diff_data: Dict) -> str
+    async def get_diff_result(run_id: str) -> Optional[Dict]
+    
+    # NewsAPI Data
+    async def save_newsapi_data(newsapi_data: Dict) -> str
+    async def get_newsapi_data(run_id: str) -> Optional[Dict]
+    
+    # Queries for Frontend
+    async def get_articles_by_source(run_id: str, source_domain: str) -> List[Dict]
+    async def search_articles(query: str, run_id: str = None) -> List[Dict]
+    async def get_missing_entities(run_id: str) -> List[str]
+    
+    # Post-related queries
+    async def save_prepared_post(post_data: Dict) -> str
+    async def get_prepared_posts(limit: int = 10, status: str = None) -> List[Dict]
+    async def update_post_status(post_id: str, status: str, x_post_id: str = None) -> bool
+    async def get_posts_by_articles(article_ids: List[str]) -> List[Dict]
 ```
 
-### 4. Configuration Updates
+### 2. AI Processing Layer (`capabilities/`)
 
-#### Update requirements.txt
-```txt
-# Add to requirements.txt
-journ4list>=0.1.0
-
-# Keep existing
-flask>=2.0.0
-google-generativeai>=0.3.0
-pydantic>=1.8.0
-# ... other existing dependencies
+#### `ai_aggregator.py` (New)
+```python
+class AIAggregator:
+    def __init__(self, google_api_key: str, mongodb_client: MongoDBClient)
+    
+    # Main workflows
+    async def aggregate_by_region(run_id: str, region: str) -> Dict
+    async def extend_eu_with_newsapi(run_id: str, newsapi_data: Dict) -> Dict
+    async def generate_diff_analysis(run_id: str) -> Dict
+    
+    # AI prompt generation
+    def _create_aggregation_prompt(source_summaries: List[Dict], region: str) -> str
+    def _create_extension_prompt(eu_data: Dict, newsapi_data: Dict) -> str
+    def _create_diff_prompt(eu_extended: Dict, tr_data: Dict) -> str
+    
+    # AI processing
+    async def _run_ai_processing(prompt: str, operation_type: str) -> Dict
 ```
 
-#### Update .env file
-```bash
-# .env - Add new variables
-JOURN4LIST_WORKSPACE_DIR=.journalist_workspace
-JOURN4LIST_DEFAULT_PERSIST=true
-JOURN4LIST_DEFAULT_SCRAPE_DEPTH=2
+#### `ai_summarizer.py` (Keep existing)
+- Maintain current `summarize_and_classify_session_data_object()` method
+- Used by orchestrator for processing individual source session files
 
-# Keep existing
-GOOGLE_API_KEY=your_key
-NEWSAPI_KEY=your_key
-# ... other existing keys
+### 3. Data Integration Layer (`integrations/`)
+
+#### `newsapi_service.py` (New)
+```python
+class NewsAPIService:
+    def __init__(self, api_key: str, cache_dir: str = "./cache")
+    
+    # Core fetching (copied from news_aggregator.py)
+    async def fetch_newsapi_articles(keywords: List[str], max_results: int = 50) -> List[Dict]
+    
+    # Schema transformation
+    def transform_to_standard_schema(newsapi_articles: List[Dict]) -> List[Dict]
+    
+    # Cache management  
+    def _write_to_cache(cache_file: str, data: List[Dict]) -> None
+    def _read_from_cache(cache_file: str) -> Optional[List[Dict]]
+    
+    # Utility
+    def validate_quota() -> bool
 ```
 
-### 5. Immediate Benefits
+#### `ai_post_maker.py` (New)
+```python
+class AIPostMaker:
+    def __init__(self, google_api_key: str, mongodb_client: MongoDBClient)
+    
+    # Post generation
+    async def create_posts_from_articles(article_ids: List[str]) -> List[Dict]
+    async def create_single_post(article: Dict) -> Dict
+    
+    # Post management
+    async def save_prepared_post(post_data: Dict) -> str
+    async def get_prepared_posts(limit: int = 10) -> List[Dict]
+    async def update_post_status(post_id: str, status: str) -> bool
+    
+    # X/Twitter integration
+    async def publish_post(post_id: str) -> bool
+    async def publish_multiple_posts(post_ids: List[str]) -> Dict
+    
+    # AI prompt generation
+    def _create_post_prompt(article: Dict) -> str
+    def _validate_post_content(content: str) -> bool
+```
 
-1. **Simplified Architecture**: No more complex pipeline orchestration
-2. **Separated Concerns**: Scraping and analysis are independent
-3. **Better Error Handling**: journ4list provides robust error management
-4. **Modern Async**: Built-in asyncio support
-5. **Easier Testing**: Services can be tested independently
+#### `collection_orchestrator.py` (Enhanced)
+```python
+class CollectionOrchestrator:
+    def __init__(self, mongodb_client: MongoDBClient, ai_aggregator: AIAggregator, 
+                 newsapi_service: NewsAPIService)
+    
+    # UseCase 1: Full Collection
+    async def run_full_collection(keywords: List[str]) -> str:
+        """
+        1. Create collection run in MongoDB
+        2. Trigger parallel scraping (TR + EU sources)
+        3. Process each source with AI → save to MongoDB
+        4. Aggregate by region → save to MongoDB  
+        5. Extend EU with NewsAPI → save to MongoDB
+        6. Generate diff analysis → save to MongoDB
+        7. Update run status to completed
+        """
+    
+    # UseCase 2: Targeted Scraping
+    async def run_targeted_scraping(target_keywords: List[str], region: str = "EU") -> str:
+        """
+        1. Create targeted run in MongoDB
+        2. Scrape only specified region with new keywords
+        3. Process with AI → save to MongoDB
+        4. Return results for frontend display
+        """
+      # Helper methods
+    async def _scrape_sources(params: Dict, region: str) -> List[Dict]  # Returns article data directly
+    async def _process_session_data(session_data: List[Dict], run_id: str) -> List[str]  # Returns summary IDs
+    async def _cleanup_temp_data(temp_data: List[Dict]) # Memory cleanup when persist=false
+```
 
-### 6. Next Phase Implementation
+### 5. API Layer (`api/endpoints/`)
 
-After Phase 1 is stable:
+#### `regional_endpoints.py` (New)
+```python
+@regional_blueprint.route('/tr', methods=['GET'])
+async def get_tr_articles():
+    """
+    GET /api/tr?days=7&limit=100
+    Returns: {
+        "articles": [article_objects],
+        "pagination": {...},
+        "summary": {"total": 145, "sources": 5}
+    }
+    """
 
-1. **Create NewsService** for API-only news fetching
-2. **Implement integration adapters** for data transformation
-3. **Add comprehensive test suite** for new architecture
-4. **Remove deprecated code** completely
-5. **Update documentation** and deployment configs
+@regional_blueprint.route('/eu', methods=['GET'])
+async def get_eu_articles():
+    """
+    GET /api/eu?days=7&limit=100
+    Returns: Same structure as /tr
+    """
+```
 
-### 7. Success Validation
+#### `post_endpoints.py` (New)
+```python
+@post_blueprint.route('/post', methods=['POST'])
+async def create_posts():
+    """
+    POST /api/post
+    Body: {
+        "article_ids": ["article_1", "article_2"],
+        "mode": "make"
+    }
+    Returns: {"post_ids": ["post_001", "post_002"], "status": "created"}
+    """
 
-Phase 1 is successful when:
-- ✅ journ4list scraping works with Turkish sports sites
-- ✅ AI analysis processes journ4list session data
-- ✅ API endpoints respond correctly
-- ✅ No breaking changes to existing functionality
-- ✅ Performance is equal or better
+@post_blueprint.route('/post', methods=['GET'])
+async def get_prepared_posts():
+    """
+    GET /api/post?status=prepared&limit=10
+    Returns: {
+        "posts": [post_objects],
+        "pagination": {...}
+    }
+    """
 
-This implementation plan provides a clear, executable roadmap for the first phase of refactoring while maintaining system stability.
+@post_blueprint.route('/post/publish', methods=['POST'])
+async def publish_posts():
+    """
+    POST /api/post/publish
+    Body: {
+        "post_ids": ["post_001", "post_002"]
+    }
+    Returns: {"published": 2, "failed": 0, "results": [...]}
+    """
+```
+
+#### `collection_endpoints.py` (Existing)
+```python
+@collection_blueprint.route('/run', methods=['POST'])
+async def start_full_collection():
+    """
+    POST /api/collection/run
+    Body: {
+        "keywords": ["fenerbahce", "mourinho"]
+    }
+    Returns: {"run_id": "run_20250624_153000", "status": "started"}
+    """
+
+@collection_blueprint.route('/targeted', methods=['POST'])
+async def start_targeted_scraping():
+    """
+    POST /api/collection/targeted  
+    Body: {
+        "target_keywords": ["vlahovic"],
+        "region": "EU",
+        "base_keywords": ["fenerbahce"] # Optional
+    }
+    Returns: {"run_id": "run_20250624_153001", "status": "started"}
+    """
+
+@collection_blueprint.route('/status/<run_id>', methods=['GET'])
+async def get_collection_status(run_id: str):
+    """Get real-time status of collection run"""
+
+@collection_blueprint.route('/runs', methods=['GET'])
+async def list_collection_runs():
+    """List recent collection runs with summary"""
+```
+
+#### `results_endpoints.py` (New)
+```python
+@results_blueprint.route('/latest', methods=['GET'])
+async def get_latest_results():
+    """Get latest collection results summary"""
+
+@results_blueprint.route('/run/<run_id>', methods=['GET'])
+async def get_run_results(run_id: str):
+    """Get complete results for specific run"""
+
+@results_blueprint.route('/diff/<run_id>', methods=['GET'])  
+async def get_diff_analysis(run_id: str):
+    """Get diff analysis results"""
+
+@results_blueprint.route('/sources/<run_id>', methods=['GET'])
+async def get_source_breakdown(run_id: str):
+    """Get results broken down by source"""
+
+@results_blueprint.route('/articles/search', methods=['POST'])
+async def search_articles():
+    """Search articles across runs"""
+
+@results_blueprint.route('/missing-entities/<run_id>', methods=['GET'])
+async def get_missing_entities(run_id: str):
+    """Get entities for targeted scraping (UseCase2)"""
+```
+
+### 6. Configuration (`helpers/config/`)
+
+#### Update `main.py`
+```python
+# Add MongoDB configuration
+app.config['MONGODB_URI'] = os.getenv('MONGODB_URI', 'mongodb://localhost:27017')
+app.config['MONGODB_DATABASE'] = os.getenv('MONGODB_DATABASE', 'aisports')
+
+# Add NewsAPI configuration  
+app.config['NEWSAPI_KEY'] = os.getenv('NEWSAPI_KEY')
+app.config['NEWSAPI_SOURCES'] = ['bbc-sport', 'espn', 'four-four-two']
+
+# Add collection settings
+app.config['MAX_CONCURRENT_SCRAPING'] = int(os.getenv('MAX_CONCURRENT_SCRAPING', '5'))
+app.config['CLEANUP_TEMP_FILES'] = os.getenv('CLEANUP_TEMP_FILES', 'true').lower() == 'true'
+```
+
+## Data Flow
+
+### Full Collection Workflow
+```
+Frontend Button Click
+    ↓
+POST /api/collection/run
+    ↓
+CollectionOrchestrator.run_full_collection()
+    ↓
+1. Create run record in MongoDB
+2. Parallel scraping (TR + EU sources) 
+3. For each session file:
+   - AI summarization → save to ai_summaries_per_source
+4. AI aggregation by region → save to ai_aggregated_results  
+5. Extend EU with NewsAPI → save to ai_aggregated_results
+6. AI diff analysis → save to ai_diff_results
+7. Update run status → completed
+    ↓
+Frontend polls /api/collection/status/{run_id}
+    ↓
+Frontend displays results via /api/results/run/{run_id}
+```
+
+### Targeted Scraping Workflow
+```
+User clicks missing entity from diff
+    ↓
+POST /api/collection/targeted
+    ↓
+CollectionOrchestrator.run_targeted_scraping()
+    ↓
+1. Create targeted run record
+2. Scrape EU sources with new keywords
+3. AI summarization per source → save to MongoDB
+4. Return results for immediate display
+    ↓
+Frontend shows source-by-source results
+```
+
+### TR/EU Endpoint Workflow
+```
+GET /api/tr?days=7&limit=100
+    ↓
+Query ai_aggregated_results collection
+    ↓
+Filter by region=TR, created_at >= (now - 7 days)
+    ↓
+Return processed_articles array with pagination
+    ↓
+Frontend displays article objects per day/source
+```
+
+### Social Media Post Generation
+
+#### Post Creation Workflow
+```
+User selects article objects → clicks "Prepare Posts"
+    ↓
+POST /api/post with article_ids and mode="make"
+    ↓
+AIPostMaker.create_posts_from_articles()
+    ↓
+For each article: Generate X/Twitter post content
+    ↓
+Save prepared posts to ai_posts collection
+    ↓
+Return post_ids to frontend
+```
+
+#### Post Publishing Workflow
+```
+User reviews prepared posts → clicks "Publish Selected"
+    ↓
+POST /api/post/publish with post_ids
+    ↓
+AIPostMaker.publish_multiple_posts()
+    ↓
+For each post: Publish to X/Twitter via API
+    ↓
+Update post status and store X post IDs
+    ↓
+Return publishing results
+```
+
+### Article Object Schema (Consistent Across All Endpoints)
+```json
+{
+  "id": "article_1",
+  "original_url": "https://www.fanatik.com.tr/...",
+  "title": "Fenerbahçe'den Dario Saric hamlesi!",
+  "summary": "AI-generated summary...",
+  "key_entities": {
+    "teams": ["Fenerbahçe Beko"],
+    "players": ["Dario Saric"],
+    "amounts": ["5.4M USD"],
+    "dates": ["2014-2016"]
+  },
+  "categories": [
+    {
+      "tag": "transfers_rumors",
+      "confidence": 0.9,
+      "evidence": "Supporting text..."
+    }
+  ],
+  "source": "www.fanatik.com.tr",
+  "published_date": "2025-06-21T19:45:15+03:00",
+  "keywords_matched": ["fenerbahce"],
+  "content_quality": "high",
+  "language": "turkish"
+}
+```
+
+### Post Object Schema
+```json
+{
+  "post_id": "post_20250624_001",
+  "based_on_articles": ["article_1", "article_2"],
+  "post_content": {
+    "text": "🔥 TRANSFER ALERT: Fenerbahçe reportedly making moves for Dario Saric! #Fenerbahce #TransferNews",
+    "hashtags": ["#Fenerbahce", "#TransferNews"],
+    "mentions": ["@Fenerbahce"],
+    "character_count": 95
+  },
+  "post_status": "prepared" | "published" | "failed",
+  "created_at": "2025-06-24T15:30:00Z",
+  "published_at": "2025-06-24T15:45:00Z",
+  "x_post_id": "1234567890",
+  "engagement_stats": {
+    "likes": 12,
+    "retweets": 3,
+    "replies": 1
+  }
+}
+```
+
+## Implementation Phases
+
+### Phase 1: Database Foundation
+1. Enhance `mongodb_client.py` with all required methods
+2. Create database indexes for performance
+3. Add connection management and error handling
+4. Create test scripts for database operations
+
+### Phase 2: AI Processing Components  
+1. Create `ai_aggregator.py` with AI prompt generation
+2. Create `newsapi_service.py` for data integration
+3. Test AI aggregation with sample data
+4. Validate schema transformations
+
+### Phase 3: Orchestration Layer
+1. Create `collection_orchestrator.py` 
+2. Implement full collection workflow
+3. Implement targeted scraping workflow
+4. Add comprehensive error handling and logging
+
+### Phase 4: API Endpoints
+1. Create collection endpoints
+2. Create results endpoints
+3. Create regional endpoints (/tr, /eu)
+4. Create post endpoints (/post)
+5. Add input validation and error responses
+6. Create API documentation
+
+### Phase 5: Social Media Integration
+1. Create ai_post_maker.py capability
+2. Implement X/Twitter integration
+3. Add post management functionality
+4. Test post generation and publishing
+
+### Phase 6: Integration & Testing
+1. End-to-end testing of both use cases
+2. Performance optimization
+3. Error scenarios testing
+4. Frontend integration points
+
+## Dependencies
+
+### New Python Packages
+```
+pymongo>=4.6.0
+motor>=3.3.0  # Async MongoDB driver
+tweepy>=4.14.0  # X/Twitter API integration
+```
+
+### Environment Variables
+```
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DATABASE=aisports
+NEWSAPI_KEY=your_newsapi_key
+MAX_CONCURRENT_SCRAPING=5
+PERSIST_RAW_DATA=true  # true for file persistence, false for memory only
+
+# X/Twitter API Configuration
+X_API_KEY=your_x_api_key
+X_API_SECRET=your_x_api_secret
+X_ACCESS_TOKEN=your_x_access_token
+X_ACCESS_TOKEN_SECRET=your_x_access_token_secret
+```
+
+## Notes
+
+- **Flexible Storage**: Supports both persistent (files) and memory-only modes via PERSIST_RAW_DATA config
+- **Article-Focused**: Core schemas focus on article objects with consistent structure across all sources
+- **Social Media Ready**: Built-in X/Twitter post generation and publishing capabilities
+- **AI-First**: All processing steps use AI for intelligent content handling
+- **Scalable**: Designed to handle multiple concurrent collection runs
+- **Frontend Ready**: API structure supports real-time status updates and flexible data access
+- **Journalist Integration**: Uses journalist package for web scraping (formerly journ4list)

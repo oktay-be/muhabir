@@ -65,3 +65,4 @@ workspace/
 archive/
 example_project
 tmp*
+gen-lang-client*

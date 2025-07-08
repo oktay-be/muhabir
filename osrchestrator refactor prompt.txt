@@ -1,0 +1,13 @@
+We will start from scratch.
+
+Make another plan to adapt integrations\collection_orchestrator.py with 
+
+Design will be like following:
+
+two tasks concernging eu_sessions and tr_sessions will run concurrently. One will summarize session_data files under tr_session workspace folder (specific timestamp), other will be summarizing session_data files under eu_session workspace folder (specific timestamp).
+
+Each branch will have multiple summarizations which must also run concurrently.
+
+Design this and add into .archive\ai_multi_threading.md
+
+Remember, you will

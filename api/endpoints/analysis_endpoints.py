@@ -5,7 +5,7 @@ These endpoints handle AI processing of both scraped data and API-fetched news.
 
 import asyncio
 import logging
-from flask import Blueprint, request, jsonify, current_app
+from quart import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
 # Import AI capabilities
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 analysis_blueprint = Blueprint('analysis', __name__)
 
 @analysis_blueprint.route('/process_scraped_data', methods=['POST'])
-def analyze_scraped_data():
+async def analyze_scraped_data():
     """
     Analyze scraped data using AI (completely separated from scraping process).
     Supports both persist scenarios (direct data or file path).
@@ -127,7 +127,7 @@ def analyze_scraped_data():
         return jsonify({"error": f"Analysis error: {str(e)}"}), 500
 
 @analysis_blueprint.route('/auto_process', methods=['POST'])
-def auto_process_latest():
+async def auto_process_latest():
     """
     Convenience endpoint: automatically find latest session and process it.
     
@@ -172,7 +172,7 @@ def auto_process_latest():
         return jsonify({"error": str(e)}), 500
 
 @analysis_blueprint.route('/test_ai', methods=['POST'])
-def test_ai_connection():
+async def test_ai_connection():
     """
     Test AI connection and capability.
     
@@ -246,7 +246,7 @@ def test_ai_connection():
         }), 500
 
 @analysis_blueprint.route('/status', methods=['GET'])
-def get_analysis_status():
+async def get_analysis_status():
     """Get analysis service status and configuration."""
     try:
         # Check AI configuration

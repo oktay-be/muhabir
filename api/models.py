@@ -131,3 +131,38 @@ class TrendingResponse(BaseModel):
     topics: List[TrendingTopic]
     count: int
     location: str
+
+
+class SessionMetadata(BaseModel):
+    """Session metadata model"""
+    session_id: str
+    urls_requested: int
+    urls_processed: int
+    articles_extracted: int
+    extraction_time_seconds: float
+    keywords_used: List[str]
+    scrape_depth: int
+    persist_mode: bool
+    extraction_timestamp: str
+    source_specific: bool
+    source_domain: str
+    articles_scraped: int
+
+
+class SessionDataModel(BaseModel):
+    """Session data model - defines the structure of session data files"""
+    source_domain: str
+    source_url: str
+    articles: List[Dict[str, Any]] = Field(default_factory=list)
+    articles_count: int
+    session_metadata: SessionMetadata
+
+
+# SESSION_DATA_MODEL for reference in testing
+SESSION_DATA_MODEL = {
+    "source_domain": "www.fanatik.com.tr",
+    "source_url": "https://www.fanatik.com.tr", 
+    "articles": [],
+    "articles_count": 28,
+    "session_metadata": {}
+}
